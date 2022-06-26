@@ -94,6 +94,7 @@ impl CardDeck {
                 cards_to_deal.push(s);
             } else {
                 self.reshuffle_muck();
+                was_deck_reshuffled = true;
             }
         }
 
