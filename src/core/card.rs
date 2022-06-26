@@ -1,6 +1,7 @@
 extern crate num;
 use num::traits::FromPrimitive;
 use strum_macros::EnumIter;
+use std::str::FromStr;
 
 #[derive(Debug, PartialEq, Clone, Copy, FromPrimitive, EnumIter)]
 pub enum Value {
@@ -37,6 +38,62 @@ impl Value {
             Self::Ace => 'A',
         }
     }
+
+    pub fn from_char(c: char) -> Option<Value> {
+        match c {
+            '2' => Some(Self::Two),
+            '3' => Some(Self::Three),
+            '4' => Some(Self::Four),
+            '5' => Some(Self::Five),
+            '6' => Some(Self::Six),
+            '7' => Some(Self::Seven),
+            '8' => Some(Self::Eight),
+            '9' => Some(Self::Nine),
+            'T' => Some(Self::Ten),
+            'J' => Some(Self::Jack),
+            'Q' => Some(Self::Queen),
+            'K' => Some(Self::King),
+            'A' => Some(Self::Ace),
+            _ => None
+        }
+    }
+
+    pub fn from_int(u: u64) -> Option<Value> {
+        match u {
+            0 => Some(Self::Two),
+            1 => Some(Self::Three),
+            2 => Some(Self::Four),
+            3 => Some(Self::Five),
+            4 => Some(Self::Six),
+            5 => Some(Self::Seven),
+            6 => Some(Self::Eight),
+            7 => Some(Self::Nine),
+            8 => Some(Self::Ten),
+            9 => Some(Self::Jack),
+            10 => Some(Self::Queen),
+            11 => Some(Self::King),
+            12 => Some(Self::Ace),
+            _ => None
+        }
+    }
+
+    pub fn get_readable_string(& self) -> String {
+        match self {
+            Self::Two => "2".to_string(),
+            Self::Three => "3".to_string(),
+            Self::Four => "4".to_string(),
+            Self::Five => "5".to_string(),
+            Self::Six => "6".to_string(),
+            Self::Seven => "7".to_string(),
+            Self::Eight => "8".to_string(),
+            Self::Nine => "9".to_string(),
+            Self::Ten => "10".to_string(),
+            Self::Jack => "Jack".to_string(),
+            Self::Queen => "Queen".to_string(),
+            Self::King => "King".to_string(),
+            Self::Ace => "Ace".to_string(),
+        }
+    }
 }
 
 impl TryFrom<i32> for Value {
@@ -48,6 +105,17 @@ impl TryFrom<i32> for Value {
         }
     }
 }
+
+impl TryFrom<char> for Value {
+    type Error = char;
+    fn try_from(s: char) -> Result<Self, Self::Error> {
+        match Value::from_char(s) {
+            Some(val) => Ok(val),
+            None => Err(s),
+        }
+    }
+}
+
 
 impl Into<char> for Value {
     fn into(self) -> char {
@@ -79,12 +147,32 @@ impl Suit {
             Self::Spade => 's',
         }
     }
+
+    pub fn from_char(c: char) -> Option<Suit> {
+        match c {
+            'h' => Some(Self::Heart),
+            'c' => Some(Self::Club),
+            'd' => Some(Self::Diamond),
+            's' => Some(Self::Spade),
+            _ => None
+        }
+    }
 }
 
 impl TryFrom<i32> for Suit {
     type Error = i32;
     fn try_from(s: i32) -> Result<Self, Self::Error> {
         match Suit::from_i32(s) {
+            Some(val) => Ok(val),
+            None => Err(s),
+        }
+    }
+}
+
+impl TryFrom<char> for Suit {
+    type Error = char;
+    fn try_from(s: char) -> Result<Self, Self::Error> {
+        match Suit::from_char(s) {
             Some(val) => Ok(val),
             None => Err(s),
         }
@@ -110,12 +198,44 @@ pub struct Card {
     pub suit: Suit,
 }
 
+impl Card {
+    pub fn vec_from_str(s: &str) -> Result<Vec<Card>, &str> {
+        if s.len() % 2 != 0 {
+            return Err("not a valid string");
+        }
+
+        let mut cards: Vec<Card> = Vec::new();
+        for i in (0..s.len()).step_by(2) {
+            let c = Card::from_str(s.get(i..i+2).unwrap()).unwrap();
+            cards.push(c);
+        }
+
+        Ok(cards)
+    }
+
+}
+
 impl From<i32> for Card {
     fn from(s: i32) -> Card {
         Card {
             value: Value::try_from((s - 1) / 4).unwrap(),
             suit: Suit::try_from((s - 1) % 4).unwrap(),
         }
+    }
+}
+
+impl FromStr for Card {
+    type Err = &'static str;
+    fn from_str(s: &'_ str) -> Result<Self, Self::Err> {
+        if s.len() != 2 {
+            return Err("String is not of length 2");
+        }
+
+        let mut chars = s.chars();
+        Ok(Card {
+            value: Value::try_from(chars.next().unwrap()).unwrap(),
+            suit: Suit::try_from(chars.next().unwrap()).unwrap(),
+        })
     }
 }
 
