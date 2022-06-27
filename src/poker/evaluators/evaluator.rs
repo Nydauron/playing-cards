@@ -1,11 +1,13 @@
 use crate::core::{Card, Value};
 
+use std::collections::HashMap;
 use std::string::String;
-use serde_json;
+
+extern crate bincode;
 
 lazy_static! {
-    pub static ref LOOKUP_TABLE: Vec<i32> = {
-        let buf = include_str!("HandRanks.json.dat");
+    pub static ref LOOKUP_TABLE: HashMap<i32, i32> = {
+        let buf = include_bytes!("HandRanks.dat");
         // Here is something to help improve this:
         // We use abomonation (https://docs.rs/abomonation/latest/abomonation/index.html) to help encode and decode the struct
         // When building the library, we have the struct be generated then encoded and then write all of the bytes to a .dat file
@@ -13,7 +15,7 @@ lazy_static! {
 
         // improve deserialization so that we can use the orginial byte-encoded file instead
         // TODO: Use a build script to generate said file https://doc.rust-lang.org/cargo/reference/build-scripts.html
-        let mut lookup_table: Vec<i32> = serde_json::from_str(&buf).unwrap();
+        let mut lookup_table: HashMap<i32, i32> = bincode::deserialize(buf).unwrap();
         lookup_table.shrink_to_fit();
         lookup_table
     };
