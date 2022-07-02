@@ -1,5 +1,15 @@
 #![allow(arithmetic_overflow)]
 
+/**
+ * This script is a Rust-ported script from Ray Wotton's 2+2 generate_table script and Paul
+ * Sneeze's Perfect Hash evaluator from XPokerEval repo.
+ * 
+ * All credit for these algorithms go to the original authors.
+ * 
+ * 2+2: (https://github.com/tangentforks/XPokerEval/blob/master/XPokerEval.TwoPlusTwo)
+ * Perfect Hash: (https://github.com/tangentforks/XPokerEval/tree/master/XPokerEval.CactusKev.PerfectHash)
+ */
+
 use std::collections::HashMap;
 use std::cmp::min;
 use std::convert::TryInto;
