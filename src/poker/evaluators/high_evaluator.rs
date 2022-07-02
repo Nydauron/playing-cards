@@ -18,11 +18,11 @@ impl Evaluator for HighEvaluator {
         let mut rank = 53;
         
         for c in all_cards {
-            rank = *LOOKUP_TABLE.get(&(rank + card_to_int(&c))).unwrap_or(&0); // [(rank + card_to_int(&c)) as usize];
+            rank = LOOKUP_TABLE[(rank + card_to_int(&c)) as usize];
         }
 
         if card_count < 7 {
-            Ok(Vec::from([*LOOKUP_TABLE.get(&rank).unwrap_or(&0) /*[(rank) as usize] */ as u64]))
+            Ok(Vec::from([LOOKUP_TABLE[rank as usize] as u64]))
         } else {
             Ok(Vec::from([rank as u64]))
         }

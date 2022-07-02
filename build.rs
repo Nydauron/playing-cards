@@ -10,7 +10,7 @@ extern crate bincode;
 
 fn main() {
     let mut ids = HashMap::<i32, i64>::with_capacity(612978);
-    let mut lookup_table = HashMap::<i32, i32>::with_capacity(32487834);
+    let mut lookup_table = Vec::<i32>::from([0; 32487834]);
     
     let mut num_ids = 1;
     let mut num_cards = 0;
@@ -58,11 +58,11 @@ fn main() {
                 }
 
                 max_hr = id_num * 53 + card + 53;
-                lookup_table.insert(max_hr, id_slot);
+                lookup_table[max_hr as usize] = id_slot;
             }
 
             if num_cards == 6 || num_cards == 7 {
-                lookup_table.insert(id_num * 53 + 53, doEval(*ids.get(&id_num).unwrap_or(&0)).expect("Failed: card num was not between 5-7"));
+                lookup_table[(id_num * 53 + 53) as usize] = doEval(*ids.get(&id_num).unwrap_or(&0)).expect("Failed: card num was not between 5-7");
             }
 
             print!("\rID - {}", id_num);
@@ -74,20 +74,20 @@ fn main() {
     println!("\nNumber IDs = {}\nmaxHR = {}", num_ids, max_hr);
 
     for c0 in 1..53 {
-        let u0 = lookup_table.get(&(53 + c0)).unwrap_or(&0);
+        let u0 = lookup_table[(53 + c0) as usize];
         for c1 in (c0+1)..53 {
-            let u1 = lookup_table.get(&(u0 + c1)).unwrap_or(&0);
+            let u1 = lookup_table[(u0 + c1) as usize];
             for c2 in (c1+1)..53 {
-                let u2 = lookup_table.get(&(u1 + c2)).unwrap_or(&0);
+                let u2 = lookup_table[(u1 + c2) as usize];
                 for c3 in (c2+1)..53 {
-                    let u3 = lookup_table.get(&(u2 + c3)).unwrap_or(&0);
+                    let u3 = lookup_table[(u2 + c3) as usize];
                     for c4 in (c3+1)..53 {
-                        let u4 = lookup_table.get(&(u3 + c4)).unwrap_or(&0);
+                        let u4 = lookup_table[(u3 + c4) as usize];
                         for c5 in (c4+1)..53 {
-                            let u5 = lookup_table.get(&(u4 + c5)).unwrap_or(&0);
+                            let u5 = lookup_table[(u4 + c5) as usize];
                             for c6 in (c5+1)..53 {
-                                let u6 = lookup_table.get(&(u5 + c6)).unwrap_or(&0);
-                                handTypeSum[(*u6 >> 12) as usize] += 1;
+                                let u6 = lookup_table[(u5 + c6) as usize];
+                                handTypeSum[(u6 >> 12) as usize] += 1;
                                 count += 1;
                             }
                         }
