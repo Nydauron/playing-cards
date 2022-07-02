@@ -25,12 +25,14 @@ Here is a list of type included within the Poker feature:
   - Drawmaha 0 Evaluator (TODO)
   - Drawmaha 49 Evaluator (TODO)
 
-All the evaluators run on the ever-popular [2+2 evalautor](https://github.com/tangentforks/XPokerEval/tree/master/XPokerEval.TwoPlusTwo).
+All the evaluators run on the ever-popular [2+2 evalautor](https://github.com/tangentforks/XPokerEval/tree/master/XPokerEval.TwoPlusTwo),
+which can evaluate 5 card hands from a given set of 5-7 cards.
 
 ## Other Things Still TODO
 
-- Create build script to generate 2+2 table (dump the struct into a file using Abomimation)
-- Improve loading the 2+2 table into static memory
-  - Issues regarding this involve reading the table for the first time (since that is when lazy_static initializes the lookup table)
-- Build the rest of the evaluators
-- Documentation
+- [X] Create build script to generate 2+2 table (dump the struct into a file using Abomimation)
+- [ ] Improve loading the 2+2 table into static memory
+  - Issues regarding this involve reading the table for the first time (since that is when
+  lazy_static initializes the lookup table)
+- [ ] Build the rest of the evaluators
+- [ ] Documentation
