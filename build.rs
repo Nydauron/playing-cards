@@ -17,22 +17,18 @@ fn main() {
     let mut max_hr = 0;
     let mut max_id = 0;
 
-    // let id_slot;
-    let mut card = 0;
     let mut count = 0;
 
-    let mut handTypeSum: [i32; 10] = [0; 10];
-
-    let mut hold_id;
+    let mut hand_type_sum: [i32; 10] = [0; 10];
 
     println!("\nGetting Card IDs!");
     {
         let mut id_num = 0;
         while ids.contains_key(&id_num) || id_num == 0 {
             for card in 1..53 {
-                let id = makeID(&mut num_cards, *ids.get(&id_num).or(Some(&0)).unwrap(), card);
+                let id = make_id(&mut num_cards, *ids.get(&id_num).or(Some(&0)).unwrap(), card);
                 if num_cards < 7 {
-                    hold_id = saveID(&mut ids, &mut num_ids, &mut max_id, id);
+                    save_id(&mut ids, &mut num_ids, &mut max_id, id);
                 }
             }
 
@@ -48,13 +44,13 @@ fn main() {
         let mut id_num = 0;
         while ids.contains_key(&id_num) || id_num == 0 {
             for card in 1..53 {
-                let id = makeID(&mut num_cards, *ids.get(&id_num).unwrap_or(&0), card);
+                let id = make_id(&mut num_cards, *ids.get(&id_num).unwrap_or(&0), card);
 
                 let id_slot;
                 if num_cards < 7 {
-                    id_slot = saveID(&mut ids, &mut num_ids, &mut max_id, id) * 53 + 53;
+                    id_slot = save_id(&mut ids, &mut num_ids, &mut max_id, id) * 53 + 53;
                 } else {
-                    id_slot = doEval(id).expect("Failed: card num was not between 5-7");
+                    id_slot = do_eval(id).expect("Failed: card num was not between 5-7");
                 }
 
                 max_hr = id_num * 53 + card + 53;
@@ -62,7 +58,7 @@ fn main() {
             }
 
             if num_cards == 6 || num_cards == 7 {
-                lookup_table[(id_num * 53 + 53) as usize] = doEval(*ids.get(&id_num).unwrap_or(&0)).expect("Failed: card num was not between 5-7");
+                lookup_table[(id_num * 53 + 53) as usize] = do_eval(*ids.get(&id_num).unwrap_or(&0)).expect("Failed: card num was not between 5-7");
             }
 
             print!("\rID - {}", id_num);
@@ -87,7 +83,7 @@ fn main() {
                             let u5 = lookup_table[(u4 + c5) as usize];
                             for c6 in (c5+1)..53 {
                                 let u6 = lookup_table[(u5 + c6) as usize];
-                                handTypeSum[(u6 >> 12) as usize] += 1;
+                                hand_type_sum[(u6 >> 12) as usize] += 1;
                                 count += 1;
                             }
                         }
@@ -98,13 +94,13 @@ fn main() {
     }
 
     for i in 0..10 {
-        println!("Hand rank {}: {}", i, handTypeSum[i]);
+        println!("Hand rank {}: {}", i, hand_type_sum[i]);
     }
 
     println!("Total hands = {}", count);
     println!("Table size: {}, capacity: {}", lookup_table.len(), lookup_table.capacity());
 
-    let mut f = BufWriter::new(File::create("src/poker/evaluators/HandRanks.dat").unwrap());
+    let f = BufWriter::new(File::create("src/poker/evaluators/HandRanks.dat").unwrap());
     
     bincode::serialize_into(f, &lookup_table).expect("Failed to write to file");
 
@@ -112,12 +108,10 @@ fn main() {
 
 }
 
-fn makeID(num_cards: &mut i32, id_in: i64, mut newcard: i32) -> i64 {
-    let mut id: i64 = 0;
+fn make_id(num_cards: &mut i32, id_in: i64, mut newcard: i32) -> i64 {
     let mut suitcount: [i32; 4+1] = [0; 5];
     let mut rankcount: [i32; 13+1] = [0; 14];
     let mut workcards: [i32; 8] = [0; 8];
-    let mut cardnum: i32;
     let mut getout = false;
 
     for cardnum in 0..6 {
@@ -188,13 +182,11 @@ fn makeID(num_cards: &mut i32, id_in: i64, mut newcard: i32) -> i64 {
 	swap(3, 4);		
 	swap(5, 6);
 
-    id = workcards[0] as i64 + ((workcards[1] as i64) << 8) + ((workcards[2] as i64) << 16) + ((workcards[3] as i64) << 24) +
-        ((workcards[4] as i64) << 32) + ((workcards[5] as i64) << 40) + ((workcards[6] as i64) << 48);
-
-    id
+    workcards[0] as i64 + ((workcards[1] as i64) << 8) + ((workcards[2] as i64) << 16) + ((workcards[3] as i64) << 24) +
+        ((workcards[4] as i64) << 32) + ((workcards[5] as i64) << 40) + ((workcards[6] as i64) << 48)
 }
 
-fn saveID(ids: &mut HashMap<i32, i64>, num_ids: &mut i32, max_id: &mut i64, id: i64) -> i32 {
+fn save_id(ids: &mut HashMap<i32, i64>, num_ids: &mut i32, max_id: &mut i64, id: i64) -> i32 {
     if id == 0 {
         return 0;
     }
@@ -239,16 +231,11 @@ fn saveID(ids: &mut HashMap<i32, i64>, num_ids: &mut i32, max_id: &mut i64, id: 
     high
 }
 
-fn doEval(id_in: i64) -> Result<i32, &'static str> {
+fn do_eval(id_in: i64) -> Result<i32, &'static str> {
     let mut handrank = 0;
-    // let cardnum;
-    // let workcard;
-    // let rank;
-    // let mut suit;
     let mut mainsuit = 20;
 
     let mut suititerator = 1;
-    // let holdrank;
     let mut workcards: [i32; 8] = [0; 8];
     let mut holdcards: [i32; 8] = [0; 8];
     let mut numevalcards = 0;
@@ -294,18 +281,18 @@ fn doEval(id_in: i64) -> Result<i32, &'static str> {
 
         match numevalcards {
             5 => {
-                holdrank = eval5HandFast(workcards[0], workcards[1], workcards[2], workcards[3], workcards[4]);
+                holdrank = eval_5_hand_fast(workcards[0], workcards[1], workcards[2], workcards[3], workcards[4]);
             },
             6 => {
-                holdrank = eval5HandFast(workcards[0],workcards[1],workcards[2],workcards[3],workcards[4]);
-				holdrank = min(holdrank, eval5HandFast(workcards[0],workcards[1],workcards[2],workcards[3],workcards[5]));
-				holdrank = min(holdrank, eval5HandFast(workcards[0],workcards[1],workcards[2],workcards[4],workcards[5]));
-				holdrank = min(holdrank, eval5HandFast(workcards[0],workcards[1],workcards[3],workcards[4],workcards[5]));
-				holdrank = min(holdrank, eval5HandFast(workcards[0],workcards[2],workcards[3],workcards[4],workcards[5]));
-				holdrank = min(holdrank, eval5HandFast(workcards[1],workcards[2],workcards[3],workcards[4],workcards[5]));
+                holdrank = eval_5_hand_fast(workcards[0],workcards[1],workcards[2],workcards[3],workcards[4]);
+				holdrank = min(holdrank, eval_5_hand_fast(workcards[0],workcards[1],workcards[2],workcards[3],workcards[5]));
+				holdrank = min(holdrank, eval_5_hand_fast(workcards[0],workcards[1],workcards[2],workcards[4],workcards[5]));
+				holdrank = min(holdrank, eval_5_hand_fast(workcards[0],workcards[1],workcards[3],workcards[4],workcards[5]));
+				holdrank = min(holdrank, eval_5_hand_fast(workcards[0],workcards[2],workcards[3],workcards[4],workcards[5]));
+				holdrank = min(holdrank, eval_5_hand_fast(workcards[1],workcards[2],workcards[3],workcards[4],workcards[5]));
             },
             7 => {
-                holdrank = eval7HandFast(workcards[0..7].try_into().unwrap());
+                holdrank = eval_7_hand_fast(workcards[0..7].try_into().unwrap());
             },
             _ => {
                 return Err("Problem with numcards");
@@ -337,7 +324,7 @@ fn doEval(id_in: i64) -> Result<i32, &'static str> {
     Ok(handrank)
 }
 
-fn eval5HandFast(c1: i32, c2: i32, c3: i32, c4: i32, c5: i32) -> i32 {
+fn eval_5_hand_fast(c1: i32, c2: i32, c3: i32, c4: i32, c5: i32) -> i32 {
     let q = (c1 | c2 | c3 | c4 | c5) >> 16;
     if c1 & c2 & c3 & c4 & c5 & 0xf000 != 0 {
         return FLUSHES[q as usize] as i32;
@@ -346,17 +333,17 @@ fn eval5HandFast(c1: i32, c2: i32, c3: i32, c4: i32, c5: i32) -> i32 {
     if s != 0 {
         return s;
     }
-    return HASH_VALUES[findFast(((c1 & 0xff) * (c2 & 0xff) * (c3 & 0xff) * (c4 & 0xff) * (c5 & 0xff)) as u32) as usize];
+    return HASH_VALUES[find_fast(((c1 & 0xff) * (c2 & 0xff) * (c3 & 0xff) * (c4 & 0xff) * (c5 & 0xff)) as u32) as usize];
 }
 
-fn eval7HandFast(cards: [i32; 7]) -> i32 {
+fn eval_7_hand_fast(cards: [i32; 7]) -> i32 {
     let mut best = 9999;
     for i in 0..21 {
         let mut sub_hand: [i32; 5] = [0; 5];
         for j in 0..5 {
             sub_hand[j] = cards[PERM7[i][j]];
         }
-        let q = eval5HandFast(sub_hand[0], sub_hand[1], sub_hand[2], sub_hand[3], sub_hand[4]);
+        let q = eval_5_hand_fast(sub_hand[0], sub_hand[1], sub_hand[2], sub_hand[3], sub_hand[4]);
         if q < best {
             best = q;
         }
@@ -365,7 +352,7 @@ fn eval7HandFast(cards: [i32; 7]) -> i32 {
     best
 }
 
-fn findFast(mut u: u32) -> u32 {
+fn find_fast(mut u: u32) -> u32 {
     u += 0xe91aaa35;
     u ^= u >> 16;
     u += u << 8;
