@@ -6,6 +6,10 @@ use crate::core::Card;
 pub struct HighEvaluator;
 
 impl Evaluator for HighEvaluator {
+    /// Evaluates the high hand for one player.
+    ///
+    /// Returns a numerical integer than can be compared against directly against other ranks. If the
+    /// total card count is not with the domain [5, 7], then an error will return.
     fn evaluate_hand(&self, player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Vec<u64>, &str> {
         let card_count = player_hand.len() + board.len();
         if card_count < 5 || card_count > 7 {

@@ -12,6 +12,19 @@ use strum::IntoEnumIterator;
 
 use super::{Card, Value, Suit};
 
+/// A deck of cards.
+///
+/// This deck will contain 52 distinct cards upon initalization. To ensure uniform randomness,
+/// mersenne twisters are used when the deck is intialized and everytime when the muck is
+/// reshuffled back in.
+///
+/// Example
+/// ```rust
+/// let mut deck = CardDeck::new().unwrap();
+/// let hand = deck.deal_cards(2).unwrap();
+///
+/// println!("{:?}", hand); // Two random cards from the deck
+/// ```
 pub struct CardDeck {
     deck: Vec<Card>,
     seed: u64,
@@ -20,7 +33,22 @@ pub struct CardDeck {
 }
 
 impl CardDeck {
-    // TODO: Add a way of creating different forms of short decks (e.g. A-7, 6-A)
+    /// Creates a new randomized CardDeck.
+    ///
+    /// The seed of the mersenne twister is set based on the entropy of the system.
+    ///
+    /// Example
+    /// ```rust
+    /// for _ in 0..10 {
+    ///     let mut deck = CardDeck::new().unwrap();
+    ///
+    ///     // Each line should produce a different permutation of cards, since the
+    ///     // chance at least one of the ten lines are the same is:
+    ///     // 1 - x!/(x-10)!/x^10
+    ///     // where x == 52! / (52-5)! which equates to about 1.442e-7
+    ///     println!("{:?}", deck.deal_cards(5).unwrap());
+    /// }
+    /// ```
     pub fn new() -> Result<CardDeck, Error> {
         let mut buf = [0u8; 8];
         let res = getrandom::getrandom(&mut buf);
@@ -40,6 +68,35 @@ impl CardDeck {
         Ok(CardDeck::new_with_seed(seed))
     }
 
+    /// Creates a new CardDeck from the given seed.
+    ///
+    /// This method is a way to create deterministic deck for random but predictiable outcomes.
+    ///
+    /// Examples
+    /// ```rust
+    /// for _ in 0..10 {
+    ///     let mut deck = CardDeck::new_with_seed(1337).unwrap();
+    ///
+    ///     // Every single line should produce the same 5 cards in the same exact order because
+    ///     // we gave each deck the same seed.
+    ///     println!("{:?}", deck.deal_cards(5).unwrap());
+    /// }
+    /// ```
+    ///
+    /// ```rust
+    /// for i in 0..10 {
+    ///     let mut deck = CardDeck::new_with_seed(i).unwrap();
+    ///
+    ///     // Each line should be different from one another, but if you rerun this code again,
+    ///     // it will print out the exact 10 lines again.
+    ///     println!("{:?}", deck.deal_cards(5).unwrap());
+    /// }
+    /// ```
+    ///
+    /// If you do use `new_with_seed` and are using it inputting random seeds, the card deck can be made predictable
+    /// if the seed generation is predictable (e.g. incrementing the seed by one, using unix time). It is better to
+    /// use `new()` in these cases since the entropy from the system cannot be replicated across systems easily
+    /// unless the seed generated is shared.
     pub fn new_with_seed(seed: u64) -> CardDeck {
         let mt = sfmt::SFMT::seed_from_u64(seed);
 
@@ -74,18 +131,61 @@ impl CardDeck {
         self.deck.shuffle(&mut self.mt);
     }
 
+    /// Gets the mersenne twister seed of the CardDeck.
     pub fn get_seed(& self) -> u64 {
         self.seed
     }
 
+    /// Adds the inputted cards into the muck.
+    ///
+    /// This is primarily important if reshuffling the muck can occur.
     pub fn muck_cards(&mut self, mut cards: Vec<Card>) {
         self.muck.append(&mut cards);
     }
 
+    /// Checks to see if there are enough cards in the deck to deal ``
     pub fn check_deal_cards(& self, n: usize, m: usize) -> bool {
         self.deck.len() + self.muck.len() >= n - m
     }
 
+    /// Deals `n` cards out from the CardDeck.
+    ///
+    /// If there is not enough cards remaining in the deck, it will reshuffle the mucked card back
+    /// into the deck and redeal them out. If there are no more cards left, this method will return
+    /// None.
+    ///
+    /// Examples
+    /// ```rust
+    /// let mut player_hands: [Vec<Card>; 10] = [vec![]; 10];
+    ///
+    /// let mut deck = CardDeck::new().unwrap();
+    /// for i in 0..10 {
+    ///     if let Some(hand) = deck.deal_cards(2) { // 2 cards per player would require 20 cards
+    ///         player_hands[i] = hand;
+    ///     } else {
+    ///         // Should never reach here
+    ///         panic!("Ran out of cards!");
+    ///     }
+    /// }
+    ///
+    /// println!("{:?}", player_hands);
+    /// ```
+    ///
+    /// ```rust
+    /// let mut player_hands: [Vec<Card>; 10] = [vec![]; 10];
+    ///
+    /// let mut deck = CardDeck::new().unwrap();
+    /// for i in 0..10 {
+    ///     if let Some(hand) = deck.deal_cards(6) { // 6 cards per player would require 60 cards, but there's only 52
+    ///         player_hands[i] = hand;
+    ///     } else {
+    ///         panic!("Ran out of cards!");
+    ///     }
+    /// }
+    ///
+    /// // Should never reach here
+    /// println!("{:?}", player_hands);
+    /// ```
     pub fn deal_cards(&mut self, n: usize) -> (Option<Vec<Card>>, bool) {
         let mut cards_to_deal: Vec<Card> = Vec::new();
         let mut was_deck_reshuffled = false;
@@ -105,6 +205,11 @@ impl CardDeck {
         }
     }
 
+    /// Draws `n` cards out from the CardDeck.
+    ///
+    /// The definition of drawing in this case means to discard and replace cards. This function
+    /// can take any number of discard cards with the help of `muck_cards()` and then simply
+    /// invokes `deal_cards()` to deal `n` cards out of the deck.
     pub fn draw_cards(&mut self, n: usize, discard_cards: Option<Vec<Card>>) -> (Option<Vec<Card>>, bool) {
         if let Some(c) = discard_cards {
             self.muck_cards(c);

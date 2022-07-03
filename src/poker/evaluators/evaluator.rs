@@ -18,13 +18,15 @@ lazy_static! {
     };
 }
 
+/// A Trait definition for all poker evaluators.
 pub trait Evaluator {
-    // Evaluates a hand for one player
+    /// Evaluates a hand for one player.
     fn evaluate_hand(&self, player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Vec<u64>, &str>;
 
-    // Return the string for the associated hand
-    // This implementation defaults 5-card hands with the input representing a high hand
-    // Low evaluators will need to override this function
+    /// Returns the string for the associated hand.
+    ///
+    /// This implementation defaults to 5-card hands with the input representing a high hand. Any
+    /// low evaluators will need to override this function.
     fn get_string(&self, hand_rank: u64) -> Result<String, &'static str> {
         let hand_category;
         let sub_rank = hand_rank & 0xFFF;
@@ -196,6 +198,12 @@ pub trait Evaluator {
     }
 }
 
+/// This function allows for the 2+2 lookup table to be loaded in. This function only needs to be
+/// called once, and calling it multiple times does not have any significant performance penalties.
+///
+/// This exists due to the fact that the first inital load of the table takes about 8 seconds to
+/// initialize using `lazy_static`. In an ideal world, the table should be baked into static
+/// memory.
 pub fn init_lookup_table() {
     print!("Loading LOOKUP_TABLE ... ");
     lazy_static::initialize(&LOOKUP_TABLE);

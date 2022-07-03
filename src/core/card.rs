@@ -3,6 +3,10 @@ use num::traits::FromPrimitive;
 use strum_macros::EnumIter;
 use std::str::FromStr;
 
+/// An enum representation of the rank of a card
+///
+/// Each value corresponds to the rank strength.
+#[allow(missing_docs)]
 #[derive(Debug, PartialEq, Clone, Copy, FromPrimitive, EnumIter)]
 pub enum Value {
     Two = 0,
@@ -21,6 +25,11 @@ pub enum Value {
 }
 
 impl Value {
+    /// Gets the associated character for the Value.
+    ///
+    /// This is typically used to parse a Value into a string format for users like printing
+    /// shortened ASCII card representations (e.g. As for the Ace of spades, 5d for the 5 of
+    /// diamonds).
     pub fn get_char(& self) -> char {
         match self {
             Self::Two => '2',
@@ -39,6 +48,10 @@ impl Value {
         }
     }
 
+    /// Attempts to parse a character and returns the associated Value.
+    ///
+    /// The function will return back None if the input character is not any of the mapped
+    /// characters.
     pub fn from_char(c: char) -> Option<Value> {
         match c {
             '2' => Some(Self::Two),
@@ -58,6 +71,9 @@ impl Value {
         }
     }
 
+    /// Attempts to parse an interger to a Value.
+    ///
+    /// Returns back None if the number does not fall within `[0, 13)`.
     pub fn from_int(u: u64) -> Option<Value> {
         match u {
             0 => Some(Self::Two),
@@ -77,6 +93,10 @@ impl Value {
         }
     }
 
+    /// Returns a prettified string of the Value.
+    ///
+    /// These strings are meant for end-users and can also be used for printing
+    /// hand ranks.
     pub fn get_readable_string(& self) -> String {
         match self {
             Self::Two => "2".to_string(),
@@ -130,6 +150,10 @@ impl std::fmt::Display for Value {
     }
 }
 
+/// An enum representation of the suit of a card
+///
+/// Numerical value is just for distinction and each suit has equal strength
+#[allow(missing_docs)]
 #[derive(Debug, PartialEq, Clone, Copy, FromPrimitive, EnumIter)]
 pub enum Suit {
     Heart = 0,
@@ -139,6 +163,11 @@ pub enum Suit {
 }
 
 impl Suit {
+    /// Gets the associated character for the Suit
+    ///
+    /// This is typically used to parse a Suit into a string format for users like printing
+    /// shortened ASCII card representations (e.g. As for the Ace of spades, 5d for the 5 of
+    /// diamonds).
     pub fn get_char(& self) -> char {
         match self {
             Self::Heart => 'h',
@@ -148,6 +177,10 @@ impl Suit {
         }
     }
 
+    /// Attempts to parse a character and returns the associated Suit.
+    ///
+    /// The function will return back None if the input character is not any of the mapped
+    /// characters.
     pub fn from_char(c: char) -> Option<Suit> {
         match c {
             'h' => Some(Self::Heart),
@@ -192,13 +225,19 @@ impl std::fmt::Display for Suit {
     }
 }
 
+/// A structural representation of a playing card.
 #[derive(Debug, PartialEq, Clone)]
 pub struct Card {
+    /// The Value of the Card
     pub value: Value,
+    /// The Suit of the Card
     pub suit: Suit,
 }
 
 impl Card {
+    /// Takes in a string and returns back a vector of Cards.
+    ///
+    /// This can be used to quickly static hands that can be evaluated for testing.
     pub fn vec_from_str(s: &str) -> Result<Vec<Card>, &str> {
         if s.len() % 2 != 0 {
             return Err("not a valid string");
