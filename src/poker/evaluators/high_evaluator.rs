@@ -54,7 +54,6 @@ fn card_to_int(c: &Card) -> i32 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use test::Bencher;
 
     #[test]
     fn threes_full_of_deuces_six_cards() {
@@ -83,24 +82,6 @@ mod tests {
         assert_eq!(1, player1_rank & 0xFFF);
         
         assert_eq!(player1_rank, player2_rank);
-    }
-
-    #[bench]
-    fn bench_same_rank_different_cards(b: &mut Bencher) {
-        b.iter(|| {
-            let player1_hand = Card::vec_from_str("2s3s4s5s7s").unwrap();
-            let player2_hand = Card::vec_from_str("2h3h4h5h7h").unwrap();
-
-            let eval = HighEvaluator::new();
-            
-            let player1_rank = eval.evaluate_hand(&player1_hand, &Vec::new()).expect("Evaluation failed")[0];
-            let player2_rank = eval.evaluate_hand(&player2_hand, &Vec::new()).expect("Evaluation failed")[0];
-
-            assert_eq!(6, player1_rank >> 12);
-            assert_eq!(1, player1_rank & 0xFFF);
-            
-            assert_eq!(player1_rank, player2_rank);
-        })
     }
 
     #[test]
@@ -206,5 +187,29 @@ mod tests {
             let string_rank = eval.get_string(player_rank).expect("Hand generated bad rank");
             assert_eq!(expected_str, string_rank, "\nFailed on hand {}\n", h);
         }
+    }
+}
+
+#[cfg(all(feature = "unstable", test))]
+mod bench {
+    use super::*;
+    use test::Bencher;
+
+    #[bench]
+    fn bench_same_rank_different_cards(b: &mut Bencher) {
+        b.iter(|| {
+            let player1_hand = Card::vec_from_str("2s3s4s5s7s").unwrap();
+            let player2_hand = Card::vec_from_str("2h3h4h5h7h").unwrap();
+
+            let eval = HighEvaluator::new();
+
+            let player1_rank = eval.evaluate_hand(&player1_hand, &Vec::new()).expect("Evaluation failed")[0];
+            let player2_rank = eval.evaluate_hand(&player2_hand, &Vec::new()).expect("Evaluation failed")[0];
+
+            assert_eq!(6, player1_rank >> 12);
+            assert_eq!(1, player1_rank & 0xFFF);
+
+            assert_eq!(player1_rank, player2_rank);
+        })
     }
 }

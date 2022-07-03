@@ -44,4 +44,5 @@ all-features = true
 
 [features]
 default = []
+unstable = []
 poker = ["dep:bincode", "dep:async-std"]
