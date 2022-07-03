@@ -24,6 +24,7 @@ Here is a list of type included within the Poker feature:
   - Drawmaha Evaluator (TODO)
   - Drawmaha 0 Evaluator (TODO)
   - Drawmaha 49 Evaluator (TODO)
+  - Shortdeck High Evaluator (TODO)
 
 All the evaluators run on the ever-popular [2+2 evalautor](https://github.com/tangentforks/XPokerEval/tree/master/XPokerEval.TwoPlusTwo),
 which can evaluate 5 card hands from a given set of 5-7 cards.
@@ -40,4 +41,4 @@ which can evaluate 5 card hands from a given set of 5-7 cards.
   however in practice, this makes compile time *unbearably* slow due to the size of the Hashmap that
   gets generated. (Reason is due to the runtime of calcualting perfect hashes.)
 - [ ] Build the rest of the evaluators
-- [ ] Documentation
+- [X] Documentation
