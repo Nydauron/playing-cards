@@ -1,9 +1,24 @@
+use async_std::task;
+
 use super::Evaluator;
 use super::LOOKUP_TABLE;
 
 use crate::core::Card;
 
+/// The wrapper struct for the High Evaluator.
 pub struct HighEvaluator;
+
+impl HighEvaluator {
+    /// Creates a new HighEvaluator.
+    /// 
+    /// Initializes the lookup table if it isn't already.
+    pub fn new() -> Self {
+        task::spawn(async {
+            init_lookup_table();
+        });
+        Self{}
+    }
+}
 
 impl Evaluator for HighEvaluator {
     /// Evaluates the high hand for one player.
@@ -45,11 +60,10 @@ mod tests {
 
     #[test]
     fn threes_full_of_deuces_six_cards() {
-        init_lookup_table();
         let player_hand = Vec::from([Card::from(1), Card::from(2)]);
         let board = Vec::from([Card::from(7), Card::from(5), Card::from(6), Card::from(52)]);
 
-        let eval = HighEvaluator{};
+        let eval = HighEvaluator::new();
         
         let rank = eval.evaluate_hand(&player_hand, &board).expect("Evaluation failed")[0];
 
@@ -59,11 +73,10 @@ mod tests {
 
     #[test]
     fn same_rank_different_cards() {
-        init_lookup_table();
         let player1_hand = Card::vec_from_str("2s3s4s5s7s").unwrap();
         let player2_hand = Card::vec_from_str("2h3h4h5h7h").unwrap();
 
-        let eval = HighEvaluator{};
+        let eval = HighEvaluator::new();
         
         let player1_rank = eval.evaluate_hand(&player1_hand, &Vec::new()).expect("Evaluation failed")[0];
         let player2_rank = eval.evaluate_hand(&player2_hand, &Vec::new()).expect("Evaluation failed")[0];
@@ -76,12 +89,11 @@ mod tests {
 
     #[bench]
     fn bench_same_rank_different_cards(b: &mut Bencher) {
-        init_lookup_table();
         b.iter(|| {
             let player1_hand = Card::vec_from_str("2s3s4s5s7s").unwrap();
             let player2_hand = Card::vec_from_str("2h3h4h5h7h").unwrap();
 
-            let eval = HighEvaluator{};
+            let eval = HighEvaluator::new();
             
             let player1_rank = eval.evaluate_hand(&player1_hand, &Vec::new()).expect("Evaluation failed")[0];
             let player2_rank = eval.evaluate_hand(&player2_hand, &Vec::new()).expect("Evaluation failed")[0];
@@ -99,7 +111,7 @@ mod tests {
         for (h, expected_str) in hands {
             let player_hand = Card::vec_from_str(h).unwrap();
 
-            let eval = HighEvaluator{};
+            let eval = HighEvaluator::new();
 
             let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
@@ -114,7 +126,7 @@ mod tests {
         for (h, expected_str) in hands {
             let player_hand = Card::vec_from_str(h).unwrap();
 
-            let eval = HighEvaluator{};
+            let eval = HighEvaluator::new();
 
             let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
@@ -129,7 +141,7 @@ mod tests {
         for (h, expected_str) in hands {
             let player_hand = Card::vec_from_str(h).unwrap();
 
-            let eval = HighEvaluator{};
+            let eval = HighEvaluator::new();
 
             let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
@@ -144,7 +156,7 @@ mod tests {
         for (h, expected_str) in hands {
             let player_hand = Card::vec_from_str(h).unwrap();
 
-            let eval = HighEvaluator{};
+            let eval = HighEvaluator::new();
 
             let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
@@ -159,7 +171,7 @@ mod tests {
         for (h, expected_str) in hands {
             let player_hand = Card::vec_from_str(h).unwrap();
 
-            let eval = HighEvaluator{};
+            let eval = HighEvaluator::new();
 
             let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
@@ -174,7 +186,7 @@ mod tests {
         for (h, expected_str) in hands {
             let player_hand = Card::vec_from_str(h).unwrap();
 
-            let eval = HighEvaluator{};
+            let eval = HighEvaluator::new();
 
             let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
@@ -189,7 +201,7 @@ mod tests {
         for (h, expected_str) in hands {
             let player_hand = Card::vec_from_str(h).unwrap();
 
-            let eval = HighEvaluator{};
+            let eval = HighEvaluator::new();
 
             let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
