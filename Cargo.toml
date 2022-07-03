@@ -39,6 +39,9 @@ overflow-checks = false
 opt-level = 3
 overflow-checks = false
 
+[package.metadata.docs.rs]
+all-features = true
+
 [features]
 default = []
 poker = ["dep:bincode", "dep:async-std"]
