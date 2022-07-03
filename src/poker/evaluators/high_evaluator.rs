@@ -1,7 +1,6 @@
 use async_std::task;
 
-use super::Evaluator;
-use super::LOOKUP_TABLE;
+use super::{Evaluator, init_lookup_table, LOOKUP_TABLE};
 
 use crate::core::Card;
 
@@ -56,7 +55,6 @@ fn card_to_int(c: &Card) -> i32 {
 mod tests {
     use super::*;
     use test::Bencher;
-    use super::super::init_lookup_table;
 
     #[test]
     fn threes_full_of_deuces_six_cards() {
