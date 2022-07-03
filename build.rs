@@ -20,110 +20,111 @@ use std::io::BufWriter;
 extern crate bincode;
 
 fn main() {
-    let mut ids = HashMap::<i32, i64>::with_capacity(612978);
-    let mut lookup_table = Vec::<i32>::from([0; 32487834]);
-    
-    let mut num_ids = 1;
-    let mut num_cards = 0;
-    let mut max_hr = 0;
-    let mut max_id = 0;
+    let _ = std::thread::Builder::new().stack_size(1024 * 1024 * 1024).spawn(|| {
+        let mut ids = HashMap::<i32, i64>::with_capacity(612978);
+        let mut lookup_table = Vec::<i32>::from([0; 32487834]);
 
-    let mut count = 0;
+        let mut num_ids = 1;
+        let mut num_cards = 0;
+        let mut max_hr = 0;
+        let mut max_id = 0;
 
-    let mut hand_type_sum: [i32; 10] = [0; 10];
+        let mut count = 0;
 
-    println!("\nGetting Card IDs!");
-    {
-        let mut id_num = 0;
-        while ids.contains_key(&id_num) || id_num == 0 {
-            for card in 1..53 {
-                let id = make_id(&mut num_cards, *ids.get(&id_num).or(Some(&0)).unwrap(), card);
-                if num_cards < 7 {
-                    save_id(&mut ids, &mut num_ids, &mut max_id, id);
-                }
-            }
+        let mut hand_type_sum: [i32; 10] = [0; 10];
 
-            print!("\rID - {}", id_num);
-
-            id_num += 1;
-        }
-    }
-
-    println!("\nSetting HandRanks!");
-
-    {
-        let mut id_num = 0;
-        while ids.contains_key(&id_num) || id_num == 0 {
-            for card in 1..53 {
-                let id = make_id(&mut num_cards, *ids.get(&id_num).unwrap_or(&0), card);
-
-                let id_slot;
-                if num_cards < 7 {
-                    id_slot = save_id(&mut ids, &mut num_ids, &mut max_id, id) * 53 + 53;
-                } else {
-                    id_slot = do_eval(id).expect("Failed: card num was not between 5-7");
+        println!("\nGetting Card IDs!");
+        {
+            let mut id_num = 0;
+            while ids.contains_key(&id_num) || id_num == 0 {
+                for card in 1..53 {
+                    let id = make_id(&mut num_cards, *ids.get(&id_num).or(Some(&0)).unwrap(), card);
+                    if num_cards < 7 {
+                        save_id(&mut ids, &mut num_ids, &mut max_id, id);
+                    }
                 }
 
-                max_hr = id_num * 53 + card + 53;
-                lookup_table[max_hr as usize] = id_slot;
+                print!("\rID - {}", id_num);
+
+                id_num += 1;
             }
-
-            if num_cards == 6 || num_cards == 7 {
-                lookup_table[(id_num * 53 + 53) as usize] = do_eval(*ids.get(&id_num).unwrap_or(&0)).expect("Failed: card num was not between 5-7");
-            }
-
-            print!("\rID - {}", id_num);
-
-            id_num += 1;
         }
-    }
 
-    println!("\nNumber IDs = {}\nmaxHR = {}", num_ids, max_hr);
+        println!("\nSetting HandRanks!");
 
-    for c0 in 1..53 {
-        let u0 = lookup_table[(53 + c0) as usize];
-        for c1 in (c0+1)..53 {
-            let u1 = lookup_table[(u0 + c1) as usize];
-            for c2 in (c1+1)..53 {
-                let u2 = lookup_table[(u1 + c2) as usize];
-                for c3 in (c2+1)..53 {
-                    let u3 = lookup_table[(u2 + c3) as usize];
-                    for c4 in (c3+1)..53 {
-                        let u4 = lookup_table[(u3 + c4) as usize];
-                        for c5 in (c4+1)..53 {
-                            let u5 = lookup_table[(u4 + c5) as usize];
-                            for c6 in (c5+1)..53 {
-                                let u6 = lookup_table[(u5 + c6) as usize];
-                                hand_type_sum[(u6 >> 12) as usize] += 1;
-                                count += 1;
+        {
+            let mut id_num = 0;
+            while ids.contains_key(&id_num) || id_num == 0 {
+                for card in 1..53 {
+                    let id = make_id(&mut num_cards, *ids.get(&id_num).unwrap_or(&0), card);
+
+                    let id_slot;
+                    if num_cards < 7 {
+                        id_slot = save_id(&mut ids, &mut num_ids, &mut max_id, id) * 53 + 53;
+                    } else {
+                        id_slot = do_eval(id).expect("Failed: card num was not between 5-7");
+                    }
+
+                    max_hr = id_num * 53 + card + 53;
+                    lookup_table[max_hr as usize] = id_slot;
+                }
+
+                if num_cards == 6 || num_cards == 7 {
+                    lookup_table[(id_num * 53 + 53) as usize] = do_eval(*ids.get(&id_num).unwrap_or(&0)).expect("Failed: card num was not between 5-7");
+                }
+
+                print!("\rID - {}", id_num);
+
+                id_num += 1;
+            }
+        }
+
+        println!("\nNumber IDs = {}\nmaxHR = {}", num_ids, max_hr);
+
+        for c0 in 1..53 {
+            let u0 = lookup_table[(53 + c0) as usize];
+            for c1 in (c0+1)..53 {
+                let u1 = lookup_table[(u0 + c1) as usize];
+                for c2 in (c1+1)..53 {
+                    let u2 = lookup_table[(u1 + c2) as usize];
+                    for c3 in (c2+1)..53 {
+                        let u3 = lookup_table[(u2 + c3) as usize];
+                        for c4 in (c3+1)..53 {
+                            let u4 = lookup_table[(u3 + c4) as usize];
+                            for c5 in (c4+1)..53 {
+                                let u5 = lookup_table[(u4 + c5) as usize];
+                                for c6 in (c5+1)..53 {
+                                    let u6 = lookup_table[(u5 + c6) as usize];
+                                    hand_type_sum[(u6 >> 12) as usize] += 1;
+                                    count += 1;
+                                }
                             }
                         }
                     }
                 }
             }
         }
-    }
 
-    for i in 0..10 {
-        println!("Hand rank {}: {}", i, hand_type_sum[i]);
-    }
+        for i in 0..10 {
+            println!("Hand rank {}: {}", i, hand_type_sum[i]);
+        }
 
-    println!("Total hands = {}", count);
-    println!("Table size: {}, capacity: {}", lookup_table.len(), lookup_table.capacity());
+        println!("Total hands = {}", count);
+        println!("Table size: {}, capacity: {}", lookup_table.len(), lookup_table.capacity());
 
-    let out_dir = std::env::var("OUT_DIR").unwrap();
-    let full_path = &format!("{}/src/poker/evaluators/HandRanks.dat", out_dir);
-    println!("{}", full_path);
-    let path = Path::new(full_path);
-    let parent_dir = path.parent().unwrap();
-    std::fs::create_dir_all(parent_dir).unwrap();
+        let out_dir = std::env::var("OUT_DIR").unwrap();
+        let full_path = &format!("{}/src/poker/evaluators/HandRanks.dat", out_dir);
+        println!("{}", full_path);
+        let path = Path::new(full_path);
+        let parent_dir = path.parent().unwrap();
+        std::fs::create_dir_all(parent_dir).unwrap();
 
-    let f = BufWriter::new(File::create(path).unwrap());
-    
-    bincode::serialize_into(f, &lookup_table).expect("Failed to write to file");
+        let f = BufWriter::new(File::create(path).unwrap());
 
-    println!("cargo:rerun-if-changed=build.rs")
+        bincode::serialize_into(f, &lookup_table).expect("Failed to write to file");
 
+        println!("cargo:rerun-if-changed=build.rs");
+    }).unwrap().join();
 }
 
 fn make_id(num_cards: &mut i32, id_in: i64, mut newcard: i32) -> i64 {
