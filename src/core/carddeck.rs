@@ -20,10 +20,12 @@ use super::{Card, Value, Suit};
 ///
 /// Example
 /// ```rust
-/// let mut deck = CardDeck::new().unwrap();
-/// let hand = deck.deal_cards(2).unwrap();
+/// use playing_cards::core::CardDeck;
 ///
-/// println!("{:?}", hand); // Two random cards from the deck
+/// let mut deck = CardDeck::new().unwrap();
+/// let (hand, _) = deck.deal_cards(2);
+///
+/// println!("{:?}", hand.unwrap()); // Two random cards from the deck
 /// ```
 pub struct CardDeck {
     deck: Vec<Card>,
@@ -39,6 +41,8 @@ impl CardDeck {
     ///
     /// Example
     /// ```rust
+    /// use playing_cards::core::CardDeck;
+    ///
     /// for _ in 0..10 {
     ///     let mut deck = CardDeck::new().unwrap();
     ///
@@ -46,7 +50,8 @@ impl CardDeck {
     ///     // chance at least one of the ten lines are the same is:
     ///     // 1 - x!/(x-10)!/x^10
     ///     // where x == 52! / (52-5)! which equates to about 1.442e-7
-    ///     println!("{:?}", deck.deal_cards(5).unwrap());
+    ///     let (hand, _) = deck.deal_cards(5);
+    ///     println!("{:?}", hand.unwrap());
     /// }
     /// ```
     pub fn new() -> Result<CardDeck, Error> {
@@ -74,22 +79,28 @@ impl CardDeck {
     ///
     /// Examples
     /// ```rust
+    /// use playing_cards::core::CardDeck;
+    ///
     /// for _ in 0..10 {
-    ///     let mut deck = CardDeck::new_with_seed(1337).unwrap();
+    ///     let mut deck = CardDeck::new_with_seed(1337);
     ///
     ///     // Every single line should produce the same 5 cards in the same exact order because
     ///     // we gave each deck the same seed.
-    ///     println!("{:?}", deck.deal_cards(5).unwrap());
+    ///     let (hand, _) = deck.deal_cards(5);
+    ///     println!("{:?}", hand.unwrap());
     /// }
     /// ```
     ///
     /// ```rust
+    /// use playing_cards::core::CardDeck;
+    ///
     /// for i in 0..10 {
-    ///     let mut deck = CardDeck::new_with_seed(i).unwrap();
+    ///     let mut deck = CardDeck::new_with_seed(i);
     ///
     ///     // Each line should be different from one another, but if you rerun this code again,
     ///     // it will print out the exact 10 lines again.
-    ///     println!("{:?}", deck.deal_cards(5).unwrap());
+    ///     let (hand, _) = deck.deal_cards(5);
+    ///     println!("{:?}", hand.unwrap());
     /// }
     /// ```
     ///
@@ -152,16 +163,18 @@ impl CardDeck {
     ///
     /// If there is not enough cards remaining in the deck, it will reshuffle the mucked card back
     /// into the deck and redeal them out. If there are no more cards left, this method will return
-    /// None.
+    /// None. The method also returns 
     ///
     /// Examples
     /// ```rust
-    /// let mut player_hands: [Vec<Card>; 10] = [vec![]; 10];
+    /// use playing_cards::core::{Card, CardDeck};
+    ///
+    /// let mut player_hands: Vec<Vec<Card>> = Vec::new();
     ///
     /// let mut deck = CardDeck::new().unwrap();
     /// for i in 0..10 {
-    ///     if let Some(hand) = deck.deal_cards(2) { // 2 cards per player would require 20 cards
-    ///         player_hands[i] = hand;
+    ///     if let (Some(hand), _) = deck.deal_cards(2) { // 2 cards per player would require 20 cards
+    ///         player_hands.push(hand);
     ///     } else {
     ///         // Should never reach here
     ///         panic!("Ran out of cards!");
@@ -171,13 +184,15 @@ impl CardDeck {
     /// println!("{:?}", player_hands);
     /// ```
     ///
-    /// ```rust
-    /// let mut player_hands: [Vec<Card>; 10] = [vec![]; 10];
+    /// ```rust should_panic
+    ///  use playing_cards::core::{Card, CardDeck};
+    ///
+    /// let mut player_hands: Vec<Vec<Card>> = Vec::new();
     ///
     /// let mut deck = CardDeck::new().unwrap();
     /// for i in 0..10 {
-    ///     if let Some(hand) = deck.deal_cards(6) { // 6 cards per player would require 60 cards, but there's only 52
-    ///         player_hands[i] = hand;
+    ///     if let (Some(hand), _) = deck.deal_cards(6) { // 6 cards per player would require 60 cards, but there's only 52
+    ///         player_hands.push(hand);
     ///     } else {
     ///         panic!("Ran out of cards!");
     ///     }
