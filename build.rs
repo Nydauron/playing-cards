@@ -14,6 +14,7 @@ use std::collections::HashMap;
 use std::cmp::min;
 use std::convert::TryInto;
 use std::fs::File;
+use std::path::Path;
 use std::io::BufWriter;
 
 extern crate bincode;
@@ -110,7 +111,14 @@ fn main() {
     println!("Total hands = {}", count);
     println!("Table size: {}, capacity: {}", lookup_table.len(), lookup_table.capacity());
 
-    let f = BufWriter::new(File::create("src/poker/evaluators/HandRanks.dat").unwrap());
+    let out_dir = std::env::var("OUT_DIR").unwrap();
+    let full_path = &format!("{}/src/poker/evaluators/HandRanks.dat", out_dir);
+    println!("{}", full_path);
+    let path = Path::new(full_path);
+    let parent_dir = path.parent().unwrap();
+    std::fs::create_dir_all(parent_dir).unwrap();
+
+    let f = BufWriter::new(File::create(path).unwrap());
     
     bincode::serialize_into(f, &lookup_table).expect("Failed to write to file");
 

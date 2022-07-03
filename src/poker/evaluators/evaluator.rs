@@ -6,14 +6,12 @@ extern crate bincode;
 
 lazy_static! {
     pub static ref LOOKUP_TABLE: Vec<i32> = {
-        let buf = include_bytes!("HandRanks.dat");
+        let buf = include_bytes!(concat!(env!("OUT_DIR"), "/src/poker/evaluators/HandRanks.dat"));
         // Here is something to help improve this:
         // We use abomonation (https://docs.rs/abomonation/latest/abomonation/index.html) to help encode and decode the struct
         // When building the library, we have the struct be generated then encoded and then write all of the bytes to a .dat file
         // Then, we use include_bytes!() and decode the struct
 
-        // improve deserialization so that we can use the orginial byte-encoded file instead
-        // TODO: Use a build script to generate said file https://doc.rust-lang.org/cargo/reference/build-scripts.html
         let mut lookup_table: Vec<i32> = bincode::deserialize(buf).unwrap();
         lookup_table.shrink_to_fit();
         lookup_table
