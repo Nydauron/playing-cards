@@ -1,3 +1,10 @@
+#![warn(missing_docs)]
+
+//! # playing-cards
+//! 
+//! `playing-cards` is a library for developing card games. Ranging from dealing cards from a
+//! deck to hand evaluations.
+
 #![feature(test)]
 extern crate test;
 
