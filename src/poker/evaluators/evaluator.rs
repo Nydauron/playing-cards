@@ -1,22 +1,21 @@
 use crate::core::{Card, Value};
 
 use std::string::String;
+use once_cell::sync::Lazy;
 
 extern crate bincode;
 
-lazy_static! {
-    pub static ref LOOKUP_TABLE: Vec<i32> = {
-        let buf = include_bytes!(concat!(env!("OUT_DIR"), "/src/poker/evaluators/HandRanks.dat"));
-        // Here is something to help improve this:
-        // We use abomonation (https://docs.rs/abomonation/latest/abomonation/index.html) to help encode and decode the struct
-        // When building the library, we have the struct be generated then encoded and then write all of the bytes to a .dat file
-        // Then, we use include_bytes!() and decode the struct
+pub static LOOKUP_TABLE: Lazy<Vec<i32>> = Lazy::new(|| {
+    let buf = include_bytes!(concat!(env!("OUT_DIR"), "/src/poker/evaluators/HandRanks.dat"));
+    // Here is something to help improve this:
+    // We use abomonation (https://docs.rs/abomonation/latest/abomonation/index.html) to help encode and decode the struct
+    // When building the library, we have the struct be generated then encoded and then write all of the bytes to a .dat file
+    // Then, we use include_bytes!() and decode the struct
 
-        let mut lookup_table: Vec<i32> = bincode::deserialize(buf).unwrap();
-        lookup_table.shrink_to_fit();
-        lookup_table
-    };
-}
+    let mut lookup_table: Vec<i32> = bincode::deserialize(buf).unwrap();
+    lookup_table.shrink_to_fit();
+    lookup_table
+});
 
 /// A Trait definition for all poker evaluators.
 pub trait Evaluator {
@@ -206,6 +205,6 @@ pub trait Evaluator {
 /// memory.
 pub fn init_lookup_table() {
     print!("Loading LOOKUP_TABLE ... ");
-    lazy_static::initialize(&LOOKUP_TABLE);
+    Lazy::force(&LOOKUP_TABLE);
     println!("Done!");
 }
