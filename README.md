@@ -10,7 +10,9 @@ Playing Cards is a Rust library that implements playing cards, primarily focussi
 Here is a list of types included within the Core package:
 
 - Card
-- Carddeck
+- BaseDeck (TODO)
+  - CardDeck
+  - ShortDeck (TODO)
 
 ### Poker
 
