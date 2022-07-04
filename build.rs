@@ -1,5 +1,3 @@
-#![allow(arithmetic_overflow)]
-
 /**
  * This script is a Rust-ported script from Ray Wotton's 2+2 generate_table script and Paul
  * Sneeze's Perfect Hash evaluator from XPokerEval repo.
@@ -16,6 +14,7 @@ use std::convert::TryInto;
 use std::fs::File;
 use std::path::Path;
 use std::io::BufWriter;
+use std::num::Wrapping;
 
 extern crate bincode;
 
@@ -352,7 +351,7 @@ fn eval_5_hand_fast(c1: i32, c2: i32, c3: i32, c4: i32, c5: i32) -> i32 {
     if s != 0 {
         return s;
     }
-    return HASH_VALUES[find_fast(((c1 & 0xff) * (c2 & 0xff) * (c3 & 0xff) * (c4 & 0xff) * (c5 & 0xff)) as u32) as usize];
+    return HASH_VALUES[find_fast(Wrapping(((c1 & 0xff) * (c2 & 0xff) * (c3 & 0xff) * (c4 & 0xff) * (c5 & 0xff)) as u32)) as usize];
 }
 
 fn eval_7_hand_fast(cards: [i32; 7]) -> i32 {
@@ -371,15 +370,15 @@ fn eval_7_hand_fast(cards: [i32; 7]) -> i32 {
     best
 }
 
-fn find_fast(mut u: u32) -> u32 {
-    u += 0xe91aaa35;
+fn find_fast(mut u: Wrapping<u32>) -> u32 {
+    u += Wrapping(0xe91aaa35);
     u ^= u >> 16;
     u += u << 8;
     u ^= u >> 4;
-    let b = (u >> 8) & 0x1ff;
+    let b = (u >> 8) & Wrapping(0x1ff);
     let a = (u + (u << 2)) >> 19;
-    let r = a ^ HASH_ADJUST[b as usize];
-    return r;
+    let r = a ^ Wrapping(HASH_ADJUST[b.0 as usize]);
+    return r.0;
 }
 
 static PERM7: [[usize; 5]; 21] = [
