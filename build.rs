@@ -238,8 +238,8 @@ fn save_id(ids: &mut HashMap<i32, i64>, num_ids: &mut i32, max_id: &mut i64, id:
     }
 
     for i in (high..*num_ids).rev() {
-        if let Some(id) = ids.get(&i) {
-            ids.insert(i + 1, *id);
+        if let Some(&id) = ids.get(&i) {
+            ids.insert(i + 1, id);
             ids.remove(&i);
         }
     }
