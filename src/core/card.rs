@@ -252,6 +252,12 @@ impl Card {
         Ok(cards)
     }
 
+    /// Turns card into integer.
+    ///
+    /// This is typically used for when travesing the lookup table.
+    pub fn to_int(&self) -> i32 {
+        ((self.value as i32) * 4) + (self.suit as i32) + 1
+    }
 }
 
 impl From<i32> for Card {

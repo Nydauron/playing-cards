@@ -36,7 +36,7 @@ impl Evaluator for HighEvaluator {
         let mut rank = 53;
         
         for c in all_cards {
-            rank = LOOKUP_TABLE[(rank + card_to_int(&c)) as usize];
+            rank = LOOKUP_TABLE[(rank + c.to_int()) as usize];
         }
 
         if card_count < 7 {
@@ -45,10 +45,6 @@ impl Evaluator for HighEvaluator {
             Ok(Vec::from([rank as u64]))
         }
     }
-}
-
-fn card_to_int(c: &Card) -> i32 {
-    ((c.value as i32) * 4) + (c.suit as i32) + 1
 }
 
 #[cfg(test)]
