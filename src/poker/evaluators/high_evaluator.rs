@@ -27,8 +27,8 @@ impl Evaluator for HighEvaluator {
     type Output = HighRank;
     /// Evaluates the high hand for one player.
     ///
-    /// Returns a `HighRank` than can be compared against directly against other ranks. If the
-    /// total card count is not with the domain [5, 7], then an error will return.
+    /// Returns a `HighRank` than can be compared against directly against other `HighRank`s. If
+    /// the total card count is not with the domain [5, 7], then an error will return.
     ///
     /// Examples
     /// ```rust

@@ -24,7 +24,7 @@ impl Evaluator for LowEvaluator {
     type Output = LowRank;
     /// Evaluates the low hand for one player.
     ///
-    /// Returns a `LowRank` than can be compared against directly against other ranks. If the
+    /// Returns a `LowRank` than can be compared against directly against other `LowRank`s. If the
     /// total card count is not with the domain [5, 7], then an error will return.
     ///
     /// Examples
