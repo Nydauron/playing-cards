@@ -1,13 +1,20 @@
 #![warn(missing_docs)]
 
 //! # playing-cards
-//! 
+//!
 //! `playing-cards` is a library for developing card games. Ranging from dealing cards from a
 //! deck to hand evaluations.
-//! 
-//! DISCLAIMER:
+//!
+//! ## DISCLAIMER
 //! This library is still in early development. A lot of features may be subject to breaking
 //! changes across minor version changes. Be sure to check the docs for updates on any changes.
+//!
+//! ## Breaking Changes from 0.0.4 to 0.1.0
+//! - `Rank`s are now primarily used for storing handing rankings instead of `u64`s.
+//! - `Rank`s are returned by `evaluate_hand()` instead of a `Vec<u64>`. Each Evaluator can return
+//! different types with the use of `type Output`.
+//! - `get_string()` has been removed from the `Evaluator` trait. This has been moved to the `Rank`
+//! trait.
 
 #![cfg_attr(feature = "unstable", feature(test))]
 

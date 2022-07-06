@@ -2,6 +2,7 @@
 
 use super::Rank;
 use crate::core::Value;
+use std::cmp::Ordering;
 
 /// Distinguhes a hand rank relative to finding the best high hand.
 /// 
@@ -15,6 +16,24 @@ impl HighRank {
     /// Creates a new HighRank struct
     pub fn new(strength: u64) -> Self {
         Self { rank_strength: strength }
+    }
+}
+
+// PartialOrd and PartialEq unfortunately are repeated for all Rank types
+// This is because there is no way to implement generic types for foriegn traits, so alas
+impl PartialOrd for HighRank {
+    fn partial_cmp(&self, other: &HighRank) -> Option<Ordering> {
+        Some(self.get_rank_strength().cmp(&other.get_rank_strength()))
+    }
+}
+
+impl PartialEq for HighRank {
+    fn eq(&self, other: &HighRank) -> bool {
+        self.get_rank_strength() == other.get_rank_strength()
+    }
+
+    fn ne(&self, other: &HighRank) -> bool {
+        self.get_rank_strength() != other.get_rank_strength()
     }
 }
 
