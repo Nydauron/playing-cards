@@ -39,7 +39,7 @@ impl PartialEq for HighRank {
 
 impl Rank for HighRank {
     fn get_rank_strength(&self) -> u64 {
-        self.rank_strength    
+        self.rank_strength
     }
 
     fn get_string(&self) -> Result<String, &'static str> {
