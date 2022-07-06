@@ -29,6 +29,51 @@ impl Evaluator for HighEvaluator {
     ///
     /// Returns a `HighRank` than can be compared against directly against other ranks. If the
     /// total card count is not with the domain [5, 7], then an error will return.
+    ///
+    /// Examples
+    /// ```rust
+    /// use playing_cards::{core::Card, poker::{Evaluator, HighEvaluator, Rank}};
+    ///
+    /// let hand = Card::vec_from_str("5h5s").unwrap();
+    /// let board = Card::vec_from_str("2dTdKs5sAc").unwrap();
+    ///
+    /// let eval = HighEvaluator::new();
+    ///
+    /// let rank = eval.evaluate_hand(&hand, &board).unwrap();
+    ///
+    /// assert_eq!(rank.get_string().unwrap(), "Trip 5s");
+    /// ```
+    ///
+    /// ```rust
+    /// use playing_cards::{core::Card, poker::{Evaluator, HighEvaluator, Rank}};
+    ///
+    /// let hand = Card::vec_from_str("KhAs").unwrap();
+    /// let board = Card::vec_from_str("2cQdKs5dAd").unwrap();
+    ///
+    /// let eval = HighEvaluator::new();
+    ///
+    /// let rank = eval.evaluate_hand(&hand, &board).unwrap();
+    ///
+    /// assert_eq!(rank.get_string().unwrap(), "Two Pair of Aces and Kings");
+    /// ```
+    ///
+    /// ```rust
+    /// use playing_cards::{core::Card, poker::{Evaluator, HighEvaluator, Rank}};
+    ///
+    /// let hero_hand = Card::vec_from_str("KhQc").unwrap();
+    /// let villan_hand = Card::vec_from_str("Ac2c").unwrap();
+    /// let board = Card::vec_from_str("AhKsQs9c2h").unwrap();
+    ///
+    /// let eval = HighEvaluator::new();
+    ///
+    /// let hero_rank = eval.evaluate_hand(&hero_hand, &board).unwrap();
+    /// let villan_rank = eval.evaluate_hand(&villan_hand, &board).unwrap();
+    ///
+    /// assert_eq!(hero_rank.get_string().unwrap(), "Two Pair of Kings and Queens");
+    /// assert_eq!(villan_rank.get_string().unwrap(), "Two Pair of Aces and 2s");
+    ///
+    /// assert!(hero_rank < villan_rank); // Villan's hand is better than the hero's
+    /// ```
     fn evaluate_hand(&self, player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Self::Output, &str> {
         let card_count = player_hand.len() + board.len();
         if card_count < 5 || card_count > 7 {
@@ -83,6 +128,35 @@ mod tests {
         assert_eq!(1, player1_rank.get_rank_strength() & 0xFFF);
         
         assert_eq!(player1_rank, player2_rank);
+    }
+
+    #[test]
+    fn different_rank_by_1() {
+        let player1_hand = Card::vec_from_str("2s3s4s5s8s").unwrap(); // stronger high hand
+        let player2_hand = Card::vec_from_str("2h3h4h5h7h").unwrap();
+
+        let eval = HighEvaluator::new();
+
+        let player1_rank = eval.evaluate_hand(&player1_hand, &Vec::new()).expect("Evaluation failed");
+        let player2_rank = eval.evaluate_hand(&player2_hand, &Vec::new()).expect("Evaluation failed");
+
+        assert!(player1_rank > player2_rank);
+    }
+
+    #[test]
+    fn cooler_holdem_example() {
+        let board = Card::vec_from_str("2d9d2c9h3h").unwrap();
+        let player1_hand = Card::vec_from_str("8h9s").unwrap();
+        let player2_hand = Card::vec_from_str("9c3s").unwrap();
+
+        let eval = HighEvaluator::new();
+
+        let player1_rank = eval.evaluate_hand(&player1_hand, &board).expect("Evaluation failed");
+        let player2_rank = eval.evaluate_hand(&player2_hand, &board).expect("Evaluation failed");
+
+        assert_eq!(player1_rank.get_string().expect("Player 1 hand generated bad rank"), "9s Full of 2s");
+        assert_eq!(player2_rank.get_string().expect("Player 2 hand generated bad rank"), "9s Full of 3s");
+        assert!(player1_rank < player2_rank);
     }
 
     #[test]
