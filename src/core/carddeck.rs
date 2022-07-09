@@ -2,11 +2,11 @@ use std::io::{Cursor, Error};
 use getrandom;
 use byteorder::{BigEndian, ReadBytesExt};
 
-extern crate sfmt;
 extern crate rand;
 
 use rand::seq::SliceRandom;
 use rand_core::SeedableRng;
+use rand_xoshiro::Xoshiro256PlusPlus;
 
 use strum::IntoEnumIterator;
 
@@ -30,7 +30,7 @@ use super::{Card, Value, Suit};
 pub struct CardDeck {
     deck: Vec<Card>,
     seed: u64,
-    mt:   sfmt::SFMT,
+    mt:   Xoshiro256PlusPlus,
     muck: Vec<Card>,
 }
 
@@ -109,12 +109,12 @@ impl CardDeck {
     /// use `new()` in these cases since the entropy from the system cannot be replicated across systems easily
     /// unless the seed generated is shared.
     pub fn new_with_seed(seed: u64) -> CardDeck {
-        let mt = sfmt::SFMT::seed_from_u64(seed);
+        let mt = Xoshiro256PlusPlus::seed_from_u64(seed);
 
-        CardDeck::new_with_mt(& mt, seed)
+        CardDeck::new_with_mt(&mt, seed)
     }
 
-    fn new_with_mt(mt: & sfmt::SFMT, seed: u64) -> CardDeck {
+    fn new_with_mt(mt: &Xoshiro256PlusPlus, seed: u64) -> CardDeck {
         let mut d: Vec<Card> = Vec::with_capacity(52);
 
         for s in Suit::iter() {
@@ -298,7 +298,7 @@ mod tests {
     #[test]
     #[ignore]
     fn test_monte_carlo_2kings_adjacent() {
-        let iters = 300000;
+        let iters = 150000;
 
         let count : i32 = (0..iters).into_par_iter().map(|_| {
             let mut deck = CardDeck::new().unwrap();

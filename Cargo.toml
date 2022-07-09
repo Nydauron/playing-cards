@@ -23,6 +23,7 @@ num-traits = "0.2.15"
 once_cell = { version = "1.12.1", optional = true }
 rand = "0.8.5"
 rand_core = "0.6.3"
+rand_xoshiro = "0.6.0"
 rayon = "1.5.3"
 sfmt = "0.7.0"
 strum = "0.24.1"
