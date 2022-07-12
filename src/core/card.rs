@@ -3,6 +3,8 @@ use num::traits::FromPrimitive;
 use strum_macros::EnumIter;
 use std::str::FromStr;
 
+use serde::Deserialize;
+
 /// An enum representation of the rank of a card
 ///
 /// Each value corresponds to the rank strength.
@@ -226,7 +228,8 @@ impl std::fmt::Display for Suit {
 }
 
 /// A structural representation of a playing card.
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Deserialize, Debug, PartialEq, Clone)]
+#[serde(try_from = "String")]
 pub struct Card {
     /// The Value of the Card
     pub value: Value,
@@ -269,18 +272,38 @@ impl From<i32> for Card {
     }
 }
 
-impl FromStr for Card {
-    type Err = &'static str;
-    fn from_str(s: &'_ str) -> Result<Self, Self::Err> {
+impl TryFrom<String> for Card {
+	type Error = &'static str;
+	fn try_from(s: String) -> Result<Self, Self::Error> {
         if s.len() != 2 {
-            return Err("String is not of length 2");
+            return Err("Card string is not exactly a length of 2");
         }
 
         let mut chars = s.chars();
+
+        let val = Value::try_from(chars.next().unwrap());
+        if val.is_err() {
+            return Err("Card value was not a valid character");
+        }
+        let val = val.unwrap();
+
+        let suit = Suit::try_from(chars.next().unwrap());
+        if suit.is_err() {
+            return Err("Card suit was not a valid character");
+        }
+        let suit = suit.unwrap();
+
         Ok(Card {
-            value: Value::try_from(chars.next().unwrap()).unwrap(),
-            suit: Suit::try_from(chars.next().unwrap()).unwrap(),
+            value: val,
+            suit: suit,
         })
+    }
+}
+
+impl FromStr for Card {
+    type Err = &'static str;
+    fn from_str(s: &'_ str) -> Result<Self, Self::Err> {
+        Self::try_from(s.to_string())
     }
 }
 
