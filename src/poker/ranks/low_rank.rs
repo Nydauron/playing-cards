@@ -1,6 +1,6 @@
 //! This module contains the implementation of LowRank.
 
-use super::{HighRank, Rank};
+use super::HighRank;
 use std::cmp::Ordering;
 
 /// Distinguhes a hand rank relative to finding the best low hand.
@@ -15,6 +15,20 @@ impl LowRank {
     /// Creates a new LowRank struct
     pub fn new(strength: u64) -> Self {
         Self { rank_strength: strength }
+    }
+
+    /// Gets the hand rank's strength.
+    pub fn get_rank_strength(&self) -> u64 {
+        self.rank_strength
+    }
+
+    /// Returns the string for the associated hand.
+    ///
+    /// The string is user-interperable string of the hand strength and can be used for displaying
+    /// to the user.
+    pub fn get_string(&self) -> Result<String, &'static str> {
+        let high_rank = HighRank::new(self.rank_strength);
+        high_rank.get_string()
     }
 }
 
@@ -43,16 +57,5 @@ impl PartialEq for LowRank {
 
     fn ne(&self, other: &LowRank) -> bool {
         self.get_rank_strength() != other.get_rank_strength()
-    }
-}
-
-impl Rank for LowRank {
-    fn get_rank_strength(&self) -> u64 {
-        self.rank_strength
-    }
-
-    fn get_string(&self) -> Result<String, &'static str> {
-        let high_rank = HighRank::new(self.rank_strength);
-        high_rank.get_string()
     }
 }

@@ -1,6 +1,5 @@
 //! This module contains the implementation of HighRank.
 
-use super::Rank;
 use crate::core::Value;
 use std::cmp::Ordering;
 
@@ -17,32 +16,17 @@ impl HighRank {
     pub fn new(strength: u64) -> Self {
         Self { rank_strength: strength }
     }
-}
 
-// PartialOrd and PartialEq unfortunately are repeated for all Rank types
-// This is because there is no way to implement generic types for foriegn traits, so alas
-impl PartialOrd for HighRank {
-    fn partial_cmp(&self, other: &HighRank) -> Option<Ordering> {
-        Some(self.get_rank_strength().cmp(&other.get_rank_strength()))
-    }
-}
-
-impl PartialEq for HighRank {
-    fn eq(&self, other: &HighRank) -> bool {
-        self.get_rank_strength() == other.get_rank_strength()
-    }
-
-    fn ne(&self, other: &HighRank) -> bool {
-        self.get_rank_strength() != other.get_rank_strength()
-    }
-}
-
-impl Rank for HighRank {
-    fn get_rank_strength(&self) -> u64 {
+    /// Gets the hand rank's strength.
+    pub fn get_rank_strength(&self) -> u64 {
         self.rank_strength
     }
 
-    fn get_string(&self) -> Result<String, &'static str> {
+    /// Returns the string for the associated hand.
+    ///
+    /// The string is user-interperable string of the hand strength and can be used for displaying
+    /// to the user.
+    pub fn get_string(&self) -> Result<String, &'static str> {
         let hand_rank = self.rank_strength;
         let hand_category;
         let sub_rank = hand_rank & 0xFFF;
@@ -211,5 +195,23 @@ impl Rank for HighRank {
                 return Err("Hand rank did not have a valid hand category");
             }
         }
+    }
+}
+
+// PartialOrd and PartialEq unfortunately are repeated for all Rank types
+// This is because there is no way to implement generic types for foriegn traits, so alas
+impl PartialOrd for HighRank {
+    fn partial_cmp(&self, other: &HighRank) -> Option<Ordering> {
+        Some(self.get_rank_strength().cmp(&other.get_rank_strength()))
+    }
+}
+
+impl PartialEq for HighRank {
+    fn eq(&self, other: &HighRank) -> bool {
+        self.get_rank_strength() == other.get_rank_strength()
+    }
+
+    fn ne(&self, other: &HighRank) -> bool {
+        self.get_rank_strength() != other.get_rank_strength()
     }
 }

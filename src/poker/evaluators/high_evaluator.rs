@@ -2,9 +2,7 @@ use async_std::task;
 
 use super::{Evaluator, init_lookup_table, LOOKUP_TABLE};
 
-#[allow(unused_imports)]
-use super::super::Rank;
-use super::super::HighRank;
+use super::super::{Rank, HighRank};
 
 use crate::core::Card;
 
@@ -24,7 +22,6 @@ impl HighEvaluator {
 }
 
 impl Evaluator for HighEvaluator {
-    type Output = HighRank;
     /// Evaluates the high hand for one player.
     ///
     /// Returns a `HighRank` than can be compared against directly against other `HighRank`s. If
@@ -74,7 +71,7 @@ impl Evaluator for HighEvaluator {
     ///
     /// assert!(hero_rank < villan_rank); // Villan's hand is better than the hero's
     /// ```
-    fn evaluate_hand(&self, player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Self::Output, &str> {
+    fn evaluate_hand(&self, player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Rank, &str> {
         let card_count = player_hand.len() + board.len();
         if card_count < 5 || card_count > 7 {
             return Err("Provided number of cards does not fall inclusively between 5 and 7");
@@ -90,9 +87,9 @@ impl Evaluator for HighEvaluator {
         }
 
         if card_count < 7 {
-            Ok(HighRank::new(LOOKUP_TABLE[rank as usize] as u64))
+            Ok(Rank::High(HighRank::new(LOOKUP_TABLE[rank as usize] as u64)))
         } else {
-            Ok(HighRank::new(rank as u64))
+            Ok(Rank::High(HighRank::new(rank as u64)))
         }
     }
 }

@@ -21,7 +21,6 @@ impl LowEvaluator {
 }
 
 impl Evaluator for LowEvaluator {
-    type Output = LowRank;
     /// Evaluates the low hand for one player.
     ///
     /// Returns a `LowRank` than can be compared against directly against other `LowRank`s. If the
@@ -69,9 +68,9 @@ impl Evaluator for LowEvaluator {
     ///
     /// assert!(hero_rank > villan_rank); // Hero's hand is better than the villan's
     /// ```
-    fn evaluate_hand(&self, player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Self::Output, &str> {
+    fn evaluate_hand(&self, player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Rank, &str> {
         HighEvaluator{}.evaluate_hand(player_hand, board).and_then(|high| {
-            Ok(LowRank::new(high.get_rank_strength()))
+            Ok(Rank::Low(LowRank::new(high.get_rank_strength())))
         })
     }
 }

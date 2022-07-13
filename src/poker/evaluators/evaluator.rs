@@ -1,4 +1,4 @@
-use crate::core::Card;
+use crate::{core::Card, poker::Rank};
 
 use once_cell::sync::Lazy;
 
@@ -18,13 +18,9 @@ pub static LOOKUP_TABLE: Lazy<Vec<i32>> = Lazy::new(|| {
 
 /// A Trait definition for all poker evaluators.
 pub trait Evaluator {
-    /// The output of `evaluate_hand()`.
-    ///
-    /// This should be of type `Vec<Rank>` or some type that inherits `Rank`.
-    type Output;
 
     /// Evaluates a hand for one player.
-    fn evaluate_hand(&self, player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Self::Output, &str>;
+    fn evaluate_hand(&self, player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Rank, &str>;
 }
 
 /// This function allows for the 2+2 lookup table to be loaded in. This function only needs to be

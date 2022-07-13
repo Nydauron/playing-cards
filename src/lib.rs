@@ -11,10 +11,9 @@
 //!
 //! ## Breaking Changes from 0.0.4 to 0.1.0
 //! - `Rank`s are now primarily used for storing handing rankings instead of `u64`s.
-//! - `Rank`s are returned by `evaluate_hand()` instead of a `Vec<u64>`. Each Evaluator can return
-//! different types with the use of `type Output`.
+//! - `Rank`s are returned by `Evaluator::evaluate_hand()` instead of a `Vec<u64>`.
 //! - `get_string()` has been removed from the `Evaluator` trait. This has been moved to the `Rank`
-//! trait.
+//! enum.
 
 #![cfg_attr(feature = "unstable", feature(test))]
 
