@@ -3,7 +3,6 @@ use async_std::task;
 use super::{Evaluator, init_lookup_table, LOOKUP_TABLE};
 use super::super::{Rank, HighRank};
 
-use rayon::prelude::*;
 use itertools::Itertools;
 
 use crate::core::Card;
@@ -13,7 +12,7 @@ use crate::core::Card;
 /// The evaluator requires that the player has at least 4 cards and the board has at least 3
 /// cards. In Omaha and Omaha-varients, the player is required to use only 2 cards from their
 /// hand and 3 from the board. This evaluator permutates through these combinations in parallel
-/// with the help of `rayon` and map-reduce.
+/// with the help of map-reduce.
 ///
 /// Some games that can make use of this evaluator include but are not limited to Omaha, Omaha 8
 /// (Hi/Lo), Big O, and Drawmaha.
@@ -98,8 +97,10 @@ impl Evaluator for OmahaHighEvaluator {
         let hand_combinations: Vec<Vec<Card>> = player_hand.clone().into_iter().clone().combinations(2).collect();
         let board_combinations: Vec<Vec<Card>> = board.clone().into_iter().clone().combinations(3).collect();
 
-        Ok(Rank::High(hand_combinations.into_par_iter().map(|player_comb| {
-            board_combinations.clone().into_par_iter().map(|mut board_comb| {
+        // Trying to run rayon map-reduce on the combinations is not efficient because of how quick
+        // using the lookup table is.
+        Ok(Rank::High(hand_combinations.into_iter().map(|player_comb| {
+            board_combinations.clone().into_iter().map(|mut board_comb| {
                 board_comb.extend(player_comb.to_owned());
                 let card_count = board_comb.len();
 
@@ -114,20 +115,20 @@ impl Evaluator for OmahaHighEvaluator {
                 } else {
                     HighRank::new(rank as u64)
                 }
-            }).reduce(|| HighRank::new(0), |a, b| {
+            }).reduce(|a, b| {
                 if a > b {
                     a
                 } else {
                     b
                 }
-            })
-        }).reduce(|| HighRank::new(0), |a, b| {
+            }).unwrap()
+        }).reduce(|a, b| {
             if a > b {
                 a
             } else {
                 b
             }
-        })))
+        }).unwrap()))
     }
 }
 
@@ -159,5 +160,23 @@ mod tests {
 
         let string_rank = player_rank.get_string().expect("Hand generated bad rank");
         assert_eq!("Two Pair of Queens and 3s", string_rank);
+    }
+}
+
+#[cfg(all(feature = "unstable", test))]
+mod bench {
+    use super::*;
+    use test::Bencher;
+
+    #[bench]
+    fn omaha_high_hands(b: &mut Bencher) {
+        init_lookup_table();
+        let player_hand = Card::vec_from_str("2s3c4h7cJhKs").unwrap();
+        let board = Card::vec_from_str("5h6dAsTdTh").unwrap();
+        b.iter(|| {
+            let eval = OmahaHighEvaluator::new();
+
+            let _player1_rank = eval.evaluate_hand(&player_hand, &board).expect("Evaluation failed");
+        })
     }
 }
