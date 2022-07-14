@@ -7,6 +7,8 @@ use super::super::{Rank, HighRank};
 use crate::core::Card;
 
 /// The wrapper struct for the High Evaluator.
+///
+/// This evaluator is typically used for games like Texas Hold'em, Five Card Draw, and Stud.
 pub struct HighEvaluator;
 
 impl HighEvaluator {

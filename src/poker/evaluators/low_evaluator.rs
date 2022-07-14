@@ -6,6 +6,8 @@ use super::super::{Rank, LowRank};
 use crate::core::Card;
 
 /// The wrapper struct for the Low Evaluator.
+///
+/// This evaluator is typically used for games like 2-7 Lowball Draw.
 pub struct LowEvaluator;
 
 impl LowEvaluator {
