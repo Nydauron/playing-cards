@@ -9,3 +9,6 @@ pub use self::high_evaluator::HighEvaluator;
 
 mod low_evaluator;
 pub use self::low_evaluator::LowEvaluator;
+
+mod omaha_hi_evaluator;
+pub use self::omaha_hi_evaluator::OmahaHighEvaluator;
