@@ -19,7 +19,7 @@ use crate::core::Card;
 pub struct OmahaHighEvaluator;
 
 impl OmahaHighEvaluator {
-    /// Creates a new `HighEvaluator`.
+    /// Creates a new `OmahaHighEvaluator`.
     ///
     /// Initializes the lookup table if it isn't already.
     pub fn new() -> Self {
