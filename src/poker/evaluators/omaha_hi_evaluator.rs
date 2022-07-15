@@ -16,6 +16,55 @@ use crate::core::Card;
 ///
 /// Some games that can make use of this evaluator include but are not limited to Omaha, Omaha 8
 /// (Hi/Lo), Big O, and Drawmaha.
+///
+/// Examples
+/// ```rust
+/// use playing_cards::{core::Card, poker::{Evaluator, OmahaHighEvaluator, Rank}};
+///
+/// let hand = Card::vec_from_str("2cAsAcKc").unwrap();
+/// let board = Card::vec_from_str("Ks2sTd8h7d").unwrap();
+///
+/// let eval = OmahaHighEvaluator::new();
+///
+/// let rank = eval.evaluate_hand(&hand, &board).unwrap()[0];
+///
+/// // Notice: Even though we can Aces in our hand, we can only use 2 cards from out hand to
+/// // make the best hand (e.g. the K and the 2 pair with the board).
+/// assert_eq!(rank.get_string().unwrap(), "Two Pair of Kings and 2s");
+/// ```
+///
+/// ```rust
+/// use playing_cards::{core::Card, poker::{Evaluator, OmahaHighEvaluator, Rank}};
+///
+/// let hand = Card::vec_from_str("AcKhKsTd").unwrap();
+/// let board = Card::vec_from_str("Tc5c3s6cQc").unwrap();
+///
+/// let eval = OmahaHighEvaluator::new();
+///
+/// let rank = eval.evaluate_hand(&hand, &board).unwrap()[0];
+///
+/// // Notice: Even though we have the Ace of Clubs in out hand, we do not have a flush, as we
+/// // need another club within our hand.
+/// assert_eq!(rank.get_string().unwrap(), "Pair of Kings");
+/// ```
+///
+/// ```rust
+/// use playing_cards::{core::Card, poker::{Evaluator, OmahaHighEvaluator, Rank}};
+///
+/// let hero_hand = Card::vec_from_str("5s6c9s7c").unwrap();
+/// let villan_hand = Card::vec_from_str("AhKdAsTh").unwrap();
+/// let board = Card::vec_from_str("8hTcAdQs6s").unwrap();
+///
+/// let eval = OmahaHighEvaluator::new();
+///
+/// let hero_rank = eval.evaluate_hand(&hero_hand, &board).unwrap()[0];
+/// let villan_rank = eval.evaluate_hand(&villan_hand, &board).unwrap()[0];
+///
+/// assert_eq!(hero_rank.get_string().unwrap(), "10 High Straight");
+/// assert_eq!(villan_rank.get_string().unwrap(), "Trip Aces");
+///
+/// assert!(hero_rank > villan_rank); // Hero's hand is better than the villans's
+/// ```
 pub struct OmahaHighEvaluator;
 
 impl OmahaHighEvaluator {
@@ -36,55 +85,6 @@ impl Evaluator for OmahaHighEvaluator {
     /// Returns a `Vec<HighRank>` than can be compared directly against other `HighRank`s. If
     /// the player's hand contains less than 4 cards or the board contains less than 3 cards,
     /// then an error will return.
-    ///
-    /// Examples
-    /// ```rust
-    /// use playing_cards::{core::Card, poker::{Evaluator, OmahaHighEvaluator, Rank}};
-    ///
-    /// let hand = Card::vec_from_str("2cAsAcKc").unwrap();
-    /// let board = Card::vec_from_str("Ks2sTd8h7d").unwrap();
-    ///
-    /// let eval = OmahaHighEvaluator::new();
-    ///
-    /// let rank = eval.evaluate_hand(&hand, &board).unwrap()[0];
-    ///
-    /// // Notice: Even though we can Aces in our hand, we can only use 2 cards from out hand to
-    /// // make the best hand (e.g. the K and the 2 pair with the board).
-    /// assert_eq!(rank.get_string().unwrap(), "Two Pair of Kings and 2s");
-    /// ```
-    ///
-    /// ```rust
-    /// use playing_cards::{core::Card, poker::{Evaluator, OmahaHighEvaluator, Rank}};
-    ///
-    /// let hand = Card::vec_from_str("AcKhKsTd").unwrap();
-    /// let board = Card::vec_from_str("Tc5c3s6cQc").unwrap();
-    ///
-    /// let eval = OmahaHighEvaluator::new();
-    ///
-    /// let rank = eval.evaluate_hand(&hand, &board).unwrap()[0];
-    ///
-    /// // Notice: Even though we have the Ace of Clubs in out hand, we do not have a flush, as we
-    /// // need another club within our hand.
-    /// assert_eq!(rank.get_string().unwrap(), "Pair of Kings");
-    /// ```
-    ///
-    /// ```rust
-    /// use playing_cards::{core::Card, poker::{Evaluator, OmahaHighEvaluator, Rank}};
-    ///
-    /// let hero_hand = Card::vec_from_str("5s6c9s7c").unwrap();
-    /// let villan_hand = Card::vec_from_str("AhKdAsTh").unwrap();
-    /// let board = Card::vec_from_str("8hTcAdQs6s").unwrap();
-    ///
-    /// let eval = OmahaHighEvaluator::new();
-    ///
-    /// let hero_rank = eval.evaluate_hand(&hero_hand, &board).unwrap()[0];
-    /// let villan_rank = eval.evaluate_hand(&villan_hand, &board).unwrap()[0];
-    ///
-    /// assert_eq!(hero_rank.get_string().unwrap(), "10 High Straight");
-    /// assert_eq!(villan_rank.get_string().unwrap(), "Trip Aces");
-    ///
-    /// assert!(hero_rank > villan_rank); // Hero's hand is better than the villans's
-    /// ```
     fn evaluate_hand(&self, player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Vec<Rank>, EvaluatorError> {
         if player_hand.len() < 4 {
             return Err(EvaluatorError::NotEnoughCards("Player hand".to_string(), 4));

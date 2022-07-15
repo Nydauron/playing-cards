@@ -9,6 +9,51 @@ use crate::core::Card;
 /// The wrapper struct for the High Evaluator.
 ///
 /// This evaluator is typically used for games like Texas Hold'em, Five Card Draw, and Stud.
+///
+/// Examples
+/// ```rust
+/// use playing_cards::{core::Card, poker::{Evaluator, HighEvaluator, Rank}};
+///
+/// let hand = Card::vec_from_str("5h5s").unwrap();
+/// let board = Card::vec_from_str("2dTdKs5sAc").unwrap();
+///
+/// let eval = HighEvaluator::new();
+///
+/// let rank = eval.evaluate_hand(&hand, &board).unwrap()[0];
+///
+/// assert_eq!(rank.get_string().unwrap(), "Trip 5s");
+/// ```
+///
+/// ```rust
+/// use playing_cards::{core::Card, poker::{Evaluator, HighEvaluator, Rank}};
+///
+/// let hand = Card::vec_from_str("KhAs").unwrap();
+/// let board = Card::vec_from_str("2cQdKs5dAd").unwrap();
+///
+/// let eval = HighEvaluator::new();
+///
+/// let rank = eval.evaluate_hand(&hand, &board).unwrap()[0];
+///
+/// assert_eq!(rank.get_string().unwrap(), "Two Pair of Aces and Kings");
+/// ```
+///
+/// ```rust
+/// use playing_cards::{core::Card, poker::{Evaluator, HighEvaluator, Rank}};
+///
+/// let hero_hand = Card::vec_from_str("KhQc").unwrap();
+/// let villan_hand = Card::vec_from_str("Ac2c").unwrap();
+/// let board = Card::vec_from_str("AhKsQs9c2h").unwrap();
+///
+/// let eval = HighEvaluator::new();
+///
+/// let hero_rank = eval.evaluate_hand(&hero_hand, &board).unwrap()[0];
+/// let villan_rank = eval.evaluate_hand(&villan_hand, &board).unwrap()[0];
+///
+/// assert_eq!(hero_rank.get_string().unwrap(), "Two Pair of Kings and Queens");
+/// assert_eq!(villan_rank.get_string().unwrap(), "Two Pair of Aces and 2s");
+///
+/// assert!(hero_rank < villan_rank); // Villan's hand is better than the hero's
+/// ```
 pub struct HighEvaluator;
 
 impl HighEvaluator {
@@ -28,51 +73,6 @@ impl Evaluator for HighEvaluator {
     ///
     /// Returns a `Vec<HighRank>` than can be compared directly against other `HighRank`s. If
     /// the total card count is not with the domain [5, 7], then an error will return.
-    ///
-    /// Examples
-    /// ```rust
-    /// use playing_cards::{core::Card, poker::{Evaluator, HighEvaluator, Rank}};
-    ///
-    /// let hand = Card::vec_from_str("5h5s").unwrap();
-    /// let board = Card::vec_from_str("2dTdKs5sAc").unwrap();
-    ///
-    /// let eval = HighEvaluator::new();
-    ///
-    /// let rank = eval.evaluate_hand(&hand, &board).unwrap()[0];
-    ///
-    /// assert_eq!(rank.get_string().unwrap(), "Trip 5s");
-    /// ```
-    ///
-    /// ```rust
-    /// use playing_cards::{core::Card, poker::{Evaluator, HighEvaluator, Rank}};
-    ///
-    /// let hand = Card::vec_from_str("KhAs").unwrap();
-    /// let board = Card::vec_from_str("2cQdKs5dAd").unwrap();
-    ///
-    /// let eval = HighEvaluator::new();
-    ///
-    /// let rank = eval.evaluate_hand(&hand, &board).unwrap()[0];
-    ///
-    /// assert_eq!(rank.get_string().unwrap(), "Two Pair of Aces and Kings");
-    /// ```
-    ///
-    /// ```rust
-    /// use playing_cards::{core::Card, poker::{Evaluator, HighEvaluator, Rank}};
-    ///
-    /// let hero_hand = Card::vec_from_str("KhQc").unwrap();
-    /// let villan_hand = Card::vec_from_str("Ac2c").unwrap();
-    /// let board = Card::vec_from_str("AhKsQs9c2h").unwrap();
-    ///
-    /// let eval = HighEvaluator::new();
-    ///
-    /// let hero_rank = eval.evaluate_hand(&hero_hand, &board).unwrap()[0];
-    /// let villan_rank = eval.evaluate_hand(&villan_hand, &board).unwrap()[0];
-    ///
-    /// assert_eq!(hero_rank.get_string().unwrap(), "Two Pair of Kings and Queens");
-    /// assert_eq!(villan_rank.get_string().unwrap(), "Two Pair of Aces and 2s");
-    ///
-    /// assert!(hero_rank < villan_rank); // Villan's hand is better than the hero's
-    /// ```
     fn evaluate_hand(&self, player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Vec<Rank>, EvaluatorError> {
         let card_count = player_hand.len() + board.len();
         if card_count < 5 {

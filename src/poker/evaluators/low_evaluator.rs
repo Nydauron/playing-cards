@@ -8,6 +8,49 @@ use crate::core::Card;
 /// The wrapper struct for the Low Evaluator.
 ///
 /// This evaluator is typically used for games like 2-7 Lowball Draw.
+///
+/// Examples
+/// ```rust
+/// use playing_cards::{core::Card, poker::{Evaluator, LowEvaluator, Rank}};
+///
+/// let hand = Card::vec_from_str("2dTd3s5sAc").unwrap();
+///
+/// let eval = LowEvaluator::new();
+///
+/// let rank = eval.evaluate_hand(&hand, &Vec::new()).unwrap()[0];
+///
+/// assert_eq!(rank.get_string().unwrap(), "Ace High");
+/// ```
+///
+/// ```rust
+/// use playing_cards::{core::Card, poker::{Evaluator, LowEvaluator, Rank}};
+///
+/// let hand = Card::vec_from_str("2c4dKs2dKd").unwrap();
+///
+/// let eval = LowEvaluator::new();
+///
+/// let rank = eval.evaluate_hand(&hand, &Vec::new()).unwrap()[0];
+///
+/// assert_eq!(rank.get_string().unwrap(), "Two Pair of Kings and 2s");
+/// ```
+///
+/// ```rust
+/// use playing_cards::{core::Card, poker::{Evaluator, LowEvaluator, Rank}};
+///
+/// let hero_hand = Card::vec_from_str("6h7h2s3cTd").unwrap();
+/// let villan_hand = Card::vec_from_str("2c3s4s5s6d").unwrap();
+/// let board = vec![];
+///
+/// let eval = LowEvaluator::new();
+///
+/// let hero_rank = eval.evaluate_hand(&hero_hand, &board).unwrap()[0];
+/// let villan_rank = eval.evaluate_hand(&villan_hand, &board).unwrap()[0];
+///
+/// assert_eq!(hero_rank.get_string().unwrap(), "10 High");
+/// assert_eq!(villan_rank.get_string().unwrap(), "6 High Straight");
+///
+/// assert!(hero_rank > villan_rank); // Hero's hand is better than the villan's
+/// ```
 pub struct LowEvaluator;
 
 impl LowEvaluator {
@@ -27,49 +70,6 @@ impl Evaluator for LowEvaluator {
     ///
     /// Returns a `Vec<LowRank>` than can be compared directly against other `LowRank`s. If the
     /// total card count is not with the domain [5, 7], then an error will return.
-    ///
-    /// Examples
-    /// ```rust
-    /// use playing_cards::{core::Card, poker::{Evaluator, LowEvaluator, Rank}};
-    ///
-    /// let hand = Card::vec_from_str("2dTd3s5sAc").unwrap();
-    ///
-    /// let eval = LowEvaluator::new();
-    ///
-    /// let rank = eval.evaluate_hand(&hand, &Vec::new()).unwrap()[0];
-    ///
-    /// assert_eq!(rank.get_string().unwrap(), "Ace High");
-    /// ```
-    ///
-    /// ```rust
-    /// use playing_cards::{core::Card, poker::{Evaluator, LowEvaluator, Rank}};
-    ///
-    /// let hand = Card::vec_from_str("2c4dKs2dKd").unwrap();
-    ///
-    /// let eval = LowEvaluator::new();
-    ///
-    /// let rank = eval.evaluate_hand(&hand, &Vec::new()).unwrap()[0];
-    ///
-    /// assert_eq!(rank.get_string().unwrap(), "Two Pair of Kings and 2s");
-    /// ```
-    ///
-    /// ```rust
-    /// use playing_cards::{core::Card, poker::{Evaluator, LowEvaluator, Rank}};
-    ///
-    /// let hero_hand = Card::vec_from_str("6h7h2s3cTd").unwrap();
-    /// let villan_hand = Card::vec_from_str("2c3s4s5s6d").unwrap();
-    /// let board = vec![];
-    ///
-    /// let eval = LowEvaluator::new();
-    ///
-    /// let hero_rank = eval.evaluate_hand(&hero_hand, &board).unwrap()[0];
-    /// let villan_rank = eval.evaluate_hand(&villan_hand, &board).unwrap()[0];
-    ///
-    /// assert_eq!(hero_rank.get_string().unwrap(), "10 High");
-    /// assert_eq!(villan_rank.get_string().unwrap(), "6 High Straight");
-    ///
-    /// assert!(hero_rank > villan_rank); // Hero's hand is better than the villan's
-    /// ```
     fn evaluate_hand(&self, player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Vec<Rank>, EvaluatorError> {
         HighEvaluator{}.evaluate_hand(player_hand, board).and_then(|high| {
             Ok(Vec::from([Rank::Low(LowRank::new(high[0].get_rank_strength()))]))
