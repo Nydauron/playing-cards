@@ -15,3 +15,6 @@ pub use self::low_evaluator::LowEvaluator;
 
 mod omaha_hi_evaluator;
 pub use self::omaha_hi_evaluator::OmahaHighEvaluator;
+
+mod drawmaha_evaluator;
+pub use self::drawmaha_evaluator::DrawmahaEvaluator;

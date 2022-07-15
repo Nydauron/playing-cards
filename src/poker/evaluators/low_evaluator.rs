@@ -25,7 +25,7 @@ impl LowEvaluator {
 impl Evaluator for LowEvaluator {
     /// Evaluates the low hand for one player.
     ///
-    /// Returns a `LowRank` than can be compared against directly against other `LowRank`s. If the
+    /// Returns a `Vec<LowRank>` than can be compared directly against other `LowRank`s. If the
     /// total card count is not with the domain [5, 7], then an error will return.
     ///
     /// Examples
@@ -36,7 +36,7 @@ impl Evaluator for LowEvaluator {
     ///
     /// let eval = LowEvaluator::new();
     ///
-    /// let rank = eval.evaluate_hand(&hand, &Vec::new()).unwrap();
+    /// let rank = eval.evaluate_hand(&hand, &Vec::new()).unwrap()[0];
     ///
     /// assert_eq!(rank.get_string().unwrap(), "Ace High");
     /// ```
@@ -48,7 +48,7 @@ impl Evaluator for LowEvaluator {
     ///
     /// let eval = LowEvaluator::new();
     ///
-    /// let rank = eval.evaluate_hand(&hand, &Vec::new()).unwrap();
+    /// let rank = eval.evaluate_hand(&hand, &Vec::new()).unwrap()[0];
     ///
     /// assert_eq!(rank.get_string().unwrap(), "Two Pair of Kings and 2s");
     /// ```
@@ -62,8 +62,8 @@ impl Evaluator for LowEvaluator {
     ///
     /// let eval = LowEvaluator::new();
     ///
-    /// let hero_rank = eval.evaluate_hand(&hero_hand, &board).unwrap();
-    /// let villan_rank = eval.evaluate_hand(&villan_hand, &board).unwrap();
+    /// let hero_rank = eval.evaluate_hand(&hero_hand, &board).unwrap()[0];
+    /// let villan_rank = eval.evaluate_hand(&villan_hand, &board).unwrap()[0];
     ///
     /// assert_eq!(hero_rank.get_string().unwrap(), "10 High");
     /// assert_eq!(villan_rank.get_string().unwrap(), "6 High Straight");

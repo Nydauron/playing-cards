@@ -26,7 +26,7 @@ impl HighEvaluator {
 impl Evaluator for HighEvaluator {
     /// Evaluates the high hand for one player.
     ///
-    /// Returns a `HighRank` than can be compared against directly against other `HighRank`s. If
+    /// Returns a `Vec<HighRank>` than can be compared directly against other `HighRank`s. If
     /// the total card count is not with the domain [5, 7], then an error will return.
     ///
     /// Examples
@@ -38,7 +38,7 @@ impl Evaluator for HighEvaluator {
     ///
     /// let eval = HighEvaluator::new();
     ///
-    /// let rank = eval.evaluate_hand(&hand, &board).unwrap();
+    /// let rank = eval.evaluate_hand(&hand, &board).unwrap()[0];
     ///
     /// assert_eq!(rank.get_string().unwrap(), "Trip 5s");
     /// ```
@@ -51,7 +51,7 @@ impl Evaluator for HighEvaluator {
     ///
     /// let eval = HighEvaluator::new();
     ///
-    /// let rank = eval.evaluate_hand(&hand, &board).unwrap();
+    /// let rank = eval.evaluate_hand(&hand, &board).unwrap()[0];
     ///
     /// assert_eq!(rank.get_string().unwrap(), "Two Pair of Aces and Kings");
     /// ```
@@ -65,8 +65,8 @@ impl Evaluator for HighEvaluator {
     ///
     /// let eval = HighEvaluator::new();
     ///
-    /// let hero_rank = eval.evaluate_hand(&hero_hand, &board).unwrap();
-    /// let villan_rank = eval.evaluate_hand(&villan_hand, &board).unwrap();
+    /// let hero_rank = eval.evaluate_hand(&hero_hand, &board).unwrap()[0];
+    /// let villan_rank = eval.evaluate_hand(&villan_hand, &board).unwrap()[0];
     ///
     /// assert_eq!(hero_rank.get_string().unwrap(), "Two Pair of Kings and Queens");
     /// assert_eq!(villan_rank.get_string().unwrap(), "Two Pair of Aces and 2s");

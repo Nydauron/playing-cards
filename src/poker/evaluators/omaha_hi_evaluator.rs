@@ -33,8 +33,8 @@ impl OmahaHighEvaluator {
 impl Evaluator for OmahaHighEvaluator {
     /// Evaluates the Omaha high hand for one player.
     ///
-    /// Returns a `HighRank` than can be compared against directly against other `HighRank`s. If
-    /// the player's hand contains less than 4 cards and the board contains less than 3 cards,
+    /// Returns a `Vec<HighRank>` than can be compared directly against other `HighRank`s. If
+    /// the player's hand contains less than 4 cards or the board contains less than 3 cards,
     /// then an error will return.
     ///
     /// Examples
@@ -46,7 +46,7 @@ impl Evaluator for OmahaHighEvaluator {
     ///
     /// let eval = OmahaHighEvaluator::new();
     ///
-    /// let rank = eval.evaluate_hand(&hand, &board).unwrap();
+    /// let rank = eval.evaluate_hand(&hand, &board).unwrap()[0];
     ///
     /// // Notice: Even though we can Aces in our hand, we can only use 2 cards from out hand to
     /// // make the best hand (e.g. the K and the 2 pair with the board).
@@ -61,7 +61,7 @@ impl Evaluator for OmahaHighEvaluator {
     ///
     /// let eval = OmahaHighEvaluator::new();
     ///
-    /// let rank = eval.evaluate_hand(&hand, &board).unwrap();
+    /// let rank = eval.evaluate_hand(&hand, &board).unwrap()[0];
     ///
     /// // Notice: Even though we have the Ace of Clubs in out hand, we do not have a flush, as we
     /// // need another club within our hand.
@@ -77,8 +77,8 @@ impl Evaluator for OmahaHighEvaluator {
     ///
     /// let eval = OmahaHighEvaluator::new();
     ///
-    /// let hero_rank = eval.evaluate_hand(&hero_hand, &board).unwrap();
-    /// let villan_rank = eval.evaluate_hand(&villan_hand, &board).unwrap();
+    /// let hero_rank = eval.evaluate_hand(&hero_hand, &board).unwrap()[0];
+    /// let villan_rank = eval.evaluate_hand(&villan_hand, &board).unwrap()[0];
     ///
     /// assert_eq!(hero_rank.get_string().unwrap(), "10 High Straight");
     /// assert_eq!(villan_rank.get_string().unwrap(), "Trip Aces");
