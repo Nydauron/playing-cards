@@ -101,7 +101,7 @@ impl Evaluator for OmahaHighEvaluator {
 
         // Trying to run rayon map-reduce on the combinations is not efficient because of how quick
         // using the lookup table is.
-        Ok(Rank::High(hand_combinations.into_iter().map(|player_comb| {
+        Ok(Vec::from([Rank::High(hand_combinations.iter().map(|player_comb| {
             board_combinations.clone().into_iter().map(|mut board_comb| {
                 board_comb.extend(player_comb.to_owned());
                 let card_count = board_comb.len();
@@ -117,20 +117,22 @@ impl Evaluator for OmahaHighEvaluator {
                 } else {
                     HighRank::new(rank as u64)
                 }
-            }).reduce(|a, b| {
+            })
+            .reduce(|a, b| {
                 if a > b {
                     a
                 } else {
                     b
                 }
             }).unwrap()
-        }).reduce(|a, b| {
+        })
+        .reduce(|a, b| {
             if a > b {
                 a
             } else {
                 b
             }
-        }).unwrap()))
+        }).unwrap())]))
     }
 }
 
