@@ -2,7 +2,10 @@
 
 mod evaluator;
 pub use self::evaluator::{Evaluator, init_lookup_table};
-pub (super) use self::evaluator::LOOKUP_TABLE; 
+pub (super) use self::evaluator::LOOKUP_TABLE;
+
+mod evaluator_errors;
+pub use self::evaluator_errors::EvaluatorError;
 
 mod high_evaluator;
 pub use self::high_evaluator::HighEvaluator;

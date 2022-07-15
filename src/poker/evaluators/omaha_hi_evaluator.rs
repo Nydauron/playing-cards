@@ -1,6 +1,6 @@
 use async_std::task;
 
-use super::{Evaluator, init_lookup_table, LOOKUP_TABLE};
+use super::{Evaluator, init_lookup_table, LOOKUP_TABLE, EvaluatorError};
 use super::super::{Rank, HighRank};
 
 use itertools::Itertools;
@@ -85,13 +85,15 @@ impl Evaluator for OmahaHighEvaluator {
     ///
     /// assert!(hero_rank > villan_rank); // Hero's hand is better than the villans's
     /// ```
-    fn evaluate_hand(&self, player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Rank, &str> {
+    fn evaluate_hand(&self, player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Vec<Rank>, EvaluatorError> {
         if player_hand.len() < 4 {
-            return Err("Player hand is not at least 4 cards");
+            return Err(EvaluatorError::NotEnoughCards("Player hand".to_string(), 4));
+            // Player hand does not have at least 4 cards
         }
 
         if board.len() < 3 { // 3 because it allows for evaluation on flop-only flop-turn-only boards
-            return Err("Board does not have at least 3 cards");
+            return Err(EvaluatorError::NotEnoughCards("Board".to_string(), 3));
+            // Board does not have at least 3 cards
         }
 
         let hand_combinations: Vec<Vec<Card>> = player_hand.clone().into_iter().clone().combinations(2).collect();
@@ -143,7 +145,7 @@ mod tests {
 
         let eval = OmahaHighEvaluator::new();
 
-        let player_rank = eval.evaluate_hand(&player_hand, &board).expect("Evaluation failed");
+        let player_rank = eval.evaluate_hand(&player_hand, &board).expect("Evaluation failed")[0];
 
         let string_rank = player_rank.get_string().expect("Hand generated bad rank");
         assert_eq!("Trip Kings", string_rank);
@@ -156,7 +158,7 @@ mod tests {
 
         let eval = OmahaHighEvaluator::new();
 
-        let player_rank = eval.evaluate_hand(&player_hand, &board).expect("Evaluation failed");
+        let player_rank = eval.evaluate_hand(&player_hand, &board).expect("Evaluation failed")[0];
 
         let string_rank = player_rank.get_string().expect("Hand generated bad rank");
         assert_eq!("Two Pair of Queens and 3s", string_rank);

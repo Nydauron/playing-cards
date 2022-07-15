@@ -1,6 +1,6 @@
 use async_std::task;
 
-use super::{Evaluator, init_lookup_table, LOOKUP_TABLE};
+use super::{Evaluator, init_lookup_table, LOOKUP_TABLE, EvaluatorError};
 
 use super::super::{Rank, HighRank};
 
@@ -73,10 +73,14 @@ impl Evaluator for HighEvaluator {
     ///
     /// assert!(hero_rank < villan_rank); // Villan's hand is better than the hero's
     /// ```
-    fn evaluate_hand(&self, player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Rank, &str> {
+    fn evaluate_hand(&self, player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Vec<Rank>, EvaluatorError> {
         let card_count = player_hand.len() + board.len();
-        if card_count < 5 || card_count > 7 {
-            return Err("Provided number of cards does not fall inclusively between 5 and 7");
+        if card_count < 5 {
+            return Err(EvaluatorError::NotEnoughCards("Set of cards".to_string(), 5));
+            // Set of cards does not have at least 5 cards
+        } else if card_count > 7 {
+            return Err(EvaluatorError::TooManyCards("Set of cards".to_string(), 7));
+            // Set of cards does not have at most 7 cards
         }
         let mut all_cards = player_hand.to_owned();
         
@@ -89,9 +93,9 @@ impl Evaluator for HighEvaluator {
         }
 
         if card_count < 7 {
-            Ok(Rank::High(HighRank::new(LOOKUP_TABLE[rank as usize] as u64)))
+            Ok(Vec::from([Rank::High(HighRank::new(LOOKUP_TABLE[rank as usize] as u64))]))
         } else {
-            Ok(Rank::High(HighRank::new(rank as u64)))
+            Ok(Vec::from([Rank::High(HighRank::new(rank as u64))]))
         }
     }
 }
@@ -107,7 +111,7 @@ mod tests {
 
         let eval = HighEvaluator::new();
         
-        let rank = eval.evaluate_hand(&player_hand, &board).expect("Evaluation failed");
+        let rank = eval.evaluate_hand(&player_hand, &board).expect("Evaluation failed")[0];
 
         assert_eq!(7, rank.get_rank_strength() >> 12);
         assert_eq!(13, rank.get_rank_strength() & 0xFFF);
@@ -120,8 +124,8 @@ mod tests {
 
         let eval = HighEvaluator::new();
         
-        let player1_rank = eval.evaluate_hand(&player1_hand, &Vec::new()).expect("Evaluation failed");
-        let player2_rank = eval.evaluate_hand(&player2_hand, &Vec::new()).expect("Evaluation failed");
+        let player1_rank = eval.evaluate_hand(&player1_hand, &Vec::new()).expect("Evaluation failed")[0];
+        let player2_rank = eval.evaluate_hand(&player2_hand, &Vec::new()).expect("Evaluation failed")[0];
 
         assert_eq!(6, player1_rank.get_rank_strength() >> 12);
         assert_eq!(1, player1_rank.get_rank_strength() & 0xFFF);
@@ -136,8 +140,8 @@ mod tests {
 
         let eval = HighEvaluator::new();
 
-        let player1_rank = eval.evaluate_hand(&player1_hand, &Vec::new()).expect("Evaluation failed");
-        let player2_rank = eval.evaluate_hand(&player2_hand, &Vec::new()).expect("Evaluation failed");
+        let player1_rank = eval.evaluate_hand(&player1_hand, &Vec::new()).expect("Evaluation failed")[0];
+        let player2_rank = eval.evaluate_hand(&player2_hand, &Vec::new()).expect("Evaluation failed")[0];
 
         assert!(player1_rank > player2_rank);
     }
@@ -150,8 +154,8 @@ mod tests {
 
         let eval = HighEvaluator::new();
 
-        let player1_rank = eval.evaluate_hand(&player1_hand, &board).expect("Evaluation failed");
-        let player2_rank = eval.evaluate_hand(&player2_hand, &board).expect("Evaluation failed");
+        let player1_rank = eval.evaluate_hand(&player1_hand, &board).expect("Evaluation failed")[0];
+        let player2_rank = eval.evaluate_hand(&player2_hand, &board).expect("Evaluation failed")[0];
 
         assert_eq!(player1_rank.get_string().expect("Player 1 hand generated bad rank"), "9s Full of 2s");
         assert_eq!(player2_rank.get_string().expect("Player 2 hand generated bad rank"), "9s Full of 3s");
@@ -166,7 +170,7 @@ mod tests {
 
             let eval = HighEvaluator::new();
 
-            let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed");
+            let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
             let string_rank = player_rank.get_string().expect("Hand generated bad rank");
             assert_eq!(expected_str, string_rank, "\nFailed on hand {}\n", h);
@@ -181,7 +185,7 @@ mod tests {
 
             let eval = HighEvaluator::new();
 
-            let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed");
+            let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
             let string_rank = player_rank.get_string().expect("Hand generated bad rank");
             assert_eq!(expected_str, string_rank, "\nFailed on hand {}\n", h);
@@ -196,7 +200,7 @@ mod tests {
 
             let eval = HighEvaluator::new();
 
-            let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed");
+            let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
             let string_rank = player_rank.get_string().expect("Hand generated bad rank");
             assert_eq!(expected_str, string_rank, "\nFailed on hand {}\n", h);
@@ -211,7 +215,7 @@ mod tests {
 
             let eval = HighEvaluator::new();
 
-            let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed");
+            let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
             let string_rank = player_rank.get_string().expect("Hand generated bad rank");
             assert_eq!(expected_str, string_rank, "\nFailed on hand {}\n", h);
@@ -226,7 +230,7 @@ mod tests {
 
             let eval = HighEvaluator::new();
 
-            let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed");
+            let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
             let string_rank = player_rank.get_string().expect("Hand generated bad rank");
             assert_eq!(expected_str, string_rank, "\nFailed on hand {}\n", h);
@@ -241,7 +245,7 @@ mod tests {
 
             let eval = HighEvaluator::new();
 
-            let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed");
+            let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
             let string_rank = player_rank.get_string().expect("Hand generated bad rank");
             assert_eq!(expected_str, string_rank, "\nFailed on hand {}\n", h);
@@ -256,7 +260,7 @@ mod tests {
 
             let eval = HighEvaluator::new();
 
-            let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed");
+            let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
             let string_rank = player_rank.get_string().expect("Hand generated bad rank");
             assert_eq!(expected_str, string_rank, "\nFailed on hand {}\n", h);
@@ -280,8 +284,8 @@ mod bench {
             let player1_rank = eval.evaluate_hand(&player1_hand, &Vec::new()).expect("Evaluation failed")[0];
             let player2_rank = eval.evaluate_hand(&player2_hand, &Vec::new()).expect("Evaluation failed")[0];
 
-            assert_eq!(6, player1_rank >> 12);
-            assert_eq!(1, player1_rank & 0xFFF);
+            assert_eq!(6, player1_rank.get_rank_strength() >> 12);
+            assert_eq!(1, player1_rank.get_rank_strength() & 0xFFF);
 
             assert_eq!(player1_rank, player2_rank);
         })

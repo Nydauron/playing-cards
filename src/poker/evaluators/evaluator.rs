@@ -2,6 +2,8 @@ use crate::{core::Card, poker::Rank};
 
 use once_cell::sync::Lazy;
 
+use super::EvaluatorError;
+
 extern crate bincode;
 
 pub static LOOKUP_TABLE: Lazy<Vec<i32>> = Lazy::new(|| {
@@ -20,7 +22,7 @@ pub static LOOKUP_TABLE: Lazy<Vec<i32>> = Lazy::new(|| {
 pub trait Evaluator {
 
     /// Evaluates a hand for one player.
-    fn evaluate_hand(&self, player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Rank, &str>;
+    fn evaluate_hand(&self, player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Vec<Rank>, EvaluatorError>;
 }
 
 /// This function allows for the 2+2 lookup table to be loaded in. This function only needs to be

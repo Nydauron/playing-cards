@@ -12,7 +12,7 @@ use super::{HighRank, LowRank};
 ///
 /// A `Rank` varient can be compared with any other of the same varient.
 #[allow(missing_docs)]
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Copy, Clone)]
 pub enum Rank {
     High(HighRank),
     Low(LowRank),
