@@ -104,9 +104,12 @@ impl Evaluator for DrawmahaEvaluator {
             // Board does not have at least 3 cards
         }
 
-        let evals: Vec<Box<dyn Evaluator + Sync>> = vec![Box::new(OmahaHighEvaluator), Box::new(HighEvaluator)];
+        let evals: Vec<(Box<dyn Evaluator + Sync>, Vec<Card>, Vec<Card>)> = vec![
+            (Box::new(OmahaHighEvaluator), player_hand.clone(), board.clone()),
+            (Box::new(HighEvaluator), player_hand.clone(), Vec::new()),
+        ];
 
-        evals.par_iter().map(|eval| {
+        evals.par_iter().map(|(eval, player_hand, board)| {
             eval.evaluate_hand(&player_hand, &board)
         })
         .try_reduce(|| Vec::new(), |mut a, b| {
