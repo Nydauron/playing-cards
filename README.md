@@ -23,10 +23,10 @@ Here is a list of type included within the Poker feature:
 
 - Evaluators
   - High Evaluator
-  - Low Evaluator (TODO)
-  - Omaha Evaluator (TODO)
+  - Low Evaluator
+  - Omaha Evaluator
   - Omaha Hi-Lo Evaluator (TODO)
-  - Drawmaha Evaluator (TODO)
+  - Drawmaha Evaluator
   - Drawmaha 0 Evaluator (TODO)
   - Drawmaha 49 Evaluator (TODO)
   - Shortdeck High Evaluator (TODO)

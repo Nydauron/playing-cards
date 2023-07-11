@@ -1,63 +1,60 @@
 use async_std::task;
 
-use super::{Evaluator, init_lookup_table, LOOKUP_TABLE, EvaluatorError};
-
-use super::super::{Rank, HighRank};
+use super::{Evaluator, HighEvaluator, init_lookup_table, EvaluatorError};
+use super::super::{Rank, LowRank};
 
 use crate::core::Card;
 
-/// The wrapper struct for the High Evaluator.
+/// The wrapper struct for the Low Evaluator.
 ///
-/// This evaluator is typically used for games like Texas Hold'em, Five Card Draw, and Stud.
+/// This evaluator is typically used for games like 2-7 Lowball Draw.
 ///
 /// Examples
 /// ```rust
-/// use playing_cards::{core::Card, poker::{Evaluator, HighEvaluator, Rank}};
+/// use playing_cards::{core::Card, poker::{Evaluator, LowEvaluator, Rank}};
 ///
-/// let hand = Card::vec_from_str("5h5s").unwrap();
-/// let board = Card::vec_from_str("2dTdKs5sAc").unwrap();
+/// let hand = Card::vec_from_str("2dTd3s5sAc").unwrap();
 ///
-/// let eval = HighEvaluator::new();
+/// let eval = LowEvaluator::new();
 ///
-/// let rank = eval.evaluate_hand(&hand, &board).unwrap()[0];
+/// let rank = eval.evaluate_hand(&hand, &Vec::new()).unwrap()[0];
 ///
-/// assert_eq!(rank.get_string().unwrap(), "Trip 5s");
+/// assert_eq!(rank.get_string().unwrap(), "Ace High");
 /// ```
 ///
 /// ```rust
-/// use playing_cards::{core::Card, poker::{Evaluator, HighEvaluator, Rank}};
+/// use playing_cards::{core::Card, poker::{Evaluator, LowEvaluator, Rank}};
 ///
-/// let hand = Card::vec_from_str("KhAs").unwrap();
-/// let board = Card::vec_from_str("2cQdKs5dAd").unwrap();
+/// let hand = Card::vec_from_str("2c4dKs2dKd").unwrap();
 ///
-/// let eval = HighEvaluator::new();
+/// let eval = LowEvaluator::new();
 ///
-/// let rank = eval.evaluate_hand(&hand, &board).unwrap()[0];
+/// let rank = eval.evaluate_hand(&hand, &Vec::new()).unwrap()[0];
 ///
-/// assert_eq!(rank.get_string().unwrap(), "Two Pair of Aces and Kings");
+/// assert_eq!(rank.get_string().unwrap(), "Two Pair of Kings and 2s");
 /// ```
 ///
 /// ```rust
-/// use playing_cards::{core::Card, poker::{Evaluator, HighEvaluator, Rank}};
+/// use playing_cards::{core::Card, poker::{Evaluator, LowEvaluator, Rank}};
 ///
-/// let hero_hand = Card::vec_from_str("KhQc").unwrap();
-/// let villan_hand = Card::vec_from_str("Ac2c").unwrap();
-/// let board = Card::vec_from_str("AhKsQs9c2h").unwrap();
+/// let hero_hand = Card::vec_from_str("6h7h2s3cTd").unwrap();
+/// let villan_hand = Card::vec_from_str("2c3s4s5s6d").unwrap();
+/// let board = vec![];
 ///
-/// let eval = HighEvaluator::new();
+/// let eval = LowEvaluator::new();
 ///
 /// let hero_rank = eval.evaluate_hand(&hero_hand, &board).unwrap()[0];
 /// let villan_rank = eval.evaluate_hand(&villan_hand, &board).unwrap()[0];
 ///
-/// assert_eq!(hero_rank.get_string().unwrap(), "Two Pair of Kings and Queens");
-/// assert_eq!(villan_rank.get_string().unwrap(), "Two Pair of Aces and 2s");
+/// assert_eq!(hero_rank.get_string().unwrap(), "10 High");
+/// assert_eq!(villan_rank.get_string().unwrap(), "6 High Straight");
 ///
-/// assert!(hero_rank < villan_rank); // Villan's hand is better than the hero's
+/// assert!(hero_rank > villan_rank); // Hero's hand is better than the villan's
 /// ```
-pub struct HighEvaluator;
+pub struct LowEvaluator;
 
-impl HighEvaluator {
-    /// Creates a new `HighEvaluator`.
+impl LowEvaluator {
+    /// Creates a new `LowEvaluator`.
     /// 
     /// Initializes the lookup table if it isn't already.
     pub fn new() -> Self {
@@ -68,35 +65,15 @@ impl HighEvaluator {
     }
 }
 
-impl Evaluator for HighEvaluator {
-    /// Evaluates the high hand for one player.
+impl Evaluator for LowEvaluator {
+    /// Evaluates the low hand for one player.
     ///
-    /// Returns a `Vec<HighRank>` than can be compared directly against other `HighRank`s. If
-    /// the total card count is not with the domain [5, 7], then an error will return.
+    /// Returns a `Vec<LowRank>` than can be compared directly against other `LowRank`s. If the
+    /// total card count is not with the domain [5, 7], then an error will return.
     fn evaluate_hand(&self, player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Vec<Rank>, EvaluatorError> {
-        let card_count = player_hand.len() + board.len();
-        if card_count < 5 {
-            return Err(EvaluatorError::NotEnoughCards("Set of cards".to_string(), 5));
-            // Set of cards does not have at least 5 cards
-        } else if card_count > 7 {
-            return Err(EvaluatorError::TooManyCards("Set of cards".to_string(), 7));
-            // Set of cards does not have at most 7 cards
-        }
-        let mut all_cards = player_hand.to_owned();
-        
-        all_cards.extend(board.to_owned());
-
-        let mut rank = 53;
-        
-        for c in all_cards {
-            rank = LOOKUP_TABLE[(rank + c.to_int()) as usize];
-        }
-
-        if card_count < 7 {
-            Ok(Vec::from([Rank::High(HighRank::new(LOOKUP_TABLE[rank as usize] as u64))]))
-        } else {
-            Ok(Vec::from([Rank::High(HighRank::new(rank as u64))]))
-        }
+        HighEvaluator{}.evaluate_hand(player_hand, board).and_then(|high| {
+            Ok(Vec::from([Rank::Low(LowRank::new(high[0].get_rank_strength()))]))
+        })
     }
 }
 
@@ -109,7 +86,7 @@ mod tests {
         let player_hand = Vec::from([Card::from(1), Card::from(2)]);
         let board = Vec::from([Card::from(7), Card::from(5), Card::from(6), Card::from(52)]);
 
-        let eval = HighEvaluator::new();
+        let eval = LowEvaluator::new();
         
         let rank = eval.evaluate_hand(&player_hand, &board).expect("Evaluation failed")[0];
 
@@ -122,7 +99,7 @@ mod tests {
         let player1_hand = Card::vec_from_str("2s3s4s5s7s").unwrap();
         let player2_hand = Card::vec_from_str("2h3h4h5h7h").unwrap();
 
-        let eval = HighEvaluator::new();
+        let eval = LowEvaluator::new();
         
         let player1_rank = eval.evaluate_hand(&player1_hand, &Vec::new()).expect("Evaluation failed")[0];
         let player2_rank = eval.evaluate_hand(&player2_hand, &Vec::new()).expect("Evaluation failed")[0];
@@ -135,40 +112,55 @@ mod tests {
 
     #[test]
     fn different_rank_by_1() {
-        let player1_hand = Card::vec_from_str("2s3s4s5s8s").unwrap(); // stronger high hand
-        let player2_hand = Card::vec_from_str("2h3h4h5h7h").unwrap();
+        let player1_hand = Card::vec_from_str("2s3s4s5s8s").unwrap();
+        let player2_hand = Card::vec_from_str("2h3h4h5h7h").unwrap(); // stronger low hand
 
-        let eval = HighEvaluator::new();
-
+        let eval = LowEvaluator::new();
+        
         let player1_rank = eval.evaluate_hand(&player1_hand, &Vec::new()).expect("Evaluation failed")[0];
         let player2_rank = eval.evaluate_hand(&player2_hand, &Vec::new()).expect("Evaluation failed")[0];
-
-        assert!(player1_rank > player2_rank);
+        
+        assert!(player2_rank > player1_rank);
     }
 
     #[test]
-    fn cooler_holdem_example() {
-        let board = Card::vec_from_str("2d9d2c9h3h").unwrap();
-        let player1_hand = Card::vec_from_str("8h9s").unwrap();
-        let player2_hand = Card::vec_from_str("9c3s").unwrap();
+    fn cooler_2to7_example_1() {
+        let board = vec![];
+        let player1_hand = Card::vec_from_str("5h3d7h2s9c").unwrap();
+        let player2_hand = Card::vec_from_str("4s3c2h6s8s").unwrap();
 
-        let eval = HighEvaluator::new();
+        let eval = LowEvaluator::new();
 
         let player1_rank = eval.evaluate_hand(&player1_hand, &board).expect("Evaluation failed")[0];
         let player2_rank = eval.evaluate_hand(&player2_hand, &board).expect("Evaluation failed")[0];
 
-        assert_eq!(player1_rank.get_string().expect("Player 1 hand generated bad rank"), "9s Full of 2s");
-        assert_eq!(player2_rank.get_string().expect("Player 2 hand generated bad rank"), "9s Full of 3s");
+        assert_eq!(player1_rank.get_string().expect("Player 1 hand generated bad rank"), "9 High");
+        assert_eq!(player2_rank.get_string().expect("Player 2 hand generated bad rank"), "8 High");
         assert!(player1_rank < player2_rank);
     }
 
+    #[test]
+    fn cooler_2to7_example_2() {
+        let board = vec![];
+        let player1_hand = Card::vec_from_str("5h3d7h2s8c").unwrap();
+        let player2_hand = Card::vec_from_str("4s3c2h6s8s").unwrap();
+
+        let eval = LowEvaluator::new();
+
+        let player1_rank = eval.evaluate_hand(&player1_hand, &board).expect("Evaluation failed")[0];
+        let player2_rank = eval.evaluate_hand(&player2_hand, &board).expect("Evaluation failed")[0];
+
+        assert_eq!(player1_rank.get_string().expect("Player 1 hand generated bad rank"), "8 High");
+        assert_eq!(player2_rank.get_string().expect("Player 2 hand generated bad rank"), "8 High");
+        assert!(player1_rank < player2_rank);
+    }
     #[test]
     fn string_pairs_two_pairs_highs() {
         let hands = vec![("2c2h4c5s7s", "Pair of 2s"), ("2c2hAcKsQs", "Pair of 2s"), ("3c3hAcKsQs", "Pair of 3s"), ("7c7hAcKsJs", "Pair of 7s"), ("2c2hAcQsQs", "Two Pair of Queens and 2s"), ("2c7hAcQsQs", "Pair of Queens"), ("2c7hTcKsQs", "King High")];
         for (h, expected_str) in hands {
             let player_hand = Card::vec_from_str(h).unwrap();
 
-            let eval = HighEvaluator::new();
+            let eval = LowEvaluator::new();
 
             let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
@@ -183,7 +175,7 @@ mod tests {
         for (h, expected_str) in hands {
             let player_hand = Card::vec_from_str(h).unwrap();
 
-            let eval = HighEvaluator::new();
+            let eval = LowEvaluator::new();
 
             let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
@@ -198,7 +190,7 @@ mod tests {
         for (h, expected_str) in hands {
             let player_hand = Card::vec_from_str(h).unwrap();
 
-            let eval = HighEvaluator::new();
+            let eval = LowEvaluator::new();
 
             let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
@@ -213,7 +205,7 @@ mod tests {
         for (h, expected_str) in hands {
             let player_hand = Card::vec_from_str(h).unwrap();
 
-            let eval = HighEvaluator::new();
+            let eval = LowEvaluator::new();
 
             let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
@@ -228,7 +220,7 @@ mod tests {
         for (h, expected_str) in hands {
             let player_hand = Card::vec_from_str(h).unwrap();
 
-            let eval = HighEvaluator::new();
+            let eval = LowEvaluator::new();
 
             let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
@@ -243,7 +235,7 @@ mod tests {
         for (h, expected_str) in hands {
             let player_hand = Card::vec_from_str(h).unwrap();
 
-            let eval = HighEvaluator::new();
+            let eval = LowEvaluator::new();
 
             let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
@@ -258,7 +250,7 @@ mod tests {
         for (h, expected_str) in hands {
             let player_hand = Card::vec_from_str(h).unwrap();
 
-            let eval = HighEvaluator::new();
+            let eval = LowEvaluator::new();
 
             let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
@@ -279,7 +271,7 @@ mod bench {
             let player1_hand = Card::vec_from_str("2s3s4s5s7s").unwrap();
             let player2_hand = Card::vec_from_str("2h3h4h5h7h").unwrap();
 
-            let eval = HighEvaluator::new();
+            let eval = LowEvaluator::new();
 
             let player1_rank = eval.evaluate_hand(&player1_hand, &Vec::new()).expect("Evaluation failed")[0];
             let player2_rank = eval.evaluate_hand(&player2_hand, &Vec::new()).expect("Evaluation failed")[0];

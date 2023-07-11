@@ -3,7 +3,7 @@ use num::traits::FromPrimitive;
 use strum_macros::EnumIter;
 use std::str::FromStr;
 
-use serde::Deserialize;
+use serde::{Serialize, Deserialize};
 
 /// An enum representation of the rank of a card
 ///
@@ -228,8 +228,9 @@ impl std::fmt::Display for Suit {
 }
 
 /// A structural representation of a playing card.
-#[derive(Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(try_from = "String")]
+#[serde(into = "String")]
 pub struct Card {
     /// The Value of the Card
     pub value: Value,
@@ -297,6 +298,12 @@ impl TryFrom<String> for Card {
             value: val,
             suit: suit,
         })
+    }
+}
+
+impl From<Card> for String {
+    fn from(c: Card) -> Self {
+        format!("{}{}", c.value.get_char(), c.suit.get_char())
     }
 }
 
