@@ -96,40 +96,7 @@ impl Evaluator for OmahaHighEvaluator {
         let hand_combinations: Vec<Vec<Card>> = player_hand.clone().into_iter().clone().combinations(2).collect();
         let board_combinations: Vec<Vec<Card>> = board.clone().into_iter().clone().combinations(3).collect();
 
-        // Trying to run rayon map-reduce on the combinations is not efficient because of how quick
-        // using the lookup table is.
-        Ok(Vec::from([Rank::High(hand_combinations.iter().map(|player_comb| {
-            board_combinations.clone().into_iter().map(|mut board_comb| {
-                board_comb.extend(player_comb.to_owned());
-                let card_count = board_comb.len();
-
-                let mut rank = 53;
-            
-                for c in board_comb {
-                    rank = LOOKUP_TABLE[(rank + c.to_int()) as usize];
-                }
-
-                if card_count < 7 {
-                    HighRank::new(LOOKUP_TABLE[rank as usize] as u64)
-                } else {
-                    HighRank::new(rank as u64)
-                }
-            })
-            .reduce(|a, b| {
-                if a > b {
-                    a
-                } else {
-                    b
-                }
-            }).unwrap()
-        })
-        .reduce(|a, b| {
-            if a > b {
-                a
-            } else {
-                b
-            }
-        }).unwrap())]))
+        todo!();
     }
 }
 
