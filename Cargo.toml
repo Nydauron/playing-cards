@@ -23,6 +23,7 @@ num = "0.4.0"
 num-derive = "0.3.3"
 num-traits = "0.2.15"
 once_cell = { version = "1.12.1", optional = true }
+phf = { version = "0.11.2", features = ["macros"] }
 rand = "0.8.5"
 rand_core = "0.6.3"
 rayon = "1.5.3"
@@ -44,6 +45,6 @@ opt-level = 3
 all-features = true
 
 [features]
-default = []
+default = ["poker"]
 unstable = []
 poker = ["dep:bincode", "dep:async-std", "dep:once_cell", "dep:itertools"]

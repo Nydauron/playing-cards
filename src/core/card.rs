@@ -117,6 +117,24 @@ impl Value {
             Self::Ace => "Ace".to_string(),
         }
     }
+
+    pub fn get_cactus_kev_prime(& self) -> u8 {
+        match self {
+            Self::Two => 2,
+            Self::Three => 3,
+            Self::Four => 5,
+            Self::Five => 7,
+            Self::Six => 11,
+            Self::Seven => 13,
+            Self::Eight => 17,
+            Self::Nine => 19,
+            Self::Ten => 23,
+            Self::Jack => 29,
+            Self::Queen => 31,
+            Self::King => 37,
+            Self::Ace => 41,
+        }
+    }
 }
 
 impl TryFrom<i32> for Value {
@@ -262,6 +280,25 @@ impl Card {
     /// This is typically used for when travesing the lookup table.
     pub fn to_int(&self) -> i32 {
         ((self.value as i32) * 4) + (self.suit as i32) + 1
+    }
+
+    /// Calcualtes the Catus Kev bit pattern for the card. This can be useful for building custom
+    /// hand evaluators.
+    ///
+    /// For poker-related hand evaulators, please see the poker module.
+    pub fn calculate_bit_pattern(&self) -> u32 {
+        let mut bit_pattern: u32 = 0;
+        bit_pattern |= 1 << (16 + self.value as u32);
+        bit_pattern |= 1 << (12 + match self.suit {
+            Suit::Heart => 1,
+            Suit::Club => 3,
+            Suit::Diamond => 2,
+            Suit::Spade => 0
+        });
+        bit_pattern |= (self.value as u32) << 8;
+        bit_pattern |= self.value.get_cactus_kev_prime() as u32;
+
+        bit_pattern
     }
 }
 

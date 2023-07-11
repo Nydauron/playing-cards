@@ -1,6 +1,6 @@
 use async_std::task;
 
-use super::{Evaluator, HighEvaluator, OmahaHighEvaluator, init_lookup_table, EvaluatorError};
+use super::{Evaluator, HighEvaluator, OmahaHighEvaluator, EvaluatorError};
 use super::super::Rank;
 
 use crate::core::Card;
@@ -76,9 +76,6 @@ impl DrawmahaEvaluator {
     ///
     /// Initializes the lookup table if it isn't already.
     pub fn new() -> Self {
-        task::spawn(async {
-            init_lookup_table();
-        });
         Self {}
     }
 }

@@ -8,18 +8,51 @@ use std::cmp::Ordering;
 /// This struct is typically returned by evaluators that evaluate a high hand component.
 #[derive(Copy, Clone, Debug)]
 pub struct HighRank {
-    rank_strength: u64,
+    rank_strength: u16,
+    hand_rank: u8,
+    sub_rank: u16,
 }
 
 impl HighRank {
     /// Creates a new HighRank struct
-    pub fn new(strength: u64) -> Self {
-        Self { rank_strength: strength }
+    pub fn new(strength: u16) -> Self {
+        let mut hand_rank: u8 = 0;
+        let mut sub_rank: u16 = 0;
+
+        if strength >= 1 {
+            let mut ranks_left = strength - 1;
+
+            // distinct combos from high card to straight flush
+            let strength_threshold = [1277, 2860, 858, 858, 10, 1277, 156, 156, 10];
+
+            for (i, &subranks) in strength_threshold.iter().enumerate().rev() {
+                if ranks_left < subranks {
+                    hand_rank = (i + 1) as u8;
+                    sub_rank = subranks - ranks_left;
+                    break;
+                }
+                ranks_left -= subranks;
+            }
+        }
+
+        Self {
+            rank_strength: 7463 - strength,
+            hand_rank: hand_rank,
+            sub_rank: sub_rank,
+        }
     }
 
     /// Gets the hand rank's strength.
-    pub fn get_rank_strength(&self) -> u64 {
+    pub fn get_rank_strength(&self) -> u16 {
         self.rank_strength
+    }
+
+    pub fn get_hand_rank(&self) -> u8 {
+        self.hand_rank
+    }
+
+    pub fn get_sub_rank(&self) -> u16 {
+        self.sub_rank
     }
 
     /// Returns the string for the associated hand.
@@ -27,33 +60,31 @@ impl HighRank {
     /// The string is user-interperable string of the hand strength and can be used for displaying
     /// to the user.
     pub fn get_string(&self) -> Result<String, &'static str> {
-        let hand_rank = self.rank_strength;
         let hand_category;
-        let sub_rank = hand_rank & 0xFFF;
-        match hand_rank >> 12 {
+        match self.hand_rank {
             1 => {
                 hand_category = "High";
 
-                if sub_rank < 1 || sub_rank > 1277 {
+                if self.sub_rank < 1 || self.sub_rank > 1277 {
                     return Err("Sub rank for high card was not valid");
                 }
 
                 let sub_str: &str;
-                if sub_rank > 0 && sub_rank <= 4 {
+                if self.sub_rank > 0 && self.sub_rank <= 4 {
                     sub_str = "7";
-                } else if sub_rank > 4 && sub_rank <= 18 {
+                } else if self.sub_rank > 4 && self.sub_rank <= 18 {
                     sub_str = "8";
-                } else if sub_rank > 18 && sub_rank <= 52 {
+                } else if self.sub_rank > 18 && self.sub_rank <= 52 {
                     sub_str = "9";
-                } else if sub_rank > 52 && sub_rank <= 121 {
+                } else if self.sub_rank > 52 && self.sub_rank <= 121 {
                     sub_str = "10";
-                } else if sub_rank > 121 && sub_rank <= 246 {
+                } else if self.sub_rank > 121 && self.sub_rank <= 246 {
                     sub_str = "Jack";
-                } else if sub_rank > 246 && sub_rank <= 455 {
+                } else if self.sub_rank > 246 && self.sub_rank <= 455 {
                     sub_str = "Queen";
-                } else if sub_rank > 455 && sub_rank <= 784 {
+                } else if self.sub_rank > 455 && self.sub_rank <= 784 {
                     sub_str = "King";
-                } else if sub_rank > 784 && sub_rank <= 1277 {
+                } else if self.sub_rank > 784 && self.sub_rank <= 1277 {
                     sub_str = "Ace";
                 } else {
                     return Err("Sub rank for high card was not valid");
@@ -65,7 +96,7 @@ impl HighRank {
                 hand_category = "Pair";
 
                 let sub_str;
-                match Value::from_int((sub_rank - 1) / 220) {
+                match Value::from_int((self.sub_rank - 1) / 220) {
                     Some(val) => {
                         sub_str = val.get_readable_string() + "s";
                     }
@@ -79,8 +110,8 @@ impl HighRank {
             3 => {
                 hand_category = "Two Pair";
 
-                let first_pair_rank = (((2*(sub_rank - 1) / 11) as f64 + 0.25).sqrt()-0.5).floor() as u64 + 1;
-                let sec_pair_kick_rank = sub_rank - (first_pair_rank - 1) * first_pair_rank / 2 * 11;
+                let first_pair_rank = (((2*(self.sub_rank - 1) / 11) as f64 + 0.25).sqrt()-0.5).floor() as u16 + 1;
+                let sec_pair_kick_rank = self.sub_rank - (first_pair_rank - 1) * first_pair_rank / 2 * 11;
 
                 let sub_str;
                 match (Value::from_int(first_pair_rank), Value::from_int((sec_pair_kick_rank - 1) / 11)) {
@@ -98,7 +129,7 @@ impl HighRank {
                 hand_category = "Trip";
 
                 let sub_str;
-                match Value::from_int((sub_rank - 1) / 66) {
+                match Value::from_int((self.sub_rank - 1) / 66) {
                     Some(val) => {
                         sub_str = val.get_readable_string() + "s";
                     }
@@ -112,11 +143,11 @@ impl HighRank {
             5 => {
                 hand_category = "Straight";
 
-                if sub_rank < 1 || sub_rank > 10 {
+                if self.sub_rank < 1 || self.sub_rank > 10 {
                     return Err("Sub rank for straight was not valid");
                 }
 
-                let sub_str = Value::from_int(sub_rank + 2).unwrap().get_readable_string();
+                let sub_str = Value::from_int(self.sub_rank + 2).unwrap().get_readable_string();
                 
                 return Ok(Vec::from([sub_str.to_owned(), "High".to_string(), hand_category.to_owned()]).join(" "));
             },
@@ -124,21 +155,21 @@ impl HighRank {
                 hand_category = "Flush";
 
                 let sub_str: &str;
-                if sub_rank > 0 && sub_rank <= 4 {
+                if self.sub_rank > 0 && self.sub_rank <= 4 {
                     sub_str = "7";
-                } else if sub_rank > 4 && sub_rank <= 18 {
+                } else if self.sub_rank > 4 && self.sub_rank <= 18 {
                     sub_str = "8";
-                } else if sub_rank > 18 && sub_rank <= 52 {
+                } else if self.sub_rank > 18 && self.sub_rank <= 52 {
                     sub_str = "9";
-                } else if sub_rank > 52 && sub_rank <= 121 {
+                } else if self.sub_rank > 52 && self.sub_rank <= 121 {
                     sub_str = "10";
-                } else if sub_rank > 121 && sub_rank <= 246 {
+                } else if self.sub_rank > 121 && self.sub_rank <= 246 {
                     sub_str = "Jack";
-                } else if sub_rank > 246 && sub_rank <= 455 {
+                } else if self.sub_rank > 246 && self.sub_rank <= 455 {
                     sub_str = "Queen";
-                } else if sub_rank > 455 && sub_rank <= 784 {
+                } else if self.sub_rank > 455 && self.sub_rank <= 784 {
                     sub_str = "King";
-                } else if sub_rank > 784 && sub_rank <= 1277 {
+                } else if self.sub_rank > 784 && self.sub_rank <= 1277 {
                     sub_str = "Ace";
                 } else {
                     return Err("Sub rank for flush was not valid");
@@ -149,8 +180,8 @@ impl HighRank {
             7 => {
                 // Full house
 
-                let trip_rank = (sub_rank - 1) / 12;
-                let mut pair_rank = (sub_rank - 1) % 12;
+                let trip_rank = (self.sub_rank - 1) / 12;
+                let mut pair_rank = (self.sub_rank - 1) % 12;
 
                 if pair_rank >= trip_rank {
                     pair_rank += 1;
@@ -169,7 +200,7 @@ impl HighRank {
                 hand_category = "Quad";
 
                 let sub_str;
-                match Value::from_int((sub_rank - 1) / 12) {
+                match Value::from_int((self.sub_rank - 1) / 12) {
                     Some(val) => {
                         sub_str = val.get_readable_string() + "s";
                     }
@@ -183,11 +214,11 @@ impl HighRank {
             9 => {
                 hand_category = "Straight Flush";
 
-                if sub_rank < 1 || sub_rank > 10 {
+                if self.sub_rank < 1 || self.sub_rank > 10 {
                     return Err("Sub rank for straight was not valid");
                 }
 
-                let sub_str = Value::from_int(sub_rank + 2).unwrap().get_readable_string();
+                let sub_str = Value::from_int(self.sub_rank + 2).unwrap().get_readable_string();
                 
                 return Ok(Vec::from([sub_str.to_owned(), "High".to_string(), hand_category.to_owned()]).join(" "));
             },

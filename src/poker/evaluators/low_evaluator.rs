@@ -1,6 +1,5 @@
 use async_std::task;
-
-use super::{Evaluator, HighEvaluator, init_lookup_table, EvaluatorError};
+use super::{Evaluator, HighEvaluator, EvaluatorError};
 use super::super::{Rank, LowRank};
 
 use crate::core::Card;
@@ -58,9 +57,6 @@ impl LowEvaluator {
     /// 
     /// Initializes the lookup table if it isn't already.
     pub fn new() -> Self {
-        task::spawn(async {
-            init_lookup_table();
-        });
         Self{}
     }
 }
@@ -72,7 +68,8 @@ impl Evaluator for LowEvaluator {
     /// total card count is not with the domain [5, 7], then an error will return.
     fn evaluate_hand(&self, player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Vec<Rank>, EvaluatorError> {
         HighEvaluator{}.evaluate_hand(player_hand, board).and_then(|high| {
-            Ok(Vec::from([Rank::Low(LowRank::new(high[0].get_rank_strength()))]))
+            let rank = LowRank::new(7463 - high[0].get_rank_strength());
+            Ok(Vec::from([Rank::Low(rank)]))
         })
     }
 }
@@ -90,8 +87,8 @@ mod tests {
         
         let rank = eval.evaluate_hand(&player_hand, &board).expect("Evaluation failed")[0];
 
-        assert_eq!(7, rank.get_rank_strength() >> 12);
-        assert_eq!(13, rank.get_rank_strength() & 0xFFF);
+        assert_eq!(7, rank.get_hand_rank());
+        assert_eq!(13, rank.get_sub_rank());
     }
 
     #[test]
@@ -104,8 +101,8 @@ mod tests {
         let player1_rank = eval.evaluate_hand(&player1_hand, &Vec::new()).expect("Evaluation failed")[0];
         let player2_rank = eval.evaluate_hand(&player2_hand, &Vec::new()).expect("Evaluation failed")[0];
 
-        assert_eq!(6, player1_rank.get_rank_strength() >> 12);
-        assert_eq!(1, player1_rank.get_rank_strength() & 0xFFF);
+        assert_eq!(6, player1_rank.get_hand_rank());
+        assert_eq!(1, player1_rank.get_sub_rank());
         
         assert_eq!(player1_rank, player2_rank);
     }
@@ -113,7 +110,7 @@ mod tests {
     #[test]
     fn different_rank_by_1() {
         let player1_hand = Card::vec_from_str("2s3s4s5s8s").unwrap();
-        let player2_hand = Card::vec_from_str("2h3h4h5h7h").unwrap(); // stronger low hand
+        let player2_hand = Card::vec_from_str("2h4h5h6h7h").unwrap(); // stronger low hand
 
         let eval = LowEvaluator::new();
         

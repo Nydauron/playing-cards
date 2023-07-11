@@ -32,12 +32,28 @@ impl PartialOrd for Rank {
 
 impl Rank {
     /// Gets the hand rank's strength.
-    pub fn get_rank_strength(&self) -> u64 {
+    pub fn get_rank_strength(&self) -> u16 {
         use Rank::*;
 
         match self {
             &High(h) => h.get_rank_strength(),
             &Low(l) => l.get_rank_strength(),
+        }
+    }
+
+    pub fn get_hand_rank(&self) -> u8 {
+        use Rank::*;
+        match self {
+            &High(h) => h.get_hand_rank(),
+            &Low(l) => l.get_hand_rank(),
+        }
+    }
+
+    pub fn get_sub_rank(&self) -> u16 {
+        use Rank::*;
+        match self {
+            &High(h) => h.get_sub_rank(),
+            &Low(l) => l.get_sub_rank(),
         }
     }
 

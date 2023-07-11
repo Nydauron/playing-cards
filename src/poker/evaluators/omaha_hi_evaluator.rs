@@ -1,6 +1,6 @@
 use async_std::task;
 
-use super::{Evaluator, init_lookup_table, LOOKUP_TABLE, EvaluatorError};
+use super::{Evaluator, EvaluatorError};
 use super::super::{Rank, HighRank};
 
 use itertools::Itertools;
@@ -72,9 +72,6 @@ impl OmahaHighEvaluator {
     ///
     /// Initializes the lookup table if it isn't already.
     pub fn new() -> Self {
-        task::spawn(async {
-            init_lookup_table();
-        });
         Self{}
     }
 }
@@ -174,7 +171,6 @@ mod bench {
 
     #[bench]
     fn omaha_high_hands(b: &mut Bencher) {
-        init_lookup_table();
         let player_hand = Card::vec_from_str("2s3c4h7cJhKs").unwrap();
         let board = Card::vec_from_str("5h6dAsTdTh").unwrap();
         b.iter(|| {

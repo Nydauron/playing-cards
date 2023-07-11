@@ -8,18 +8,51 @@ use std::cmp::Ordering;
 /// This struct is typically returned by evaluators that evaluate a low hand component.
 #[derive(Copy, Clone, Debug)]
 pub struct LowRank {
-    rank_strength: u64,
+    rank_strength: u16,
+    hand_rank: u8,
+    sub_rank: u16,
 }
 
 impl LowRank {
     /// Creates a new LowRank struct
-    pub fn new(strength: u64) -> Self {
-        Self { rank_strength: strength }
+    pub fn new(strength: u16) -> Self {
+        let mut hand_rank: u8 = 0;
+        let mut sub_rank: u16 = 0;
+
+        if strength >= 1 {
+            let mut ranks_left = strength - 1;
+
+            // distinct combos from high card to straight flush
+            let strength_threshold = [1277, 2860, 858, 858, 10, 1277, 156, 156, 10];
+
+            for (i, &subranks) in strength_threshold.iter().enumerate().rev() {
+                if ranks_left < subranks {
+                    hand_rank = (i + 1) as u8;
+                    sub_rank = subranks - ranks_left;
+                    break;
+                }
+                ranks_left -= subranks;
+            }
+        }
+
+        Self {
+            rank_strength: strength,
+            hand_rank: hand_rank,
+            sub_rank: sub_rank,
+        }
     }
 
     /// Gets the hand rank's strength.
-    pub fn get_rank_strength(&self) -> u64 {
+    pub fn get_rank_strength(&self) -> u16 {
         self.rank_strength
+    }
+
+    pub fn get_hand_rank(&self) -> u8 {
+        self.hand_rank
+    }
+
+    pub fn get_sub_rank(&self) -> u16 {
+        self.sub_rank
     }
 
     /// Returns the string for the associated hand.
@@ -36,17 +69,7 @@ impl LowRank {
 // This is because there is no way to implement generic types for foriegn traits, so alas
 impl PartialOrd for LowRank {
     fn partial_cmp(&self, other: &LowRank) -> Option<Ordering> {
-        // We can do a little trick here:
-        // If x is a higher hand than y, then partial_cmp(x, y) should return Greater.
-        // Therefore, we can determine that partial_cmp(x, y) and partial_cmp(y, x) should return
-        // Greater and Less respectively. We can then say that if partial_cmp() returns Greater,
-        // the LHS is better and if it returns Less, the RHS is better.
-        //
-        // If we flip x and y, then we determine what's the low hand is evaluated since it flips
-        // the range. If x is a higher hand than y, then partial_cmp(x, y) returns Less, implying
-        // the better hand is y.
-
-        Some(other.get_rank_strength().cmp(&self.get_rank_strength()))
+        Some(self.get_rank_strength().cmp(&other.get_rank_strength()))
     }
 }
 

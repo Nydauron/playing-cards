@@ -1,10 +1,13 @@
 use async_std::task;
 
-use super::{Evaluator, init_lookup_table, LOOKUP_TABLE, EvaluatorError};
+use super::{Evaluator, EvaluatorError};
 
 use super::super::{Rank, HighRank};
 
 use crate::core::Card;
+use crate::poker::tables;
+use std::num::Wrapping;
+use std::ops::{Add, AddAssign, ShrAssign, Shl, Shr, BitXorAssign, BitAnd, BitXor};
 
 /// The wrapper struct for the High Evaluator.
 ///
@@ -61,10 +64,33 @@ impl HighEvaluator {
     /// 
     /// Initializes the lookup table if it isn't already.
     pub fn new() -> Self {
-        task::spawn(async {
-            init_lookup_table();
-        });
         Self{}
+    }
+
+    fn eval_five_cards(&self, c0: u32, c1: u32, c2: u32, c3: u32, c4: u32) -> u16 {
+        let q = (c0 | c1 | c2 | c3 | c4) >> 16;
+
+        if c0 & c1 & c2 & c3 & c4 & 0xf000 != 0 {
+            tables::FLUSHES[&q]
+        } else if tables::UNIQUE5.contains_key(&q) {
+            tables::UNIQUE5[&q]
+        } else {
+            let q = (c0 & 0xff) * (c1 & 0xff) * (c2 & 0xff) * (c3 & 0xff) * (c4 & 0xff);
+            tables::HASH_VALUES[self.find_fast(Wrapping(q))]
+        }
+    }
+
+    fn find_fast(&self, mut query: Wrapping<u32>) -> usize {
+        let a : Wrapping<u32>;
+        let b : Wrapping<u32>;
+        query.add_assign(Wrapping(0xe91aaa35));
+        query.bitxor_assign(query.shr(16));
+        query.add_assign(query.shl(8));
+        query.bitxor_assign(query.shr(4));
+        b = query.shr(8).bitand(Wrapping(0x1ff));
+        a = query.add(query.shl(2)).shr(19);
+
+        a.bitxor(Wrapping::<u32>(tables::HASH_ADJUST[b.0 as usize] as u32)).0 as usize
     }
 }
 
@@ -86,16 +112,37 @@ impl Evaluator for HighEvaluator {
         
         all_cards.extend(board.to_owned());
 
-        let mut rank = 53;
-        
-        for c in all_cards {
-            rank = LOOKUP_TABLE[(rank + c.to_int()) as usize];
+        let all_cards = Vec::from_iter(
+            all_cards.iter().map(|card| { card.calculate_bit_pattern() })
+        );
+
+        let mut hand_results = Vec::new();
+
+        for i0 in 0..all_cards.len() {
+            let c0 = all_cards[i0];
+            for i1 in i0+1..all_cards.len() {
+                let c1 = all_cards[i1];
+                for i2 in i1+1..all_cards.len() {
+                    let c2 = all_cards[i2];
+                    for i3 in i2+1..all_cards.len() {
+                        let c3 = all_cards[i3];
+                        for i4 in i3+1..all_cards.len() {
+                            let c4 = all_cards[i4];
+                            hand_results.push(self.eval_five_cards(c0, c1, c2, c3, c4));
+                        }
+                    }
+                }
+            }
         }
 
-        if card_count < 7 {
-            Ok(Vec::from([Rank::High(HighRank::new(LOOKUP_TABLE[rank as usize] as u64))]))
-        } else {
-            Ok(Vec::from([Rank::High(HighRank::new(rank as u64))]))
+        match hand_results.iter().min() {
+            None => {
+                Err(EvaluatorError::UnknownError("Could not get the minimum rank".to_string()))
+            },
+            Some(&best_rank) => {
+                let rank = HighRank::new(best_rank);
+                Ok(vec![Rank::High(rank)])
+            }
         }
     }
 }
@@ -113,8 +160,8 @@ mod tests {
         
         let rank = eval.evaluate_hand(&player_hand, &board).expect("Evaluation failed")[0];
 
-        assert_eq!(7, rank.get_rank_strength() >> 12);
-        assert_eq!(13, rank.get_rank_strength() & 0xFFF);
+        assert_eq!(7, rank.get_hand_rank());
+        assert_eq!(13, rank.get_sub_rank());
     }
 
     #[test]
@@ -127,9 +174,12 @@ mod tests {
         let player1_rank = eval.evaluate_hand(&player1_hand, &Vec::new()).expect("Evaluation failed")[0];
         let player2_rank = eval.evaluate_hand(&player2_hand, &Vec::new()).expect("Evaluation failed")[0];
 
-        assert_eq!(6, player1_rank.get_rank_strength() >> 12);
-        assert_eq!(1, player1_rank.get_rank_strength() & 0xFFF);
+        assert_eq!(6, player1_rank.get_hand_rank());
+        assert_eq!(1, player1_rank.get_sub_rank());
         
+        assert_eq!(6, player2_rank.get_hand_rank());
+        assert_eq!(1, player2_rank.get_sub_rank());
+
         assert_eq!(player1_rank, player2_rank);
     }
 
