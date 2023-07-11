@@ -20,7 +20,7 @@ Here is a list of types included within the Core package:
 
 ### Poker
 
-Here is a list of type included within the Poker feature:
+Here is a list of types included within the Poker feature:
 
 - Evaluators
   - High Evaluator
@@ -35,7 +35,7 @@ Here is a list of type included within the Poker feature:
 All the evaluators run on the [CactusKev Perfect Hash algorithm](https://github.com/tangentforks/XPokerEval/tree/master/XPokerEval.CactusKev.PerfectHash).
 Originally, the evaluators ran on the 2+2 evaluator, but due to how big the lookup graph is (the
 binary encoded file took up 4GB+) and because it increased compile time to over 5 minutes, it was
-deemed infeasible dispite its super fast evaluations.
+deemed infeasible despite its super fast evaluations.
 
 ## Other Things Still TODO
 
