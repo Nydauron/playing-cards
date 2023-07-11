@@ -3,6 +3,7 @@ use num::traits::FromPrimitive;
 use strum_macros::EnumIter;
 use std::str::FromStr;
 
+use funty::Unsigned;
 use serde::{Serialize, Deserialize};
 
 /// An enum representation of the rank of a card
@@ -76,8 +77,8 @@ impl Value {
     /// Attempts to parse an interger to a Value.
     ///
     /// Returns back None if the number does not fall within `[0, 13)`.
-    pub fn from_int(u: u64) -> Option<Value> {
-        match u {
+    pub fn from_int<T: Unsigned>(u: T) -> Option<Value> {
+        match u.as_u8() {
             0 => Some(Self::Two),
             1 => Some(Self::Three),
             2 => Some(Self::Four),
