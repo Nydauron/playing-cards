@@ -1,151 +1,282 @@
-use async_std::task;
+use super::EvaluatorError;
 
-use super::{Evaluator, EvaluatorError};
-
-use super::super::{Rank, HighRank};
-
-use crate::core::Card;
+use crate::core::{Card, Value};
+use crate::poker::rank::Rank;
 use crate::poker::tables;
 use std::num::Wrapping;
-use std::ops::{Add, AddAssign, ShrAssign, Shl, Shr, BitXorAssign, BitAnd, BitXor};
+use std::ops::{Add, AddAssign, Shl, Shr, BitXorAssign, BitAnd, BitXor};
 
-/// The wrapper struct for the High Evaluator.
+/// Evaluates the high hand for one player.
 ///
-/// This evaluator is typically used for games like Texas Hold'em, Five Card Draw, and Stud.
-///
-/// Examples
-/// ```rust
-/// use playing_cards::{core::Card, poker::{Evaluator, HighEvaluator, Rank}};
-///
-/// let hand = Card::vec_from_str("5h5s").unwrap();
-/// let board = Card::vec_from_str("2dTdKs5sAc").unwrap();
-///
-/// let eval = HighEvaluator::new();
-///
-/// let rank = eval.evaluate_hand(&hand, &board).unwrap()[0];
-///
-/// assert_eq!(rank.get_string().unwrap(), "Trip 5s");
-/// ```
-///
-/// ```rust
-/// use playing_cards::{core::Card, poker::{Evaluator, HighEvaluator, Rank}};
-///
-/// let hand = Card::vec_from_str("KhAs").unwrap();
-/// let board = Card::vec_from_str("2cQdKs5dAd").unwrap();
-///
-/// let eval = HighEvaluator::new();
-///
-/// let rank = eval.evaluate_hand(&hand, &board).unwrap()[0];
-///
-/// assert_eq!(rank.get_string().unwrap(), "Two Pair of Aces and Kings");
-/// ```
-///
-/// ```rust
-/// use playing_cards::{core::Card, poker::{Evaluator, HighEvaluator, Rank}};
-///
-/// let hero_hand = Card::vec_from_str("KhQc").unwrap();
-/// let villan_hand = Card::vec_from_str("Ac2c").unwrap();
-/// let board = Card::vec_from_str("AhKsQs9c2h").unwrap();
-///
-/// let eval = HighEvaluator::new();
-///
-/// let hero_rank = eval.evaluate_hand(&hero_hand, &board).unwrap()[0];
-/// let villan_rank = eval.evaluate_hand(&villan_hand, &board).unwrap()[0];
-///
-/// assert_eq!(hero_rank.get_string().unwrap(), "Two Pair of Kings and Queens");
-/// assert_eq!(villan_rank.get_string().unwrap(), "Two Pair of Aces and 2s");
-///
-/// assert!(hero_rank < villan_rank); // Villan's hand is better than the hero's
-/// ```
-pub struct HighEvaluator;
-
-impl HighEvaluator {
-    /// Creates a new `HighEvaluator`.
-    /// 
-    /// Initializes the lookup table if it isn't already.
-    pub fn new() -> Self {
-        Self{}
+/// Returns a `Vec<HighRank>` than can be compared directly against other `HighRank`s. If
+/// the total card count is not with the domain [5, 7], then an error will return.
+pub fn evaluate_hand(player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Vec<Rank>, EvaluatorError> {
+    let card_count = player_hand.len() + board.len();
+    if card_count < 5 {
+        return Err(EvaluatorError::NotEnoughCards("Set of cards".to_string(), 5));
+        // Set of cards does not have at least 5 card.s
+    } else if card_count > 7 {
+        return Err(EvaluatorError::TooManyCards("Set of cards".to_string(), 7));
+        // Set of cards does not have at most 7 cards
     }
+    let mut all_cards = player_hand.to_owned();
 
-    fn eval_five_cards(&self, c0: u32, c1: u32, c2: u32, c3: u32, c4: u32) -> u16 {
-        let q = (c0 | c1 | c2 | c3 | c4) >> 16;
+    all_cards.extend(board.to_owned());
 
-        if c0 & c1 & c2 & c3 & c4 & 0xf000 != 0 {
-            tables::FLUSHES[&q]
-        } else if tables::UNIQUE5.contains_key(&q) {
-            tables::UNIQUE5[&q]
-        } else {
-            let q = (c0 & 0xff) * (c1 & 0xff) * (c2 & 0xff) * (c3 & 0xff) * (c4 & 0xff);
-            tables::HASH_VALUES[self.find_fast(Wrapping(q))]
-        }
-    }
+    let all_cards = Vec::from_iter(
+        all_cards.iter().map(|card| { card.calculate_bit_pattern() })
+    );
 
-    fn find_fast(&self, mut query: Wrapping<u32>) -> usize {
-        let a : Wrapping<u32>;
-        let b : Wrapping<u32>;
-        query.add_assign(Wrapping(0xe91aaa35));
-        query.bitxor_assign(query.shr(16));
-        query.add_assign(query.shl(8));
-        query.bitxor_assign(query.shr(4));
-        b = query.shr(8).bitand(Wrapping(0x1ff));
-        a = query.add(query.shl(2)).shr(19);
+    let mut hand_results = Vec::new();
 
-        a.bitxor(Wrapping::<u32>(tables::HASH_ADJUST[b.0 as usize] as u32)).0 as usize
-    }
-}
-
-impl Evaluator for HighEvaluator {
-    /// Evaluates the high hand for one player.
-    ///
-    /// Returns a `Vec<HighRank>` than can be compared directly against other `HighRank`s. If
-    /// the total card count is not with the domain [5, 7], then an error will return.
-    fn evaluate_hand(&self, player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Vec<Rank>, EvaluatorError> {
-        let card_count = player_hand.len() + board.len();
-        if card_count < 5 {
-            return Err(EvaluatorError::NotEnoughCards("Set of cards".to_string(), 5));
-            // Set of cards does not have at least 5 cards
-        } else if card_count > 7 {
-            return Err(EvaluatorError::TooManyCards("Set of cards".to_string(), 7));
-            // Set of cards does not have at most 7 cards
-        }
-        let mut all_cards = player_hand.to_owned();
-        
-        all_cards.extend(board.to_owned());
-
-        let all_cards = Vec::from_iter(
-            all_cards.iter().map(|card| { card.calculate_bit_pattern() })
-        );
-
-        let mut hand_results = Vec::new();
-
-        for i0 in 0..all_cards.len() {
-            let c0 = all_cards[i0];
-            for i1 in i0+1..all_cards.len() {
-                let c1 = all_cards[i1];
-                for i2 in i1+1..all_cards.len() {
-                    let c2 = all_cards[i2];
-                    for i3 in i2+1..all_cards.len() {
-                        let c3 = all_cards[i3];
-                        for i4 in i3+1..all_cards.len() {
-                            let c4 = all_cards[i4];
-                            hand_results.push(self.eval_five_cards(c0, c1, c2, c3, c4));
-                        }
+    for i0 in 0..all_cards.len() {
+        let c0 = all_cards[i0];
+        for i1 in i0+1..all_cards.len() {
+            let c1 = all_cards[i1];
+            for i2 in i1+1..all_cards.len() {
+                let c2 = all_cards[i2];
+                for i3 in i2+1..all_cards.len() {
+                    let c3 = all_cards[i3];
+                    for i4 in i3+1..all_cards.len() {
+                        let c4 = all_cards[i4];
+                        hand_results.push(eval_five_cards(c0, c1, c2, c3, c4));
                     }
                 }
             }
         }
+    }
 
-        match hand_results.iter().min() {
-            None => {
-                Err(EvaluatorError::UnknownError("Could not get the minimum rank".to_string()))
-            },
-            Some(&best_rank) => {
-                let rank = HighRank::new(best_rank);
-                Ok(vec![Rank::High(rank)])
+    match hand_results.iter().min() {
+        None => {
+            Err(EvaluatorError::UnknownError("Could not get the minimum rank".to_string()))
+        },
+        Some(&best_rank) => {
+            let mut hand_rank: u16 = 0;
+            let mut sub_rank: u16 = 0;
+            if best_rank >= 1 {
+                let mut ranks_left = best_rank- 1;
+
+                // distinct combos from high card to straight flush
+                let strength_threshold = [1277, 2860, 858, 858, 10, 1277, 156, 156, 10];
+
+                for (i, &subranks) in strength_threshold.iter().enumerate().rev() {
+                    if ranks_left < subranks {
+                        hand_rank = (i + 1) as u16;
+                        sub_rank = subranks - ranks_left;
+                        break;
+                    }
+                    ranks_left -= subranks;
+                }
             }
+
+            let rank = Rank {
+                strength: 7463 - best_rank as u32,
+                hand_rank: hand_rank,
+                sub_rank: sub_rank,
+                description: Some(get_string(hand_rank, sub_rank).unwrap_or_else(|err_str|
+                    err_str.to_string()
+                )),
+            };
+            Ok(vec![rank])
         }
     }
 }
+
+fn get_string(hand_rank: u16, sub_rank: u16) -> Result<String, &'static str> {
+    let hand_category;
+    match hand_rank {
+        1 => {
+            hand_category = "High";
+
+            if sub_rank < 1 || sub_rank > 1277 {
+                return Err("Sub rank for high card was not valid");
+            }
+
+            let sub_str: &str;
+            if sub_rank > 0 && sub_rank <= 4 {
+                sub_str = "7";
+            } else if sub_rank > 4 && sub_rank <= 18 {
+                sub_str = "8";
+            } else if sub_rank > 18 && sub_rank <= 52 {
+                sub_str = "9";
+            } else if sub_rank > 52 && sub_rank <= 121 {
+                sub_str = "10";
+            } else if sub_rank > 121 && sub_rank <= 246 {
+                sub_str = "Jack";
+            } else if sub_rank > 246 && sub_rank <= 455 {
+                sub_str = "Queen";
+            } else if sub_rank > 455 && sub_rank <= 784 {
+                sub_str = "King";
+            } else if sub_rank > 784 && sub_rank <= 1277 {
+                sub_str = "Ace";
+            } else {
+                return Err("Sub rank for high card was not valid");
+            }
+
+            return Ok(Vec::from([sub_str.to_owned(), hand_category.to_owned()]).join(" "));
+        },
+        2 => {
+            hand_category = "Pair";
+
+            let sub_str;
+            match Value::from_int((sub_rank - 1) / 220) {
+                Some(val) => {
+                    sub_str = val.get_readable_string() + "s";
+                }
+                None => {
+                    return Err("Sub rank for one pair was not valid");
+                }
+            }
+
+            return Ok(Vec::from([hand_category.to_owned(), "of".to_owned(), sub_str.to_owned()]).join(" "));
+        },
+        3 => {
+            hand_category = "Two Pair";
+
+            let first_pair_rank = (((2*(sub_rank - 1) / 11) as f64 + 0.25).sqrt()-0.5).floor() as u16 + 1;
+            let sec_pair_kick_rank = sub_rank - (first_pair_rank - 1) * first_pair_rank / 2 * 11;
+
+            let sub_str;
+            match (Value::from_int(first_pair_rank), Value::from_int((sec_pair_kick_rank - 1) / 11)) {
+                (Some(first_pair), Some(sec_pair)) => {
+                    sub_str = Vec::from([first_pair.get_readable_string() + "s", "and".to_string(), sec_pair.get_readable_string() + "s"]).join(" ");
+                },
+                _ => {
+                    return Err("Sub rank for two pair was not valid");
+                }
+            }
+
+            return Ok(Vec::from([hand_category.to_owned(), "of".to_string(), sub_str]).join(" "));
+        },
+        4 => {
+            hand_category = "Trip";
+
+            let sub_str;
+            match Value::from_int((sub_rank - 1) / 66) {
+                Some(val) => {
+                    sub_str = val.get_readable_string() + "s";
+                }
+                None => {
+                    return Err("Sub rank for three of a kind was not valid");
+                }
+            }
+
+            return Ok(Vec::from([hand_category.to_owned(), sub_str.to_owned()]).join(" "));
+        },
+        5 => {
+            hand_category = "Straight";
+
+            if sub_rank < 1 || sub_rank > 10 {
+                return Err("Sub rank for straight was not valid");
+            }
+
+            let sub_str = Value::from_int(sub_rank + 2).unwrap().get_readable_string();
+
+            return Ok(Vec::from([sub_str.to_owned(), "High".to_string(), hand_category.to_owned()]).join(" "));
+        },
+        6 => {
+            hand_category = "Flush";
+
+            let sub_str: &str;
+            if sub_rank > 0 && sub_rank <= 4 {
+                sub_str = "7";
+            } else if sub_rank > 4 && sub_rank <= 18 {
+                sub_str = "8";
+            } else if sub_rank > 18 && sub_rank <= 52 {
+                sub_str = "9";
+            } else if sub_rank > 52 && sub_rank <= 121 {
+                sub_str = "10";
+            } else if sub_rank > 121 && sub_rank <= 246 {
+                sub_str = "Jack";
+            } else if sub_rank > 246 && sub_rank <= 455 {
+                sub_str = "Queen";
+            } else if sub_rank > 455 && sub_rank <= 784 {
+                sub_str = "King";
+            } else if sub_rank > 784 && sub_rank <= 1277 {
+                sub_str = "Ace";
+            } else {
+                return Err("Sub rank for flush was not valid");
+            }
+
+            return Ok(Vec::from([sub_str.to_owned(), "High".to_string(), hand_category.to_owned()]).join(" "));
+        },
+        7 => {
+            // Full house
+
+            let trip_rank = (sub_rank - 1) / 12;
+            let mut pair_rank = (sub_rank - 1) % 12;
+
+            if pair_rank >= trip_rank {
+                pair_rank += 1;
+            }
+
+            match (Value::from_int(trip_rank), Value::from_int(pair_rank)) {
+                (Some(trip_val), Some(pair_val)) => {
+                    return Ok(Vec::from([trip_val.get_readable_string() + "s", "Full of".to_string(), pair_val.get_readable_string() + "s"]).join(" "))
+                },
+                _ => {
+                    return Err("Sub rank for full house was not valid");
+                }
+            }
+        },
+        8 => {
+            hand_category = "Quad";
+
+            let sub_str;
+            match Value::from_int((sub_rank - 1) / 12) {
+                Some(val) => {
+                    sub_str = val.get_readable_string() + "s";
+                }
+                None => {
+                    return Err("Sub rank for four of a kind was not valid");
+                }
+            }
+
+            return Ok(Vec::from([hand_category.to_owned(), sub_str.to_owned()]).join(" "));
+        },
+        9 => {
+            hand_category = "Straight Flush";
+
+            if sub_rank < 1 || sub_rank > 10 {
+                return Err("Sub rank for straight was not valid");
+            }
+
+            let sub_str = Value::from_int(sub_rank + 2).unwrap().get_readable_string();
+
+            return Ok(Vec::from([sub_str.to_owned(), "High".to_string(), hand_category.to_owned()]).join(" "));
+        },
+        _ => {
+            return Err("Hand rank did not have a valid hand category");
+        }
+    }
+}
+
+fn eval_five_cards(c0: u32, c1: u32, c2: u32, c3: u32, c4: u32) -> u16 {
+    let q = (c0 | c1 | c2 | c3 | c4) >> 16;
+
+    if c0 & c1 & c2 & c3 & c4 & 0xf000 != 0 {
+        tables::FLUSHES[&q]
+    } else if tables::UNIQUE5.contains_key(&q) {
+        tables::UNIQUE5[&q]
+    } else {
+        let q = (c0 & 0xff) * (c1 & 0xff) * (c2 & 0xff) * (c3 & 0xff) * (c4 & 0xff);
+        tables::HASH_VALUES[find_fast(Wrapping(q))]
+    }
+}
+
+fn find_fast(mut query: Wrapping<u32>) -> usize {
+    let a : Wrapping<u32>;
+    let b : Wrapping<u32>;
+    query.add_assign(Wrapping(0xe91aaa35));
+    query.bitxor_assign(query.shr(16));
+    query.add_assign(query.shl(8));
+    query.bitxor_assign(query.shr(4));
+    b = query.shr(8).bitand(Wrapping(0x1ff));
+    a = query.add(query.shl(2)).shr(19);
+
+    a.bitxor(Wrapping::<u32>(tables::HASH_ADJUST[b.0 as usize] as u32)).0 as usize
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -156,9 +287,7 @@ mod tests {
         let player_hand = Vec::from([Card::from(1), Card::from(2)]);
         let board = Vec::from([Card::from(7), Card::from(5), Card::from(6), Card::from(52)]);
 
-        let eval = HighEvaluator::new();
-        
-        let rank = eval.evaluate_hand(&player_hand, &board).expect("Evaluation failed")[0];
+        let rank = &evaluate_hand(&player_hand, &board).expect("Evaluation failed")[0];
 
         assert_eq!(7, rank.get_hand_rank());
         assert_eq!(13, rank.get_sub_rank());
@@ -169,10 +298,8 @@ mod tests {
         let player1_hand = Card::vec_from_str("2s3s4s5s7s").unwrap();
         let player2_hand = Card::vec_from_str("2h3h4h5h7h").unwrap();
 
-        let eval = HighEvaluator::new();
-        
-        let player1_rank = eval.evaluate_hand(&player1_hand, &Vec::new()).expect("Evaluation failed")[0];
-        let player2_rank = eval.evaluate_hand(&player2_hand, &Vec::new()).expect("Evaluation failed")[0];
+        let player1_rank = &evaluate_hand(&player1_hand, &Vec::new()).expect("Evaluation failed")[0];
+        let player2_rank = &evaluate_hand(&player2_hand, &Vec::new()).expect("Evaluation failed")[0];
 
         assert_eq!(6, player1_rank.get_hand_rank());
         assert_eq!(1, player1_rank.get_sub_rank());
@@ -188,10 +315,8 @@ mod tests {
         let player1_hand = Card::vec_from_str("2s3s4s5s8s").unwrap(); // stronger high hand
         let player2_hand = Card::vec_from_str("2h3h4h5h7h").unwrap();
 
-        let eval = HighEvaluator::new();
-
-        let player1_rank = eval.evaluate_hand(&player1_hand, &Vec::new()).expect("Evaluation failed")[0];
-        let player2_rank = eval.evaluate_hand(&player2_hand, &Vec::new()).expect("Evaluation failed")[0];
+        let player1_rank = &evaluate_hand(&player1_hand, &Vec::new()).expect("Evaluation failed")[0];
+        let player2_rank = &evaluate_hand(&player2_hand, &Vec::new()).expect("Evaluation failed")[0];
 
         assert!(player1_rank > player2_rank);
     }
@@ -202,13 +327,11 @@ mod tests {
         let player1_hand = Card::vec_from_str("8h9s").unwrap();
         let player2_hand = Card::vec_from_str("9c3s").unwrap();
 
-        let eval = HighEvaluator::new();
+        let player1_rank = &evaluate_hand(&player1_hand, &board).expect("Evaluation failed")[0];
+        let player2_rank = &evaluate_hand(&player2_hand, &board).expect("Evaluation failed")[0];
 
-        let player1_rank = eval.evaluate_hand(&player1_hand, &board).expect("Evaluation failed")[0];
-        let player2_rank = eval.evaluate_hand(&player2_hand, &board).expect("Evaluation failed")[0];
-
-        assert_eq!(player1_rank.get_string().expect("Player 1 hand generated bad rank"), "9s Full of 2s");
-        assert_eq!(player2_rank.get_string().expect("Player 2 hand generated bad rank"), "9s Full of 3s");
+        assert_eq!(player1_rank.get_description().expect("Player 1 hand generated bad rank"), "9s Full of 2s");
+        assert_eq!(player2_rank.get_description().expect("Player 2 hand generated bad rank"), "9s Full of 3s");
         assert!(player1_rank < player2_rank);
     }
 
@@ -218,11 +341,9 @@ mod tests {
         for (h, expected_str) in hands {
             let player_hand = Card::vec_from_str(h).unwrap();
 
-            let eval = HighEvaluator::new();
+            let player_rank = &evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
-            let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
-
-            let string_rank = player_rank.get_string().expect("Hand generated bad rank");
+            let string_rank = player_rank.get_description().expect("Hand generated bad rank");
             assert_eq!(expected_str, string_rank, "\nFailed on hand {}\n", h);
         }
     }
@@ -233,11 +354,9 @@ mod tests {
         for (h, expected_str) in hands {
             let player_hand = Card::vec_from_str(h).unwrap();
 
-            let eval = HighEvaluator::new();
+            let player_rank = &evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
-            let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
-
-            let string_rank = player_rank.get_string().expect("Hand generated bad rank");
+            let string_rank = player_rank.get_description().expect("Hand generated bad rank");
             assert_eq!(expected_str, string_rank, "\nFailed on hand {}\n", h);
         }
     }
@@ -248,11 +367,9 @@ mod tests {
         for (h, expected_str) in hands {
             let player_hand = Card::vec_from_str(h).unwrap();
 
-            let eval = HighEvaluator::new();
+            let player_rank = &evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
-            let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
-
-            let string_rank = player_rank.get_string().expect("Hand generated bad rank");
+            let string_rank = player_rank.get_description().expect("Hand generated bad rank");
             assert_eq!(expected_str, string_rank, "\nFailed on hand {}\n", h);
         }
     }
@@ -263,11 +380,9 @@ mod tests {
         for (h, expected_str) in hands {
             let player_hand = Card::vec_from_str(h).unwrap();
 
-            let eval = HighEvaluator::new();
+            let player_rank = &evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
-            let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
-
-            let string_rank = player_rank.get_string().expect("Hand generated bad rank");
+            let string_rank = player_rank.get_description().expect("Hand generated bad rank");
             assert_eq!(expected_str, string_rank, "\nFailed on hand {}\n", h);
         }
     }
@@ -278,11 +393,9 @@ mod tests {
         for (h, expected_str) in hands {
             let player_hand = Card::vec_from_str(h).unwrap();
 
-            let eval = HighEvaluator::new();
+            let player_rank = &evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
-            let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
-
-            let string_rank = player_rank.get_string().expect("Hand generated bad rank");
+            let string_rank = player_rank.get_description().expect("Hand generated bad rank");
             assert_eq!(expected_str, string_rank, "\nFailed on hand {}\n", h);
         }
     }
@@ -293,11 +406,9 @@ mod tests {
         for (h, expected_str) in hands {
             let player_hand = Card::vec_from_str(h).unwrap();
 
-            let eval = HighEvaluator::new();
+            let player_rank = &evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
-            let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
-
-            let string_rank = player_rank.get_string().expect("Hand generated bad rank");
+            let string_rank = player_rank.get_description().expect("Hand generated bad rank");
             assert_eq!(expected_str, string_rank, "\nFailed on hand {}\n", h);
         }
     }
@@ -308,11 +419,9 @@ mod tests {
         for (h, expected_str) in hands {
             let player_hand = Card::vec_from_str(h).unwrap();
 
-            let eval = HighEvaluator::new();
+            let player_rank = &evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
-            let player_rank = eval.evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
-
-            let string_rank = player_rank.get_string().expect("Hand generated bad rank");
+            let string_rank = player_rank.get_description().expect("Hand generated bad rank");
             assert_eq!(expected_str, string_rank, "\nFailed on hand {}\n", h);
         }
     }
@@ -329,10 +438,8 @@ mod bench {
             let player1_hand = Card::vec_from_str("2s3s4s5s7s").unwrap();
             let player2_hand = Card::vec_from_str("2h3h4h5h7h").unwrap();
 
-            let eval = HighEvaluator::new();
-
-            let player1_rank = eval.evaluate_hand(&player1_hand, &Vec::new()).expect("Evaluation failed")[0];
-            let player2_rank = eval.evaluate_hand(&player2_hand, &Vec::new()).expect("Evaluation failed")[0];
+            let player1_rank = evaluate_hand(&player1_hand, &Vec::new()).expect("Evaluation failed")[0];
+            let player2_rank = evaluate_hand(&player2_hand, &Vec::new()).expect("Evaluation failed")[0];
 
             assert_eq!(6, player1_rank.get_rank_strength() >> 12);
             assert_eq!(1, player1_rank.get_rank_strength() & 0xFFF);

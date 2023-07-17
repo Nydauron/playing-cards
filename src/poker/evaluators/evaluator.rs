@@ -1,13 +1,18 @@
-use crate::{core::Card, poker::Rank};
+use crate::{core::Card, poker::rank::Rank};
 
+use super::{high_evaluator, EvaluatorError, low_evaluator};
 
-use super::EvaluatorError;
+#[derive(Copy, Clone, Debug)]
+pub enum Evaluator {
+    High,
+    Low,
+}
 
-
-
-/// A Trait definition for all poker evaluators.
-pub trait Evaluator {
-
-    /// Evaluates a hand for one player.
-    fn evaluate_hand(&self, player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Vec<Rank>, EvaluatorError>;
+impl Evaluator {
+    pub fn evaluate_hand(&self, player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Vec<Rank>, EvaluatorError> {
+        match self {
+            Self::High => high_evaluator::evaluate_hand(player_hand, board),
+            Self::Low => low_evaluator::evaluate_hand(player_hand, board),
+        }
+    }
 }
