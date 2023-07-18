@@ -1,6 +1,6 @@
 [package]
 name = "playing-cards"
-version = "0.0.4"
+version = "0.1.0-dev"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 description = "A Rust library for playing cards and poker hand evaluation"
