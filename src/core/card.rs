@@ -118,6 +118,9 @@ impl Value {
         }
     }
 
+    /// Returns the associated Cactus-Kev prime.
+    ///
+    /// Useful for building the original or variants of the Cactus-Kev evaluator.
     pub fn get_cactus_kev_prime(& self) -> u8 {
         match self {
             Self::Two => 2,
