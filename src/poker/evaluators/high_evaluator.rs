@@ -125,7 +125,7 @@ pub fn generate_winner_list<T: Eq + Hash + Copy>(ranks: &HashMap<T, Vec<Rank>>) 
     let table: Vec<_> = transpose
         .iter()
         .map(|ranks| {
-            let mut sorted_ranks_desc = ranks
+            let sorted_ranks_desc = ranks
                 .iter()
                 .sorted_by(|a, b| {
                     a.1.cmp(b.1)
