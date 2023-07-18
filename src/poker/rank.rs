@@ -41,24 +41,6 @@ pub struct Rank {
     pub description: Option<String>,
 }
 
-impl Rank {
-    pub fn get_strength(&self) -> u32 {
-        self.strength
-    }
-
-    pub fn get_hand_rank(&self) -> u16 {
-        self.hand_rank
-    }
-
-    pub fn get_sub_rank(&self) -> u16 {
-        self.sub_rank
-    }
-
-    pub fn get_description(&self) -> Option<String> {
-        self.description.clone()
-    }
-}
-
 impl Ord for Rank {
     fn cmp(&self, other: &Self) -> Ordering {
         self.strength.cmp(&other.strength)

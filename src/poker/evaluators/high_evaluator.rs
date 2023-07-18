@@ -363,8 +363,8 @@ mod tests {
 
         let rank = &evaluate_hand(&player_hand, &board).expect("Evaluation failed")[0];
 
-        assert_eq!(7, rank.get_hand_rank());
-        assert_eq!(13, rank.get_sub_rank());
+        assert_eq!(7, rank.hand_rank);
+        assert_eq!(13, rank.sub_rank);
     }
 
     #[test]
@@ -375,11 +375,11 @@ mod tests {
         let player1_rank = &evaluate_hand(&player1_hand, &Vec::new()).expect("Evaluation failed")[0];
         let player2_rank = &evaluate_hand(&player2_hand, &Vec::new()).expect("Evaluation failed")[0];
 
-        assert_eq!(6, player1_rank.get_hand_rank());
-        assert_eq!(1, player1_rank.get_sub_rank());
+        assert_eq!(6, player1_rank.hand_rank);
+        assert_eq!(1, player1_rank.sub_rank);
         
-        assert_eq!(6, player2_rank.get_hand_rank());
-        assert_eq!(1, player2_rank.get_sub_rank());
+        assert_eq!(6, player2_rank.hand_rank);
+        assert_eq!(1, player2_rank.sub_rank);
 
         assert_eq!(player1_rank, player2_rank);
     }
@@ -404,8 +404,8 @@ mod tests {
         let player1_rank = &evaluate_hand(&player1_hand, &board).expect("Evaluation failed")[0];
         let player2_rank = &evaluate_hand(&player2_hand, &board).expect("Evaluation failed")[0];
 
-        assert_eq!(player1_rank.get_description().expect("Player 1 hand generated bad rank"), "9s Full of 2s");
-        assert_eq!(player2_rank.get_description().expect("Player 2 hand generated bad rank"), "9s Full of 3s");
+        assert_eq!(player1_rank.description.as_ref().expect("Player 1 hand generated bad rank"), "9s Full of 2s");
+        assert_eq!(player2_rank.description.as_ref().expect("Player 2 hand generated bad rank"), "9s Full of 3s");
         assert!(player1_rank < player2_rank);
     }
 
@@ -417,7 +417,7 @@ mod tests {
 
             let player_rank = &evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
-            let string_rank = player_rank.get_description().expect("Hand generated bad rank");
+            let string_rank = player_rank.description.as_ref().expect("Hand generated bad rank");
             assert_eq!(expected_str, string_rank, "\nFailed on hand {}\n", h);
         }
     }
@@ -430,7 +430,7 @@ mod tests {
 
             let player_rank = &evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
-            let string_rank = player_rank.get_description().expect("Hand generated bad rank");
+            let string_rank = player_rank.description.as_ref().expect("Hand generated bad rank");
             assert_eq!(expected_str, string_rank, "\nFailed on hand {}\n", h);
         }
     }
@@ -443,7 +443,7 @@ mod tests {
 
             let player_rank = &evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
-            let string_rank = player_rank.get_description().expect("Hand generated bad rank");
+            let string_rank = player_rank.description.as_ref().expect("Hand generated bad rank");
             assert_eq!(expected_str, string_rank, "\nFailed on hand {}\n", h);
         }
     }
@@ -456,7 +456,7 @@ mod tests {
 
             let player_rank = &evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
-            let string_rank = player_rank.get_description().expect("Hand generated bad rank");
+            let string_rank = player_rank.description.as_ref().expect("Hand generated bad rank");
             assert_eq!(expected_str, string_rank, "\nFailed on hand {}\n", h);
         }
     }
@@ -469,7 +469,7 @@ mod tests {
 
             let player_rank = &evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
-            let string_rank = player_rank.get_description().expect("Hand generated bad rank");
+            let string_rank = player_rank.description.as_ref().expect("Hand generated bad rank");
             assert_eq!(expected_str, string_rank, "\nFailed on hand {}\n", h);
         }
     }
@@ -482,7 +482,7 @@ mod tests {
 
             let player_rank = &evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
-            let string_rank = player_rank.get_description().expect("Hand generated bad rank");
+            let string_rank = player_rank.description.as_ref().expect("Hand generated bad rank");
             assert_eq!(expected_str, string_rank, "\nFailed on hand {}\n", h);
         }
     }
@@ -495,7 +495,7 @@ mod tests {
 
             let player_rank = &evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
 
-            let string_rank = player_rank.get_description().expect("Hand generated bad rank");
+            let string_rank = player_rank.description.as_ref().expect("Hand generated bad rank");
             assert_eq!(expected_str, string_rank, "\nFailed on hand {}\n", h);
         }
     }
@@ -515,8 +515,8 @@ mod bench {
             let player1_rank = evaluate_hand(&player1_hand, &Vec::new()).expect("Evaluation failed")[0];
             let player2_rank = evaluate_hand(&player2_hand, &Vec::new()).expect("Evaluation failed")[0];
 
-            assert_eq!(6, player1_rank.get_rank_strength() >> 12);
-            assert_eq!(1, player1_rank.get_rank_strength() & 0xFFF);
+            assert_eq!(6, player1_rank.rank_strength >> 12);
+            assert_eq!(1, player1_rank.rank_strength & 0xFFF);
 
             assert_eq!(player1_rank, player2_rank);
         })
