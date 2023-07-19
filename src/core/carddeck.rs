@@ -1,6 +1,5 @@
-use std::io::{Cursor, Error};
+use std::io::Error;
 use getrandom;
-use byteorder::{BigEndian, ReadBytesExt};
 
 extern crate rand;
 
@@ -29,7 +28,7 @@ use super::{Card, Value, Suit};
 /// ```
 pub struct CardDeck {
     deck: Vec<Card>,
-    seed: u64,
+    seed: [u8; 32],
     mt:   Xoshiro256PlusPlus,
     muck: Vec<Card>,
 }
@@ -55,20 +54,12 @@ impl CardDeck {
     /// }
     /// ```
     pub fn new() -> Result<CardDeck, Error> {
-        let mut buf = [0u8; 8];
-        let res = getrandom::getrandom(&mut buf);
+        let mut seed = [0u8; 32];
+        let res = getrandom::getrandom(&mut seed);
 
         if let Err(e) = res {
             return Err(From::<getrandom::Error>::from(e));
         }
-
-        let mut rdr = Cursor::new(buf);
-
-        let seed = rdr.read_u64::<BigEndian>().unwrap();
-
-        // Could do this, but idk if there is a way to get the seed
-        // let mut mt = sfmt::SFMT::from_entropy();
-        // CardDeck::new_with_mt(&mut mt)
 
         Ok(CardDeck::new_with_seed(seed))
     }
@@ -82,7 +73,9 @@ impl CardDeck {
     /// use playing_cards::core::CardDeck;
     ///
     /// for _ in 0..10 {
-    ///     let mut deck = CardDeck::new_with_seed(1337);
+    ///     let mut seed_bytes = Vec::from(1337_u32.to_ne_bytes());
+    ///     seed_bytes.extend_from_slice(&[0u8; 28]);
+    ///     let mut deck = CardDeck::new_with_seed(seed_bytes.as_slice().try_into().unwrap());
     ///
     ///     // Every single line should produce the same 5 cards in the same exact order because
     ///     // we gave each deck the same seed.
@@ -95,7 +88,9 @@ impl CardDeck {
     /// use playing_cards::core::CardDeck;
     ///
     /// for i in 0..10 {
-    ///     let mut deck = CardDeck::new_with_seed(i);
+    ///     let mut seed_bytes = Vec::from((i as u32).to_ne_bytes());
+    ///     seed_bytes.extend_from_slice(&[0u8; 28]);
+    ///     let mut deck = CardDeck::new_with_seed(seed_bytes.as_slice().try_into().unwrap());
     ///
     ///     // Each line should be different from one another, but if you rerun this code again,
     ///     // it will print out the exact 10 lines again.
@@ -108,13 +103,13 @@ impl CardDeck {
     /// if the seed generation is predictable (e.g. incrementing the seed by one, using unix time). It is better to
     /// use `new()` in these cases since the entropy from the system cannot be replicated across systems easily
     /// unless the seed generated is shared.
-    pub fn new_with_seed(seed: u64) -> CardDeck {
-        let mt = Xoshiro256PlusPlus::seed_from_u64(seed);
+    pub fn new_with_seed(seed: [u8; 32]) -> CardDeck {
+        let mt = Xoshiro256PlusPlus::from_seed(seed);
 
         CardDeck::new_with_mt(&mt, seed)
     }
 
-    fn new_with_mt(mt: &Xoshiro256PlusPlus, seed: u64) -> CardDeck {
+    fn new_with_mt(mt: &Xoshiro256PlusPlus, seed: [u8; 32]) -> CardDeck {
         let mut d: Vec<Card> = Vec::with_capacity(52);
 
         for s in Suit::iter() {
@@ -143,7 +138,7 @@ impl CardDeck {
     }
 
     /// Gets the mersenne twister seed of the CardDeck.
-    pub fn get_seed(& self) -> u64 {
+    pub fn get_seed(& self) -> [u8; 32] {
         self.seed
     }
 
@@ -264,8 +259,10 @@ mod tests {
 
     #[test]
     fn test_deck_same_seed() {
-        let mut d1 = CardDeck::new_with_seed(233);
-        let mut d2 = CardDeck::new_with_seed(233);
+        let mut seed_bytes = Vec::from(233_i32.to_le_bytes());
+        seed_bytes.extend_from_slice(&[0u8; 28]);
+        let mut d1 = CardDeck::new_with_seed(seed_bytes.as_slice().try_into().unwrap());
+        let mut d2 = CardDeck::new_with_seed(seed_bytes.as_slice().try_into().unwrap());
 
         are_decks_equal(&mut d1,&mut d2);
     }
@@ -289,12 +286,16 @@ mod tests {
 
     #[test]
     fn test_get_seed() {
-        let expected_seed = 0x879e280ef4749657;
-        let d = CardDeck::new_with_seed(expected_seed);
+        let mut expected_seed = Vec::from(233_i32.to_le_bytes());
+        expected_seed.extend_from_slice(&[0u8; 28]);
+        let d = CardDeck::new_with_seed(expected_seed.as_slice().try_into().unwrap());
 
-        assert_eq!(d.get_seed(), expected_seed);
+        assert_eq!(Vec::from(d.get_seed()), expected_seed);
     }
 
+    // This test relies on random entropy seeding. By the very nature of random numbers and normal
+    // curves, there will be a subset of runs that will fail since the actual percentage lands
+    // outside if the bounds of the expected percentage (+/- 0.2%).
     #[test]
     #[ignore]
     fn test_monte_carlo_2kings_adjacent() {
