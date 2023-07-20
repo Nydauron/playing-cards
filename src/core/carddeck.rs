@@ -1,12 +1,11 @@
-use std::io::{Cursor, Error};
+use std::io::Error;
 use getrandom;
-use byteorder::{BigEndian, ReadBytesExt};
 
-extern crate sfmt;
 extern crate rand;
 
 use rand::seq::SliceRandom;
 use rand_core::SeedableRng;
+use rand_xoshiro::Xoshiro256PlusPlus;
 
 use strum::IntoEnumIterator;
 
@@ -22,15 +21,16 @@ use super::{Card, Value, Suit};
 /// ```rust
 /// use playing_cards::core::CardDeck;
 ///
-/// let mut deck = CardDeck::new().unwrap();
-/// let (hand, _) = deck.deal_cards(2);
+/// let mut deck = CardDeck::new();
+/// deck.shuffle(None);
+///
+/// let hand = deck.deal_cards(2, false);
 ///
 /// println!("{:?}", hand.unwrap()); // Two random cards from the deck
 /// ```
 pub struct CardDeck {
     deck: Vec<Card>,
-    seed: u64,
-    mt:   sfmt::SFMT,
+    seed: Option<[u8; 32]>,
     muck: Vec<Card>,
 }
 
@@ -44,49 +44,36 @@ impl CardDeck {
     /// use playing_cards::core::CardDeck;
     ///
     /// for _ in 0..10 {
-    ///     let mut deck = CardDeck::new().unwrap();
+    ///     let mut deck = CardDeck::new();
     ///
-    ///     // Each line should produce a different permutation of cards, since the
-    ///     // chance at least one of the ten lines are the same is:
-    ///     // 1 - x!/(x-10)!/x^10
-    ///     // where x == 52! / (52-5)! which equates to about 1.442e-7
-    ///     let (hand, _) = deck.deal_cards(5);
-    ///     println!("{:?}", hand.unwrap());
+    ///     // Since we did not shuffle the deck of cards, we should see cards in descending order. 
+    ///     for (i, card) in (52..0).zip(deck) {
+    ///         assert_eq!(i, Into::<i32>::into(card));
+    ///     }
     /// }
     /// ```
-    pub fn new() -> Result<CardDeck, Error> {
-        let mut buf = [0u8; 8];
-        let res = getrandom::getrandom(&mut buf);
-
-        if let Err(e) = res {
-            return Err(From::<getrandom::Error>::from(e));
-        }
-
-        let mut rdr = Cursor::new(buf);
-
-        let seed = rdr.read_u64::<BigEndian>().unwrap();
-
-        // Could do this, but idk if there is a way to get the seed
-        // let mut mt = sfmt::SFMT::from_entropy();
-        // CardDeck::new_with_mt(&mut mt)
-
-        Ok(CardDeck::new_with_seed(seed))
+    pub fn new() -> CardDeck {
+        Self::create_unshuffled_deck()
     }
 
     /// Creates a new CardDeck from the given seed.
     ///
     /// This method is a way to create deterministic deck for random but predictiable outcomes.
+    /// Please note that this method will attempt to shuffle the deck, but if shuffling fails,
+    /// `new_with_seed()` will return an error.
     ///
     /// Examples
     /// ```rust
     /// use playing_cards::core::CardDeck;
     ///
     /// for _ in 0..10 {
-    ///     let mut deck = CardDeck::new_with_seed(1337);
+    ///     let mut seed_bytes = Vec::from(1337_u32.to_ne_bytes());
+    ///     seed_bytes.extend_from_slice(&[0u8; 28]);
+    ///     let mut deck = CardDeck::new_with_seed(Some(seed_bytes.as_slice().try_into().unwrap())).unwrap();
     ///
     ///     // Every single line should produce the same 5 cards in the same exact order because
     ///     // we gave each deck the same seed.
-    ///     let (hand, _) = deck.deal_cards(5);
+    ///     let hand = deck.deal_cards(5, false);
     ///     println!("{:?}", hand.unwrap());
     /// }
     /// ```
@@ -95,26 +82,34 @@ impl CardDeck {
     /// use playing_cards::core::CardDeck;
     ///
     /// for i in 0..10 {
-    ///     let mut deck = CardDeck::new_with_seed(i);
+    ///     let mut seed_bytes = Vec::from((i as u32).to_ne_bytes());
+    ///     seed_bytes.extend_from_slice(&[0u8; 28]);
+    ///     let mut deck = CardDeck::new_with_seed(Some(seed_bytes.as_slice().try_into().unwrap())).unwrap();
     ///
     ///     // Each line should be different from one another, but if you rerun this code again,
     ///     // it will print out the exact 10 lines again.
-    ///     let (hand, _) = deck.deal_cards(5);
+    ///     let hand = deck.deal_cards(5, false);
     ///     println!("{:?}", hand.unwrap());
     /// }
     /// ```
     ///
-    /// If you do use `new_with_seed` and are using it inputting random seeds, the card deck can be made predictable
-    /// if the seed generation is predictable (e.g. incrementing the seed by one, using unix time). It is better to
-    /// use `new()` in these cases since the entropy from the system cannot be replicated across systems easily
-    /// unless the seed generated is shared.
-    pub fn new_with_seed(seed: u64) -> CardDeck {
-        let mt = sfmt::SFMT::seed_from_u64(seed);
+    /// If you do use `new_with_seed()` and are using it inputting random seeds, the cards within
+    /// the deck can be predicted if the seed generation is predictable (e.g. incrementing the seed
+    /// by one, using unix time). It is better to use `new()` in these cases since the entropy from
+    /// the system cannot be replicated across systems easily unless the seed generated is shared.
+    pub fn new_with_seed(seed: Option<[u8; 32]>) -> Result<CardDeck, Error> {
+        let mut deck = Self::create_unshuffled_deck();
 
-        CardDeck::new_with_mt(& mt, seed)
+        if let Some(_) = seed {
+            if let Err(err) = deck.shuffle(seed) {
+                return Err(err);
+            }
+        }
+
+        Ok(deck)
     }
 
-    fn new_with_mt(mt: & sfmt::SFMT, seed: u64) -> CardDeck {
+    fn create_unshuffled_deck() -> CardDeck {
         let mut d: Vec<Card> = Vec::with_capacity(52);
 
         for s in Suit::iter() {
@@ -126,24 +121,50 @@ impl CardDeck {
             }
         }
 
-        let mut deck: CardDeck = CardDeck{
+        CardDeck{
             deck: d,
-            seed: seed,
-            mt: mt.to_owned(),
+            seed: None,
             muck: Vec::new(),
-        };
-
-        deck.shuffle();
-
-        deck
+        }
     }
 
-    fn shuffle(&mut self) {
-        self.deck.shuffle(&mut self.mt);
+    /// Shuffles the deck.
+    ///
+    /// An optional seed can be provided if the deck should be shuffled with a specific seed. If no
+    /// seed is provided, then system entropy is sampled for a random seed.
+    pub fn shuffle(&mut self, seed: Option<[u8; 32]>) -> Result<(), Error> {
+        match Self::shuffle_cards(&mut self.deck, seed) {
+            Ok(seed) => {
+                self.seed = Some(seed);
+                Ok(())
+            },
+            Err(err) => Err(err)
+        }
+    }
+
+    fn shuffle_cards(cards: &mut Vec<Card>, seed: Option<[u8; 32]>) -> Result<[u8; 32], Error> {
+        let mut rng;
+        let mut seed_used;
+        match seed {
+            Some(seed) => {
+                seed_used = seed
+            },
+            None => {
+                seed_used = [0u8; 32];
+                let res = getrandom::getrandom(&mut seed_used);
+
+                if let Err(e) = res {
+                    return Err(From::<getrandom::Error>::from(e));
+                }
+            },
+        }
+        rng = Xoshiro256PlusPlus::from_seed(seed_used);
+        cards.shuffle(&mut rng);
+        Ok(seed_used)
     }
 
     /// Gets the mersenne twister seed of the CardDeck.
-    pub fn get_seed(& self) -> u64 {
+    pub fn get_seed(& self) -> Option<[u8; 32]> {
         self.seed
     }
 
@@ -154,9 +175,15 @@ impl CardDeck {
         self.muck.append(&mut cards);
     }
 
-    /// Checks to see if there are enough cards in the deck to deal ``
-    pub fn check_deal_cards(& self, n: usize, m: usize) -> bool {
-        self.deck.len() + self.muck.len() >= n - m
+    /// Checks to see if there are enough cards in the deck to deal
+    ///
+    /// Returns true if there are enough cards, false otherwise.
+    pub fn check_deal_cards(& self, cards_to_deal: usize, include_muck: bool) -> bool {
+        let mut total_cards = self.deck.len();
+        if include_muck {
+            total_cards = self.muck.len();
+        }
+        total_cards >= cards_to_deal
     }
 
     /// Deals `n` cards out from the CardDeck.
@@ -171,13 +198,14 @@ impl CardDeck {
     ///
     /// let mut player_hands: Vec<Vec<Card>> = Vec::new();
     ///
-    /// let mut deck = CardDeck::new().unwrap();
+    /// let mut deck = CardDeck::new();
+    /// deck.shuffle(None);
+    ///
     /// for i in 0..10 {
-    ///     if let (Some(hand), _) = deck.deal_cards(2) { // 2 cards per player would require 20 cards
+    ///     if let Some(hand) = deck.deal_cards(2, false) { // 2 cards per player would require 20 cards
     ///         player_hands.push(hand);
     ///     } else {
-    ///         // Should never reach here
-    ///         panic!("Ran out of cards!");
+    ///         unreachable!("Ran out of cards!");
     ///     }
     /// }
     ///
@@ -189,35 +217,31 @@ impl CardDeck {
     ///
     /// let mut player_hands: Vec<Vec<Card>> = Vec::new();
     ///
-    /// let mut deck = CardDeck::new().unwrap();
+    /// let mut deck = CardDeck::new();
+    /// deck.shuffle(None);
+    ///
     /// for i in 0..10 {
-    ///     if let (Some(hand), _) = deck.deal_cards(6) { // 6 cards per player would require 60 cards, but there's only 52
+    ///     if let Some(hand) = deck.deal_cards(6, false) { // 6 cards per player would require 60 cards, but there's only 52
     ///         player_hands.push(hand);
     ///     } else {
     ///         panic!("Ran out of cards!");
     ///     }
     /// }
     ///
-    /// // Should never reach here
-    /// println!("{:?}", player_hands);
+    /// unreachable!();
     /// ```
-    pub fn deal_cards(&mut self, n: usize) -> (Option<Vec<Card>>, bool) {
-        let mut cards_to_deal: Vec<Card> = Vec::new();
-        let mut was_deck_reshuffled = false;
-        for _i in 0..n {
+    pub fn deal_cards(&mut self, cards_to_deal: usize, include_muck: bool) -> Option<Vec<Card>> {
+        if !self.check_deal_cards(cards_to_deal, include_muck) {
+            return None
+        }
+        let mut cards_dealt: Vec<Card> = Vec::new();
+        for _ in 0..cards_to_deal {
             if let Some(s) = self.next() {
-                cards_to_deal.push(s);
-            } else {
-                self.reshuffle_muck();
-                was_deck_reshuffled = true;
+                cards_dealt.push(s);
             }
         }
 
-        if cards_to_deal.len() == n {
-            (Some(cards_to_deal), was_deck_reshuffled)
-        } else {
-            (None, was_deck_reshuffled)
-        }
+        Some(cards_dealt)
     }
 
     /// Draws `n` cards out from the CardDeck.
@@ -225,25 +249,33 @@ impl CardDeck {
     /// The definition of drawing in this case means to discard and replace cards. This function
     /// can take any number of discard cards with the help of `muck_cards()` and then simply
     /// invokes `deal_cards()` to deal `n` cards out of the deck.
-    pub fn draw_cards(&mut self, n: usize, discard_cards: Option<Vec<Card>>) -> (Option<Vec<Card>>, bool) {
+    pub fn draw_cards(&mut self, cards_to_deal: usize, discard_cards: Option<Vec<Card>>, include_muck: bool) -> Option<Vec<Card>> {
+        if !self.check_deal_cards(cards_to_deal - discard_cards.clone().map_or(0, |v| if include_muck { v.len() } else { 0 } ), include_muck) {
+            return None
+        }
         if let Some(c) = discard_cards {
             self.muck_cards(c);
         }
 
-        self.deal_cards(n)
+        self.deal_cards(cards_to_deal, include_muck)
     }
 
-    fn reshuffle_muck(&mut self) -> bool {
-        if self.deck.len() == 0 {
-            self.muck.shuffle(&mut self.mt);
-
-            self.deck = self.muck.to_owned();
-            self.muck = Vec::new();
-
-            true
-        } else {
-            false
+    /// Reshuffles the muck and inserts those cards into the deck.
+    ///
+    /// The muck will be placed behind the remaining cards in the deck.
+    ///
+    /// Similar to `shuffle()` this funtion takes in an optional seed if a specific seed is
+    /// desired. If no seed is provided, a seed will be sampled from entropy.
+    pub fn reshuffle_muck(&mut self, seed: Option<[u8; 32]>) -> Result<(), Error> {
+        if let Err(err) = Self::shuffle_cards(&mut self.muck, seed) {
+            return Err(err);
         }
+
+        self.muck.append(&mut self.deck);
+        self.deck = self.muck.to_owned();
+        self.muck = Vec::new();
+
+        Ok(())
     }
 }
 
@@ -264,8 +296,10 @@ mod tests {
 
     #[test]
     fn test_deck_same_seed() {
-        let mut d1 = CardDeck::new_with_seed(233);
-        let mut d2 = CardDeck::new_with_seed(233);
+        let mut seed_bytes = Vec::from(233_i32.to_le_bytes());
+        seed_bytes.extend_from_slice(&[0u8; 28]);
+        let mut d1 = CardDeck::new_with_seed(Some(seed_bytes.as_slice().try_into().unwrap())).unwrap();
+        let mut d2 = CardDeck::new_with_seed(Some(seed_bytes.as_slice().try_into().unwrap())).unwrap();
 
         are_decks_equal(&mut d1,&mut d2);
     }
@@ -289,20 +323,26 @@ mod tests {
 
     #[test]
     fn test_get_seed() {
-        let expected_seed = 0x879e280ef4749657;
-        let d = CardDeck::new_with_seed(expected_seed);
+        let mut expected_seed = Vec::from(233_i32.to_le_bytes());
+        expected_seed.extend_from_slice(&[0u8; 28]);
+        let d = CardDeck::new_with_seed(Some(expected_seed.as_slice().try_into().unwrap())).unwrap();
 
-        assert_eq!(d.get_seed(), expected_seed);
+        assert_eq!(Vec::from(d.get_seed().unwrap()), expected_seed);
     }
 
+    // This test relies on random entropy seeding. By the very nature of random numbers and normal
+    // curves, there will be a subset of runs that will fail since the actual percentage lands
+    // outside if the bounds of the expected percentage (+/- 0.2%).
     #[test]
     #[ignore]
     fn test_monte_carlo_2kings_adjacent() {
-        let iters = 300000;
+        let iters = 150000;
 
         let count : i32 = (0..iters).into_par_iter().map(|_| {
-            let mut deck = CardDeck::new().unwrap();
-            
+            let mut deck = CardDeck::new();
+
+            deck.shuffle(None).expect("Problem occured when shuffling the deck");
+
             if are_2kings_adjacent(&mut deck) {
                 1
             } else {
