@@ -59,6 +59,8 @@ impl CardDeck {
     /// Creates a new CardDeck from the given seed.
     ///
     /// This method is a way to create deterministic deck for random but predictiable outcomes.
+    /// Please note that this method will attempt to shuffle the deck, but if shuffling fails,
+    /// `new_with_seed()` will return an error.
     ///
     /// Examples
     /// ```rust
@@ -67,7 +69,7 @@ impl CardDeck {
     /// for _ in 0..10 {
     ///     let mut seed_bytes = Vec::from(1337_u32.to_ne_bytes());
     ///     seed_bytes.extend_from_slice(&[0u8; 28]);
-    ///     let mut deck = CardDeck::new_with_seed(Some(seed_bytes.as_slice().try_into().unwrap()));
+    ///     let mut deck = CardDeck::new_with_seed(Some(seed_bytes.as_slice().try_into().unwrap())).unwrap();
     ///
     ///     // Every single line should produce the same 5 cards in the same exact order because
     ///     // we gave each deck the same seed.
@@ -82,7 +84,7 @@ impl CardDeck {
     /// for i in 0..10 {
     ///     let mut seed_bytes = Vec::from((i as u32).to_ne_bytes());
     ///     seed_bytes.extend_from_slice(&[0u8; 28]);
-    ///     let mut deck = CardDeck::new_with_seed(Some(seed_bytes.as_slice().try_into().unwrap()));
+    ///     let mut deck = CardDeck::new_with_seed(Some(seed_bytes.as_slice().try_into().unwrap())).unwrap();
     ///
     ///     // Each line should be different from one another, but if you rerun this code again,
     ///     // it will print out the exact 10 lines again.
@@ -91,18 +93,20 @@ impl CardDeck {
     /// }
     /// ```
     ///
-    /// If you do use `new_with_seed` and are using it inputting random seeds, the card deck can be made predictable
-    /// if the seed generation is predictable (e.g. incrementing the seed by one, using unix time). It is better to
-    /// use `new()` in these cases since the entropy from the system cannot be replicated across systems easily
-    /// unless the seed generated is shared.
-    pub fn new_with_seed(seed: Option<[u8; 32]>) -> CardDeck {
+    /// If you do use `new_with_seed()` and are using it inputting random seeds, the cards within
+    /// the deck can be predicted if the seed generation is predictable (e.g. incrementing the seed
+    /// by one, using unix time). It is better to use `new()` in these cases since the entropy from
+    /// the system cannot be replicated across systems easily unless the seed generated is shared.
+    pub fn new_with_seed(seed: Option<[u8; 32]>) -> Result<CardDeck, Error> {
         let mut deck = Self::create_unshuffled_deck();
 
         if let Some(_) = seed {
-            deck.shuffle(seed);
+            if let Err(err) = deck.shuffle(seed) {
+                return Err(err);
+            }
         }
 
-        deck
+        Ok(deck)
     }
 
     fn create_unshuffled_deck() -> CardDeck {
@@ -124,6 +128,10 @@ impl CardDeck {
         }
     }
 
+    /// Shuffles the deck.
+    ///
+    /// An optional seed can be provided if the deck should be shuffled with a specific seed. If no
+    /// seed is provided, then system entropy is sampled for a random seed.
     pub fn shuffle(&mut self, seed: Option<[u8; 32]>) -> Result<(), Error> {
         match Self::shuffle_cards(&mut self.deck, seed) {
             Ok(seed) => {
@@ -252,6 +260,12 @@ impl CardDeck {
         self.deal_cards(cards_to_deal, include_muck)
     }
 
+    /// Reshuffles the muck and inserts those cards into the deck.
+    ///
+    /// The muck will be placed behind the remaining cards in the deck.
+    ///
+    /// Similar to `shuffle()` this funtion takes in an optional seed if a specific seed is
+    /// desired. If no seed is provided, a seed will be sampled from entropy.
     pub fn reshuffle_muck(&mut self, seed: Option<[u8; 32]>) -> Result<(), Error> {
         if let Err(err) = Self::shuffle_cards(&mut self.muck, seed) {
             return Err(err);
@@ -284,8 +298,8 @@ mod tests {
     fn test_deck_same_seed() {
         let mut seed_bytes = Vec::from(233_i32.to_le_bytes());
         seed_bytes.extend_from_slice(&[0u8; 28]);
-        let mut d1 = CardDeck::new_with_seed(Some(seed_bytes.as_slice().try_into().unwrap()));
-        let mut d2 = CardDeck::new_with_seed(Some(seed_bytes.as_slice().try_into().unwrap()));
+        let mut d1 = CardDeck::new_with_seed(Some(seed_bytes.as_slice().try_into().unwrap())).unwrap();
+        let mut d2 = CardDeck::new_with_seed(Some(seed_bytes.as_slice().try_into().unwrap())).unwrap();
 
         are_decks_equal(&mut d1,&mut d2);
     }
@@ -311,7 +325,7 @@ mod tests {
     fn test_get_seed() {
         let mut expected_seed = Vec::from(233_i32.to_le_bytes());
         expected_seed.extend_from_slice(&[0u8; 28]);
-        let d = CardDeck::new_with_seed(Some(expected_seed.as_slice().try_into().unwrap()));
+        let d = CardDeck::new_with_seed(Some(expected_seed.as_slice().try_into().unwrap())).unwrap();
 
         assert_eq!(Vec::from(d.get_seed().unwrap()), expected_seed);
     }
@@ -327,7 +341,7 @@ mod tests {
         let count : i32 = (0..iters).into_par_iter().map(|_| {
             let mut deck = CardDeck::new();
 
-            deck.shuffle(None);
+            deck.shuffle(None).expect("Problem occured when shuffling the deck");
 
             if are_2kings_adjacent(&mut deck) {
                 1
