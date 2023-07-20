@@ -171,8 +171,7 @@ impl CardDeck {
     ///     if let (Some(hand), _) = deck.deal_cards(2) { // 2 cards per player would require 20 cards
     ///         player_hands.push(hand);
     ///     } else {
-    ///         // Should never reach here
-    ///         panic!("Ran out of cards!");
+    ///         unreachable!("Ran out of cards!");
     ///     }
     /// }
     ///
@@ -193,8 +192,7 @@ impl CardDeck {
     ///     }
     /// }
     ///
-    /// // Should never reach here
-    /// println!("{:?}", player_hands);
+    /// unreachable!();
     /// ```
     pub fn deal_cards(&mut self, n: usize) -> (Option<Vec<Card>>, bool) {
         let mut cards_to_deal: Vec<Card> = Vec::new();
