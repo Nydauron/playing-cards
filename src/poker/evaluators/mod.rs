@@ -91,8 +91,59 @@ pub mod high_evaluator;
 /// ```
 pub mod low_evaluator;
 
-// mod omaha_hi_evaluator;
-// pub use self::omaha_hi_evaluator::OmahaHighEvaluator;
+/// An evaluator for Omaha high hands.
+///
+/// The evaluator requires that the player has at least 4 cards and the board has at least 3
+/// cards. In Omaha and Omaha-varients, the player is required to use only 2 cards from their
+/// hand and 3 from the board. This evaluator permutates through these combinations in parallel
+/// with the help of map-reduce.
+///
+/// Some games that can make use of this evaluator include but are not limited to Omaha, Omaha 8
+/// (Hi/Lo), Big O, and Drawmaha.
+///
+/// Examples
+/// ```rust
+/// use playing_cards::{core::Card, poker::evaluators::omaha_hi_evaluator};
+///
+/// let hand = Card::vec_from_str("2cAsAcKc").unwrap();
+/// let board = Card::vec_from_str("Ks2sTd8h7d").unwrap();
+///
+/// let rank = &omaha_hi_evaluator::evaluate_hand(&hand, &board).unwrap()[0];
+///
+/// // Notice: Even though we can Aces in our hand, we can only use 2 cards from out hand to
+/// // make the best hand (e.g. the K and the 2 pair with the board).
+/// assert_eq!(rank.description.as_ref().unwrap(), "Two Pair of Kings and 2s");
+/// ```
+///
+/// ```rust
+/// use playing_cards::{core::Card, poker::evaluators::omaha_hi_evaluator};
+///
+/// let hand = Card::vec_from_str("AcKhKsTd").unwrap();
+/// let board = Card::vec_from_str("Tc5c3s6cQc").unwrap();
+///
+/// let rank = &omaha_hi_evaluator::evaluate_hand(&hand, &board).unwrap()[0];
+///
+/// // Notice: Even though we have the Ace of Clubs in out hand, we do not have a flush, as we
+/// // need another club within our hand.
+/// assert_eq!(rank.description.as_ref().unwrap(), "Pair of Kings");
+/// ```
+///
+/// ```rust
+/// use playing_cards::{core::Card, poker::evaluators::omaha_hi_evaluator};
+///
+/// let hero_hand = Card::vec_from_str("5s6c9s7c").unwrap();
+/// let villan_hand = Card::vec_from_str("AhKdAsTh").unwrap();
+/// let board = Card::vec_from_str("8hTcAdQs6s").unwrap();
+///
+/// let hero_rank = &omaha_hi_evaluator::evaluate_hand(&hero_hand, &board).unwrap()[0];
+/// let villan_rank = &omaha_hi_evaluator::evaluate_hand(&villan_hand, &board).unwrap()[0];
+///
+/// assert_eq!(hero_rank.description.as_ref().unwrap(), "10 High Straight");
+/// assert_eq!(villan_rank.description.as_ref().unwrap(), "Trip Aces");
+///
+/// assert!(hero_rank > villan_rank); // Hero's hand is better than the villans's
+/// ```
+pub mod omaha_hi_evaluator;
 
 // mod drawmaha_evaluator;
 // pub use self::drawmaha_evaluator::DrawmahaEvaluator;
