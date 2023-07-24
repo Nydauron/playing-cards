@@ -1,117 +1,63 @@
-use async_std::task;
-
-use super::{Evaluator, HighEvaluator, OmahaHighEvaluator, EvaluatorError};
-use super::super::Rank;
+use super::{high_evaluator, EvaluatorError, omaha_hi_evaluator};
+use super::super::rank::Rank;
 
 use crate::core::Card;
 
-use rayon::prelude::*;
-
-/// An evaluator for Drawmaha hands.
+/// Evaluated the Drawmaha for one player.
 ///
-/// Drawmaha is a combination of Five Card Draw and Big O (an Omaha varient). This evaluator makes
-/// use of both the HighEvaluator and OmahaHighEvaluator.
-///
-/// Examples
-/// ```rust
-/// use playing_cards::{core::Card, poker::{Evaluator, DrawmahaEvaluator, Rank}};
-///
-/// let hand = Card::vec_from_str("5cAsKdKcAc").unwrap();
-/// let board = Card::vec_from_str("Ks6s2d8c3h").unwrap();
-///
-/// let eval = DrawmahaEvaluator::new();
-///
-/// let rank = eval.evaluate_hand(&hand, &board).unwrap();
-/// let omaha_rank = rank[0];
-/// let draw_rank = rank[1];
-///
-/// assert_eq!(omaha_rank.get_string().unwrap(), "Trip Kings");
-/// assert_eq!(draw_rank.get_string().unwrap(), "Two Pair of Aces and Kings");
-/// ```
-///
-/// ```rust
-/// use playing_cards::{core::Card, poker::{Evaluator, DrawmahaEvaluator, Rank}};
-///
-/// let hand = Card::vec_from_str("3s9sAsTsQs").unwrap();
-/// let board = Card::vec_from_str("4d9hQdTcKh").unwrap();
-///
-/// let eval = DrawmahaEvaluator::new();
-///
-/// let rank = eval.evaluate_hand(&hand, &board).unwrap();
-/// let omaha_rank = rank[0];
-/// let draw_rank = rank[1];
-///
-/// assert_eq!(omaha_rank.get_string().unwrap(), "Two Pair of Queens and 10s");
-/// assert_eq!(draw_rank.get_string().unwrap(), "Ace High Flush");
-/// ```
-///
-/// ```rust
-/// use playing_cards::{core::Card, poker::{Evaluator, DrawmahaEvaluator, Rank}};
-///
-/// let hero_hand = Card::vec_from_str("Tc9sJs8hQd").unwrap();
-/// let villan_hand = Card::vec_from_str("AsQcKdQhAc").unwrap();
-/// let board = Card::vec_from_str("8d8s3cAh7d").unwrap();
-///
-/// let eval = DrawmahaEvaluator::new();
-///
-/// let hero_rank = eval.evaluate_hand(&hero_hand, &board).unwrap();
-/// let villan_rank = eval.evaluate_hand(&villan_hand, &board).unwrap();
-///
-/// // Omaha Rank
-/// assert_eq!(hero_rank[0].get_string().unwrap(), "Trip 8s");
-/// assert_eq!(villan_rank[0].get_string().unwrap(), "Aces Full of 8s");
-///
-/// assert!(hero_rank[0] < villan_rank[0]); // Villan's hand is better than the hero's
-///
-/// // 5-card Draw Rank
-/// assert_eq!(hero_rank[1].get_string().unwrap(), "Queen High Straight");
-/// assert_eq!(villan_rank[1].get_string().unwrap(), "Two Pair of Aces and Queens");
-///
-/// assert!(hero_rank[1] > villan_rank[1]); // Hero's hand is better than the villan's
-/// ```
-pub struct DrawmahaEvaluator;
-
-impl DrawmahaEvaluator {
-    /// Creates a new `DrawmahaEvaluator`.
-    ///
-    /// Initializes the lookup table if it isn't already.
-    pub fn new() -> Self {
-        Self {}
+/// Returns a `Vec<Rank>` where the first element is the rank for the Omaha hand and the second
+/// element is for the draw hand. If the player's hand does not contain exactly 5 cards or the
+/// board contains less than 3 cards, then an error will return.
+pub fn evaluate_hand(player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Vec<Rank>, EvaluatorError> {
+    let expected_card_count = 5;
+    if player_hand.len() < expected_card_count {
+        return Err(EvaluatorError::NotEnoughCards("Player hand".to_string(), 5));
+        // Player hand does not have at least 5 cards
+    } else if player_hand.len() > expected_card_count {
+        return Err(EvaluatorError::TooManyCards("Player hand".to_string(), 5));
+        // Player hand does not have at most 5 cards
     }
+
+    if board.len() < 3 {
+        return Err(EvaluatorError::NotEnoughCards("Board".to_string(), 3));
+        // Board does not have at least 3 cards
+    }
+
+    let omaha_hand_rank = match omaha_hi_evaluator::evaluate_hand(player_hand, board) {
+        Ok(rank) => rank,
+        Err(e) => return Err(e),
+    };
+    let draw_hand_rank = match high_evaluator::evaluate_hand(player_hand, &vec![]) {
+        Ok(rank) => rank,
+        Err(e) => return Err(e),
+    };
+
+    Ok(omaha_hand_rank.into_iter().chain(draw_hand_rank.into_iter()).collect())
 }
 
-impl Evaluator for DrawmahaEvaluator {
-    /// Evaluated the Drawmaha for one player.
-    ///
-    /// Returns a `Vec<OmahaHighRank, HighRank>` that can be compared directly against other
-    /// `OmahaHighRank`s and `HighRanks`s respectfully. If the player's hand does not contain
-    /// exactly 5 cards or the board contains less than 3 cards, then an error will return.
-    fn evaluate_hand(&self, player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Vec<Rank>, EvaluatorError> {
-        let expected_card_count = 5;
-        if player_hand.len() < expected_card_count {
-            return Err(EvaluatorError::NotEnoughCards("Player hand".to_string(), 5));
-            // Player hand does not have at least 5 cards
-        } else if player_hand.len() > expected_card_count {
-            return Err(EvaluatorError::TooManyCards("Player hand".to_string(), 5));
-            // Player hand does not have at most 5 cards
-        }
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-        if board.len() < 3 {
-            return Err(EvaluatorError::NotEnoughCards("Board".to_string(), 3));
-            // Board does not have at least 3 cards
-        }
+    #[test]
+    fn full_house_omaha_two_pair_draw() {
+        let player_hand = Card::vec_from_str("AsKcAdQhQc").unwrap();
+        let board = Card::vec_from_str("KhQsJdKdJs").unwrap();
 
-        let evals: Vec<(Box<dyn Evaluator + Sync>, Vec<Card>, Vec<Card>)> = vec![
-            (Box::new(OmahaHighEvaluator), player_hand.clone(), board.clone()),
-            (Box::new(HighEvaluator), player_hand.clone(), Vec::new()),
-        ];
+        let player_ranks = evaluate_hand(&player_hand, &board).expect("Evaluation failed");
 
-        evals.par_iter().map(|(eval, player_hand, board)| {
-            eval.evaluate_hand(&player_hand, &board)
-        })
-        .try_reduce(|| Vec::new(), |mut a, b| {
-            a.extend(&b);
-            Ok(a)
-        })
+        let string_ranks: Vec<String> = player_ranks.iter().map(|rank| rank.description.as_ref().expect("Hand generated bad rank").to_owned() ).collect();
+        assert_eq!(vec!["Kings Full of Queens".to_string(), "Two Pair of Aces and Queens".to_string()], string_ranks);
+    }
+
+    #[test]
+    fn two_pair_omaha_high_card_draw() {
+        let player_hand = Card::vec_from_str("AsQh2h5d7d").unwrap();
+        let board = Card::vec_from_str("3s8sKs3dQs").unwrap();
+
+        let player_ranks = evaluate_hand(&player_hand, &board).expect("Evaluation failed");
+
+        let string_ranks: Vec<String> = player_ranks.into_iter().map(|rank| rank.description.as_ref().expect("Hand generated bad rank").to_owned() ).collect();
+        assert_eq!(vec!["Two Pair of Queens and 3s".to_string(), "Ace High".to_string()], string_ranks);
     }
 }

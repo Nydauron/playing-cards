@@ -145,5 +145,60 @@ pub mod low_evaluator;
 /// ```
 pub mod omaha_hi_evaluator;
 
-// mod drawmaha_evaluator;
-// pub use self::drawmaha_evaluator::DrawmahaEvaluator;
+/// An evaluator for Drawmaha hands.
+///
+/// Drawmaha is a combination of Five Card Draw and Big O (an Omaha varient). This evaluator makes
+/// use of both the HighEvaluator and OmahaHighEvaluator.
+///
+/// Examples
+/// ```rust
+/// use playing_cards::{core::Card, poker::evaluators::drawmaha_evaluator};
+///
+/// let hand = Card::vec_from_str("5cAsKdKcAc").unwrap();
+/// let board = Card::vec_from_str("Ks6s2d8c3h").unwrap();
+///
+/// let rank = drawmaha_evaluator::evaluate_hand(&hand, &board).unwrap();
+/// let omaha_rank = &rank[0];
+/// let draw_rank = &rank[1];
+///
+/// assert_eq!(omaha_rank.description.as_ref().unwrap(), "Trip Kings");
+/// assert_eq!(draw_rank.description.as_ref().unwrap(), "Two Pair of Aces and Kings");
+/// ```
+///
+/// ```rust
+/// use playing_cards::{core::Card, poker::evaluators::drawmaha_evaluator};
+///
+/// let hand = Card::vec_from_str("3s9sAsTsQs").unwrap();
+/// let board = Card::vec_from_str("4d9hQdTcKh").unwrap();
+///
+/// let rank = drawmaha_evaluator::evaluate_hand(&hand, &board).unwrap();
+/// let omaha_rank = &rank[0];
+/// let draw_rank = &rank[1];
+///
+/// assert_eq!(omaha_rank.description.as_ref().unwrap(), "Two Pair of Queens and 10s");
+/// assert_eq!(draw_rank.description.as_ref().unwrap(), "Ace High Flush");
+/// ```
+///
+/// ```rust
+/// use playing_cards::{core::Card, poker::evaluators::drawmaha_evaluator};
+///
+/// let hero_hand = Card::vec_from_str("Tc9sJs8hQd").unwrap();
+/// let villan_hand = Card::vec_from_str("AsQcKdQhAc").unwrap();
+/// let board = Card::vec_from_str("8d8s3cAh7d").unwrap();
+///
+/// let hero_rank = drawmaha_evaluator::evaluate_hand(&hero_hand, &board).unwrap();
+/// let villan_rank = drawmaha_evaluator::evaluate_hand(&villan_hand, &board).unwrap();
+///
+/// // Omaha Rank
+/// assert_eq!(hero_rank[0].description.as_ref().unwrap(), "Trip 8s");
+/// assert_eq!(villan_rank[0].description.as_ref().unwrap(), "Aces Full of 8s");
+///
+/// assert!(hero_rank[0] < villan_rank[0]); // Villan's hand is better than the hero's
+///
+/// // 5-card Draw Rank
+/// assert_eq!(hero_rank[1].description.as_ref().unwrap(), "Queen High Straight");
+/// assert_eq!(villan_rank[1].description.as_ref().unwrap(), "Two Pair of Aces and Queens");
+///
+/// assert!(hero_rank[1] > villan_rank[1]); // Hero's hand is better than the villan's
+/// ```
+pub mod drawmaha_evaluator;
