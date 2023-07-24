@@ -4,4 +4,5 @@ pub use self::tables::*;
 
 pub mod evaluators;
 
+/// Contains structs for contains rank metadata and logic for parsing ranks.
 pub mod rank;

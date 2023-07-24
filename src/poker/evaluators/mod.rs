@@ -18,7 +18,7 @@ pub use self::evaluator_errors::EvaluatorError;
 ///
 /// let rank = &high_evaluator::evaluate_hand(&hand, &board).unwrap()[0];
 ///
-/// assert_eq!(rank.get_description().unwrap(), "Trip 5s");
+/// assert_eq!(rank.description.as_ref().unwrap(), "Trip 5s");
 /// ```
 ///
 /// ```rust
@@ -29,7 +29,7 @@ pub use self::evaluator_errors::EvaluatorError;
 ///
 /// let rank = &high_evaluator::evaluate_hand(&hand, &board).unwrap()[0];
 ///
-/// assert_eq!(rank.get_description().unwrap(), "Two Pair of Aces and Kings");
+/// assert_eq!(rank.description.as_ref().unwrap(), "Two Pair of Aces and Kings");
 /// ```
 ///
 /// ```rust
@@ -42,8 +42,8 @@ pub use self::evaluator_errors::EvaluatorError;
 /// let hero_rank = &high_evaluator::evaluate_hand(&hero_hand, &board).unwrap()[0];
 /// let villan_rank = &high_evaluator::evaluate_hand(&villan_hand, &board).unwrap()[0];
 ///
-/// assert_eq!(hero_rank.get_description().unwrap(), "Two Pair of Kings and Queens");
-/// assert_eq!(villan_rank.get_description().unwrap(), "Two Pair of Aces and 2s");
+/// assert_eq!(hero_rank.description.as_ref().unwrap(), "Two Pair of Kings and Queens");
+/// assert_eq!(villan_rank.description.as_ref().unwrap(), "Two Pair of Aces and 2s");
 ///
 /// assert!(hero_rank < villan_rank); // Villan's hand is better than the hero's
 /// ```
@@ -61,7 +61,7 @@ pub mod high_evaluator;
 ///
 /// let rank = &low_evaluator::evaluate_hand(&hand, &Vec::new()).unwrap()[0];
 ///
-/// assert_eq!(rank.get_description().unwrap(), "Ace High");
+/// assert_eq!(rank.description.as_ref().unwrap(), "Ace High");
 /// ```
 ///
 /// ```rust
@@ -71,7 +71,7 @@ pub mod high_evaluator;
 ///
 /// let rank = &low_evaluator::evaluate_hand(&hand, &Vec::new()).unwrap()[0];
 ///
-/// assert_eq!(rank.get_description().unwrap(), "Two Pair of Kings and 2s");
+/// assert_eq!(rank.description.as_ref().unwrap(), "Two Pair of Kings and 2s");
 /// ```
 ///
 /// ```rust
@@ -84,8 +84,8 @@ pub mod high_evaluator;
 /// let hero_rank = &low_evaluator::evaluate_hand(&hero_hand, &board).unwrap()[0];
 /// let villan_rank = &low_evaluator::evaluate_hand(&villan_hand, &board).unwrap()[0];
 ///
-/// assert_eq!(hero_rank.get_description().unwrap(), "10 High");
-/// assert_eq!(villan_rank.get_description().unwrap(), "6 High Straight");
+/// assert_eq!(hero_rank.description.as_ref().unwrap(), "10 High");
+/// assert_eq!(villan_rank.description.as_ref().unwrap(), "6 High Straight");
 ///
 /// assert!(hero_rank > villan_rank); // Hero's hand is better than the villan's
 /// ```
