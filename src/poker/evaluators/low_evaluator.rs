@@ -4,8 +4,8 @@ use crate::{core::Card, poker::rank::Rank};
 
 /// Evaluates the low hand for one player.
 ///
-/// Returns a `Vec<LowRank>` than can be compared directly against other `LowRank`s. If the
-/// total card count is not with the domain [5, 7], then an error will return.
+/// Returns a `Vec<Rank>`. If the total card count is not with the domain [5, 7], then an error
+/// will return.
 pub fn evaluate_hand(player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Vec<Rank>, EvaluatorError> {
     high_evaluator::evaluate_hand(player_hand, board).and_then(|mut high_result| {
         high_result[0].strength = 7463 - high_result[0].strength;

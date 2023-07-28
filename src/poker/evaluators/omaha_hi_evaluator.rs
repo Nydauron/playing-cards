@@ -8,9 +8,8 @@ use crate::poker::evaluators::high_evaluator;
 
 /// Evaluates the Omaha high hand for one player.
 ///
-/// Returns a `Vec<HighRank>` than can be compared directly against other `HighRank`s. If
-/// the player's hand contains less than 4 cards or the board contains less than 3 cards,
-/// then an error will return.
+/// Returns a `Vec<Rank>`. If the player's hand contains less than 4 cards or the board contains
+/// less than 3 cards, then an error will return.
 pub fn evaluate_hand(player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Vec<Rank>, EvaluatorError> {
     if player_hand.len() < 4 {
         return Err(EvaluatorError::NotEnoughCards("Player hand".to_string(), 4));

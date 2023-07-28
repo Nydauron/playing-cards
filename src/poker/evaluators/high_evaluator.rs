@@ -8,8 +8,8 @@ use std::ops::{Add, AddAssign, Shl, Shr, BitXorAssign, BitAnd, BitXor};
 
 /// Evaluates the high hand for one player.
 ///
-/// Returns a `Vec<HighRank>` than can be compared directly against other `HighRank`s. If
-/// the total card count is not with the domain [5, 7], then an error will return.
+/// Returns a `Vec<Rank>`. If the total card count is not with the domain [5, 7], then an error will
+/// return.
 pub fn evaluate_hand(player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Vec<Rank>, EvaluatorError> {
     let card_count = player_hand.len() + board.len();
     if card_count < 5 {
