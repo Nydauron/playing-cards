@@ -101,9 +101,7 @@ impl CardDeck {
         let mut deck = Self::create_unshuffled_deck();
 
         if let Some(_) = seed {
-            if let Err(err) = deck.shuffle(seed) {
-                return Err(err);
-            }
+            deck.shuffle(seed)?;
         }
 
         Ok(deck)
@@ -133,13 +131,8 @@ impl CardDeck {
     /// An optional seed can be provided if the deck should be shuffled with a specific seed. If no
     /// seed is provided, then system entropy is sampled for a random seed.
     pub fn shuffle(&mut self, seed: Option<[u8; 32]>) -> Result<(), Error> {
-        match Self::shuffle_cards(&mut self.deck, seed) {
-            Ok(seed) => {
-                self.seed = Some(seed);
-                Ok(())
-            },
-            Err(err) => Err(err)
-        }
+        self.seed = Some(Self::shuffle_cards(&mut self.deck, seed)?);
+        Ok(())
     }
 
     fn shuffle_cards(cards: &mut Vec<Card>, seed: Option<[u8; 32]>) -> Result<[u8; 32], Error> {
@@ -151,11 +144,7 @@ impl CardDeck {
             },
             None => {
                 seed_used = [0u8; 32];
-                let res = getrandom::getrandom(&mut seed_used);
-
-                if let Err(e) = res {
-                    return Err(From::<getrandom::Error>::from(e));
-                }
+                getrandom::getrandom(&mut seed_used)?;
             },
         }
         rng = Xoshiro256PlusPlus::from_seed(seed_used);
@@ -267,9 +256,7 @@ impl CardDeck {
     /// Similar to `shuffle()` this funtion takes in an optional seed if a specific seed is
     /// desired. If no seed is provided, a seed will be sampled from entropy.
     pub fn reshuffle_muck(&mut self, seed: Option<[u8; 32]>) -> Result<(), Error> {
-        if let Err(err) = Self::shuffle_cards(&mut self.muck, seed) {
-            return Err(err);
-        }
+        Self::shuffle_cards(&mut self.muck, seed)?;
 
         self.muck.append(&mut self.deck);
         self.deck = self.muck.to_owned();

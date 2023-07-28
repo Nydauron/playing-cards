@@ -25,50 +25,26 @@ pub fn evaluate_hand(player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Vec<R
     let hand_combinations: Vec<Vec<Card>> = player_hand.clone().into_iter().clone().combinations(2).collect();
     let board_combinations: Vec<Vec<Card>> = board.clone().into_iter().clone().combinations(3).collect();
 
-    let result =
+    let best_rank =
         hand_combinations
         .iter()
         .cartesian_product(board_combinations.iter())
         .map(|(hand, board)| {
-            let rank_arr = high_evaluator::evaluate_hand(hand, board);
-            match rank_arr {
-                Err(e) => Err(e),
-                Ok(rank_arr) => {
-                    if rank_arr.len() != 1 {
-                        Err(EvaluatorError::UnknownError("Rank array did not match expected length of 1".to_string()))
-                    } else {
-                        Ok(rank_arr[0].clone())
-                    }
-                }
+            let rank_arr = high_evaluator::evaluate_hand(hand, board)?;
+            if rank_arr.len() != 1 {
+                Err(EvaluatorError::UnknownError("Rank array did not match expected length of 1".to_string()))
+            } else {
+                Ok(rank_arr[0].clone())
             }
         })
         .reduce(|acc, rank_res| {
-            match acc {
-                Ok(acc) => {
-                    match rank_res {
-                        Ok(rank) => {
-                            if rank > acc {
-                                Ok(rank)
-                            } else {
-                                Ok(acc)
-                            }
-                        },
-                        Err(_) => rank_res,
-                    }
-                },
-                Err(_) => acc,
-            }
+            let acc = acc?;
+            let rank = rank_res?;
+            Ok(std::cmp::max(rank, acc))
         })
-        .unwrap_or(Err(EvaluatorError::UnknownError("No hand combos were evaluated".to_string())));
+        .unwrap_or(Err(EvaluatorError::UnknownError("No hand combos were evaluated".to_string())))?;
 
-    match result {
-        Ok(rank) => {
-            Ok(vec![rank])
-        },
-        Err(e) => {
-            Err(e)
-        },
-    }
+    Ok(vec![best_rank])
 }
 
 #[cfg(test)]

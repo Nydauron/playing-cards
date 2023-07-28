@@ -23,14 +23,8 @@ pub fn evaluate_hand(player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Vec<R
         // Board does not have at least 3 cards
     }
 
-    let omaha_hand_rank = match omaha_hi_evaluator::evaluate_hand(player_hand, board) {
-        Ok(rank) => rank,
-        Err(e) => return Err(e),
-    };
-    let draw_hand_rank = match high_evaluator::evaluate_hand(player_hand, &vec![]) {
-        Ok(rank) => rank,
-        Err(e) => return Err(e),
-    };
+    let omaha_hand_rank = omaha_hi_evaluator::evaluate_hand(player_hand, board)?;
+    let draw_hand_rank = high_evaluator::evaluate_hand(player_hand, &vec![])?;
 
     Ok(omaha_hand_rank.into_iter().chain(draw_hand_rank.into_iter()).collect())
 }
