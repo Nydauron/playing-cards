@@ -1,6 +1,5 @@
 //! An optional feature that includes tools for poker hand evaluation.
-mod tables;
-pub use self::tables::*;
+pub(crate) mod tables;
 
 pub mod evaluators;
 
