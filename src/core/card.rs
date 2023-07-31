@@ -10,7 +10,7 @@ use serde::{Serialize, Deserialize};
 ///
 /// Each value corresponds to the rank strength.
 #[allow(missing_docs)]
-#[derive(Debug, Clone, Copy, FromPrimitive, EnumIter, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Copy, FromPrimitive, ToPrimitive, EnumIter, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum Value {
     Two = 0,
     Three = 1,
@@ -178,7 +178,7 @@ impl std::fmt::Display for Value {
 ///
 /// Numerical value is just for distinction and each suit has equal strength
 #[allow(missing_docs)]
-#[derive(Debug, Clone, Copy, FromPrimitive, EnumIter, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Copy, FromPrimitive, ToPrimitive, EnumIter, Eq, PartialEq, Hash)]
 pub enum Suit {
     Heart = 0,
     Club = 1,

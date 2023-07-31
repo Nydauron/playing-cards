@@ -145,6 +145,67 @@ pub mod low_evaluator;
 /// ```
 pub mod omaha_hi_evaluator;
 
+/// An evaluator for Omaha Hi/Lo hands.
+///
+/// Similar to the Omaha Hi evalautor, this requires 4 player cards and at least 3 cards from the
+/// board in order to evaluate properly. Only 2 cards may be used from the player's hand to fulfill
+/// their high hand and lo hand (can be the same pair or different). The lo hand only plays if the
+/// player cards has at least 2 cards and the board has at least 3 cards with a distinct rank
+/// between A-8. Since the lo hand only applies under a condition, the return value of the evaluator
+/// contains Option types to signify the player does not have a lo hand.
+///
+/// Examples
+/// ```rust
+/// use playing_cards::{core::Card, poker::evaluators::omaha_hilo_evaluator};
+///
+/// let hand = Card::vec_from_str("2cAsAcKc").unwrap();
+/// let board = Card::vec_from_str("Ks2sTd8h7d").unwrap();
+///
+/// let ranks = &omaha_hilo_evaluator::evaluate_hand(&hand, &board).unwrap();
+///
+/// // Notice: Even though we have Aces in our hand, we can only use 2 cards from out hand to
+/// // make the best hand (e.g. the K and the 2 pair with the board).
+/// assert_eq!(ranks[0].as_ref().unwrap().description.as_ref().unwrap(), "Two Pair of Kings and 2s");
+/// // While we have A2 in our hand, the board has 278, which is only 4 distinct ranks, so no
+/// // lo rank exists
+/// assert_eq!(ranks[1], None);
+/// ```
+///
+/// ```rust
+/// use playing_cards::{core::Card, poker::evaluators::omaha_hilo_evaluator};
+///
+/// let hand = Card::vec_from_str("As2d5sAd").unwrap();
+/// let board = Card::vec_from_str("Tc5c3s6c8c").unwrap();
+///
+/// let ranks = &omaha_hilo_evaluator::evaluate_hand(&hand, &board).unwrap();
+///
+/// assert_eq!(ranks[0].as_ref().unwrap().description.as_ref().unwrap(), "Pair of Aces");
+/// assert_eq!(ranks[1].as_ref().unwrap().description.as_ref().unwrap(), "6-5-3-2-A");
+/// ```
+///
+/// ```rust
+/// use playing_cards::{core::Card, poker::evaluators::omaha_hilo_evaluator};
+///
+/// let hero_hand = Card::vec_from_str("5s6c9s7c").unwrap();
+/// let villan_hand = Card::vec_from_str("AhKdAsTh").unwrap();
+/// let board = Card::vec_from_str("8hTcAdQs6s").unwrap();
+///
+/// let hero_ranks = &omaha_hilo_evaluator::evaluate_hand(&hero_hand, &board).unwrap();
+/// let villan_ranks = &omaha_hilo_evaluator::evaluate_hand(&villan_hand, &board).unwrap();
+///
+/// assert_eq!(hero_ranks[0].as_ref().unwrap().description.as_ref().unwrap(), "10 High Straight");
+/// assert_eq!(villan_ranks[0].as_ref().unwrap().description.as_ref().unwrap(), "Trip Aces");
+///
+/// assert_eq!(hero_ranks[1].as_ref().unwrap().description.as_ref().unwrap(), "8-7-6-5-A");
+/// assert_eq!(villan_ranks[1], None);
+///
+/// println!("{:?}", hero_ranks[1]);
+/// println!("{:?}", villan_ranks[1]);
+/// assert!(hero_ranks[0] > villan_ranks[0]); // Hero's hi hand is better than the villans's
+/// assert!(hero_ranks[1].gt(&villan_ranks[1])); // Hero's lo hand is better than the villans's
+/// ```
+pub mod omaha_hilo_evaluator;
+
 /// An evaluator for Drawmaha hands.
 ///
 /// Drawmaha is a combination of Five Card Draw and Big O (an Omaha varient). This evaluator makes
