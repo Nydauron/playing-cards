@@ -91,7 +91,7 @@ pub mod high_evaluator;
 /// ```
 pub mod low_evaluator;
 
-/// An evaluator for Omaha high hands.
+/// An evaluator for Omaha High hands.
 ///
 /// The evaluator requires that the player has at least 4 cards and the board has at least 3
 /// cards. In Omaha and Omaha-varients, the player is required to use only 2 cards from their
@@ -110,7 +110,7 @@ pub mod low_evaluator;
 ///
 /// let rank = &omaha_hi_evaluator::evaluate_hand(&hand, &board).unwrap();
 ///
-/// // Notice: Even though we can Aces in our hand, we can only use 2 cards from out hand to
+/// // Notice: Even though we have Aces in our hand, we can only use 2 cards from out hand to
 /// // make the best hand (e.g. the K and the 2 pair with the board).
 /// assert_eq!(rank.description.as_ref().unwrap(), "Two Pair of Kings and 2s");
 /// ```
