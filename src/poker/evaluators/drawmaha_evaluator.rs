@@ -26,7 +26,7 @@ pub fn evaluate_hand(player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Vec<R
     let omaha_hand_rank = omaha_hi_evaluator::evaluate_hand(player_hand, board)?;
     let draw_hand_rank = high_evaluator::evaluate_hand(player_hand, &vec![])?;
 
-    Ok(omaha_hand_rank.into_iter().chain(draw_hand_rank.into_iter()).collect())
+    Ok(vec![omaha_hand_rank, draw_hand_rank])
 }
 
 #[cfg(test)]

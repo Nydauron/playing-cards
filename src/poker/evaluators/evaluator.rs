@@ -14,10 +14,14 @@ pub enum Evaluator {
 impl Evaluator {
     /// Calls the associated `evaluate_hand()` function based on what variant is currently
     /// selected.
-    pub fn evaluate_hand(&self, player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Vec<Rank>, EvaluatorError> {
+    ///
+    /// This function acts as a wrapper function to allow for interfacing all evaluators. Some
+    /// evaluators will always return back a rank if no error occurs, others might not return back
+    /// a rank if the rank is secondary.
+    pub fn evaluate_hand(self, player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Vec<Option<Rank>>, EvaluatorError> {
         match self {
-            Self::High => high_evaluator::evaluate_hand(player_hand, board),
-            Self::Low => low_evaluator::evaluate_hand(player_hand, board),
+            Self::High => Ok(vec![Some(high_evaluator::evaluate_hand(player_hand, board)?)]),
+            Self::Low => Ok(vec![Some(low_evaluator::evaluate_hand(player_hand, board)?)]),
         }
     }
 }

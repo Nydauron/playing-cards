@@ -10,7 +10,7 @@ use crate::poker::evaluators::high_evaluator;
 ///
 /// Returns a `Vec<Rank>`. If the player's hand contains less than 4 cards or the board contains
 /// less than 3 cards, then an error will return.
-pub fn evaluate_hand(player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Vec<Rank>, EvaluatorError> {
+pub fn evaluate_hand(player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Rank, EvaluatorError> {
     if player_hand.len() < 4 {
         return Err(EvaluatorError::NotEnoughCards("Player hand".to_string(), 4));
         // Player hand does not have at least 4 cards
@@ -21,20 +21,15 @@ pub fn evaluate_hand(player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Vec<R
         // Board does not have at least 3 cards
     }
 
-    let hand_combinations: Vec<Vec<Card>> = player_hand.clone().into_iter().clone().combinations(2).collect();
-    let board_combinations: Vec<Vec<Card>> = board.clone().into_iter().clone().combinations(3).collect();
+    let hand_combinations: Vec<Vec<Card>> = player_hand.into_iter().cloned().combinations(2).collect();
+    let board_combinations: Vec<Vec<Card>> = board.into_iter().cloned().combinations(3).collect();
 
     let best_rank =
         hand_combinations
         .iter()
         .cartesian_product(board_combinations.iter())
         .map(|(hand, board)| {
-            let rank_arr = high_evaluator::evaluate_hand(hand, board)?;
-            if rank_arr.len() != 1 {
-                Err(EvaluatorError::UnknownError("Rank array did not match expected length of 1".to_string()))
-            } else {
-                Ok(rank_arr[0].clone())
-            }
+            Ok(high_evaluator::evaluate_hand(hand, board)?)
         })
         .reduce(|acc, rank_res| {
             let acc = acc?;
@@ -43,7 +38,7 @@ pub fn evaluate_hand(player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Vec<R
         })
         .unwrap_or(Err(EvaluatorError::UnknownError("No hand combos were evaluated".to_string())))?;
 
-    Ok(vec![best_rank])
+    Ok(best_rank)
 }
 
 #[cfg(test)]
@@ -55,7 +50,7 @@ mod tests {
         let player_hand = Card::vec_from_str("AsKc9d7h").unwrap();
         let board = Card::vec_from_str("KhQsJdKdJs").unwrap();
 
-        let player_rank = &evaluate_hand(&player_hand, &board).expect("Evaluation failed")[0];
+        let player_rank = &evaluate_hand(&player_hand, &board).expect("Evaluation failed");
 
         let string_rank = player_rank.description.as_ref().expect("Hand generated bad rank");
         assert_eq!("Trip Kings", string_rank);
@@ -66,7 +61,7 @@ mod tests {
         let player_hand = Card::vec_from_str("AsQh2h5d").unwrap();
         let board = Card::vec_from_str("3s8sKs3dQs").unwrap();
 
-        let player_rank = &evaluate_hand(&player_hand, &board).expect("Evaluation failed")[0];
+        let player_rank = &evaluate_hand(&player_hand, &board).expect("Evaluation failed");
 
         let string_rank = player_rank.description.as_ref().expect("Hand generated bad rank");
         assert_eq!("Two Pair of Queens and 3s", string_rank);

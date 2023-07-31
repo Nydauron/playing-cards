@@ -6,10 +6,10 @@ use crate::{core::Card, poker::rank::Rank};
 ///
 /// Returns a `Vec<Rank>`. If the total card count is not with the domain [5, 7], then an error
 /// will return.
-pub fn evaluate_hand(player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Vec<Rank>, EvaluatorError> {
-    high_evaluator::evaluate_hand(player_hand, board).and_then(|mut high_result| {
-        high_result[0].strength = 7463 - high_result[0].strength;
-        Ok(high_result)
+pub fn evaluate_hand(player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Rank, EvaluatorError> {
+    high_evaluator::evaluate_hand(player_hand, board).and_then(|mut high_rank| {
+        high_rank.strength = 7463 - high_rank.strength;
+        Ok(high_rank)
     })
 }
 
@@ -22,7 +22,7 @@ mod tests {
         let player_hand = Vec::from([Card::from(1), Card::from(2)]);
         let board = Vec::from([Card::from(7), Card::from(5), Card::from(6), Card::from(52)]);
 
-        let rank = &evaluate_hand(&player_hand, &board).expect("Evaluation failed")[0];
+        let rank = &evaluate_hand(&player_hand, &board).expect("Evaluation failed");
 
         assert_eq!(7, rank.hand_rank);
         assert_eq!(13, rank.sub_rank);
@@ -33,8 +33,8 @@ mod tests {
         let player1_hand = Card::vec_from_str("2s3s4s5s7s").unwrap();
         let player2_hand = Card::vec_from_str("2h3h4h5h7h").unwrap();
 
-        let player1_rank = &evaluate_hand(&player1_hand, &Vec::new()).expect("Evaluation failed")[0];
-        let player2_rank = &evaluate_hand(&player2_hand, &Vec::new()).expect("Evaluation failed")[0];
+        let player1_rank = &evaluate_hand(&player1_hand, &Vec::new()).expect("Evaluation failed");
+        let player2_rank = &evaluate_hand(&player2_hand, &Vec::new()).expect("Evaluation failed");
 
         assert_eq!(6, player1_rank.hand_rank);
         assert_eq!(1, player1_rank.sub_rank);
@@ -47,8 +47,8 @@ mod tests {
         let player1_hand = Card::vec_from_str("2s3s4s5s8s").unwrap();
         let player2_hand = Card::vec_from_str("2h4h5h6h7h").unwrap(); // stronger low hand
 
-        let player1_rank = &evaluate_hand(&player1_hand, &Vec::new()).expect("Evaluation failed")[0];
-        let player2_rank = &evaluate_hand(&player2_hand, &Vec::new()).expect("Evaluation failed")[0];
+        let player1_rank = &evaluate_hand(&player1_hand, &Vec::new()).expect("Evaluation failed");
+        let player2_rank = &evaluate_hand(&player2_hand, &Vec::new()).expect("Evaluation failed");
         
         assert!(player2_rank > player1_rank);
     }
@@ -59,8 +59,8 @@ mod tests {
         let player1_hand = Card::vec_from_str("5h3d7h2s9c").unwrap();
         let player2_hand = Card::vec_from_str("4s3c2h6s8s").unwrap();
 
-        let player1_rank = &evaluate_hand(&player1_hand, &board).expect("Evaluation failed")[0];
-        let player2_rank = &evaluate_hand(&player2_hand, &board).expect("Evaluation failed")[0];
+        let player1_rank = &evaluate_hand(&player1_hand, &board).expect("Evaluation failed");
+        let player2_rank = &evaluate_hand(&player2_hand, &board).expect("Evaluation failed");
 
         assert_eq!(player1_rank.description.as_ref().expect("Player 1 hand generated bad rank"), "9 High");
         assert_eq!(player2_rank.description.as_ref().expect("Player 2 hand generated bad rank"), "8 High");
@@ -73,8 +73,8 @@ mod tests {
         let player1_hand = Card::vec_from_str("5h3d7h2s8c").unwrap();
         let player2_hand = Card::vec_from_str("4s3c2h6s8s").unwrap();
 
-        let player1_rank = &evaluate_hand(&player1_hand, &board).expect("Evaluation failed")[0];
-        let player2_rank = &evaluate_hand(&player2_hand, &board).expect("Evaluation failed")[0];
+        let player1_rank = &evaluate_hand(&player1_hand, &board).expect("Evaluation failed");
+        let player2_rank = &evaluate_hand(&player2_hand, &board).expect("Evaluation failed");
 
         assert_eq!(player1_rank.description.as_ref().expect("Player 1 hand generated bad rank"), "8 High");
         assert_eq!(player2_rank.description.as_ref().expect("Player 2 hand generated bad rank"), "8 High");
@@ -86,7 +86,7 @@ mod tests {
         for (h, expected_str) in hands {
             let player_hand = Card::vec_from_str(h).unwrap();
 
-            let player_rank = &evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
+            let player_rank = &evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed");
 
             let string_rank = player_rank.description.as_ref().expect("Hand generated bad rank");
             assert_eq!(expected_str, string_rank, "\nFailed on hand {}\n", h);
@@ -99,7 +99,7 @@ mod tests {
         for (h, expected_str) in hands {
             let player_hand = Card::vec_from_str(h).unwrap();
 
-            let player_rank = &evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
+            let player_rank = &evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed");
 
             let string_rank = player_rank.description.as_ref().expect("Hand generated bad rank");
             assert_eq!(expected_str, string_rank, "\nFailed on hand {}\n", h);
@@ -112,7 +112,7 @@ mod tests {
         for (h, expected_str) in hands {
             let player_hand = Card::vec_from_str(h).unwrap();
 
-            let player_rank = &evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
+            let player_rank = &evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed");
 
             let string_rank = player_rank.description.as_ref().expect("Hand generated bad rank");
             assert_eq!(expected_str, string_rank, "\nFailed on hand {}\n", h);
@@ -125,7 +125,7 @@ mod tests {
         for (h, expected_str) in hands {
             let player_hand = Card::vec_from_str(h).unwrap();
 
-            let player_rank = &evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
+            let player_rank = &evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed");
 
             let string_rank = player_rank.description.as_ref().expect("Hand generated bad rank");
             assert_eq!(expected_str, string_rank, "\nFailed on hand {}\n", h);
@@ -138,7 +138,7 @@ mod tests {
         for (h, expected_str) in hands {
             let player_hand = Card::vec_from_str(h).unwrap();
 
-            let player_rank = &evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
+            let player_rank = &evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed");
 
             let string_rank = player_rank.description.as_ref().expect("Hand generated bad rank");
             assert_eq!(expected_str, string_rank, "\nFailed on hand {}\n", h);
@@ -151,7 +151,7 @@ mod tests {
         for (h, expected_str) in hands {
             let player_hand = Card::vec_from_str(h).unwrap();
 
-            let player_rank = &evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
+            let player_rank = &evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed");
 
             let string_rank = player_rank.description.as_ref().expect("Hand generated bad rank");
             assert_eq!(expected_str, string_rank, "\nFailed on hand {}\n", h);
@@ -164,7 +164,7 @@ mod tests {
         for (h, expected_str) in hands {
             let player_hand = Card::vec_from_str(h).unwrap();
 
-            let player_rank = &evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed")[0];
+            let player_rank = &evaluate_hand(&player_hand, &Vec::new()).expect("Evaluation failed");
 
             let string_rank = player_rank.description.as_ref().expect("Hand generated bad rank");
             assert_eq!(expected_str, string_rank, "\nFailed on hand {}\n", h);
@@ -183,8 +183,8 @@ mod bench {
             let player1_hand = Card::vec_from_str("2s3s4s5s7s").unwrap();
             let player2_hand = Card::vec_from_str("2h3h4h5h7h").unwrap();
 
-            let player1_rank = evaluate_hand(&player1_hand, &Vec::new()).expect("Evaluation failed")[0];
-            let player2_rank = evaluate_hand(&player2_hand, &Vec::new()).expect("Evaluation failed")[0];
+            let player1_rank = evaluate_hand(&player1_hand, &Vec::new()).expect("Evaluation failed");
+            let player2_rank = evaluate_hand(&player2_hand, &Vec::new()).expect("Evaluation failed");
 
             assert_eq!(6, player1_rank.get_rank_strength() >> 12);
             assert_eq!(1, player1_rank.get_rank_strength() & 0xFFF);
