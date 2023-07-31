@@ -1,6 +1,6 @@
 use crate::{core::Card, poker::rank::Rank};
 
-use super::{high_evaluator, EvaluatorError, low_evaluator};
+use super::{high_evaluator, EvaluatorError, low_evaluator, omaha_hi_evaluator, omaha_hilo_evaluator, drawmaha_evaluator};
 
 /// Contains all evaluator variants allowing the ability to switch between evaluators.
 #[derive(Copy, Clone, Debug)]
@@ -9,6 +9,12 @@ pub enum Evaluator {
     High,
     /// Enum variant representing low_evaluator
     Low,
+    /// Enum variant representing omaha_hi_evaluator
+    OmahaHi,
+    /// Enum variant representing omaha_hilo_evaluator
+    OmahaHiLo,
+    /// Enum variant representing drawmaha_evaluator
+    Drawmaha,
 }
 
 impl Evaluator {
@@ -22,6 +28,9 @@ impl Evaluator {
         match self {
             Self::High => Ok(vec![Some(high_evaluator::evaluate_hand(player_hand, board)?)]),
             Self::Low => Ok(vec![Some(low_evaluator::evaluate_hand(player_hand, board)?)]),
+            Self::OmahaHi => Ok(vec![Some(omaha_hi_evaluator::evaluate_hand(player_hand, board)?)]),
+            Self::OmahaHiLo => omaha_hilo_evaluator::evaluate_hand(player_hand, board),
+            Self::Drawmaha => Ok(drawmaha_evaluator::evaluate_hand(player_hand, board)?.iter().cloned().map(|rank| Some(rank)).collect::<Vec<_>>()),
         }
     }
 }
