@@ -1,4 +1,4 @@
-use std::io::Error;
+use std::{io::Error, collections::HashSet};
 use getrandom;
 
 extern crate rand;
@@ -178,6 +178,53 @@ impl CardDeck {
         self.seed
     }
 
+    /// Searches the deck and removes cards within provided set of cards.
+    ///
+    /// Returns back a list of cards that were removed from the deck. Duplicates can be present in
+    /// the returned vector if duplicates existed in the deck.
+    pub fn strip_cards(&mut self, cards_to_remove: &HashSet<Card>) -> Vec<Card> {
+        let removed_cards: Vec<Card> = self.deck
+            .clone()
+            .into_iter()
+            .filter(|card| cards_to_remove.contains(card))
+            .collect();
+
+        self.deck.retain(|card| !cards_to_remove.contains(card));
+        removed_cards
+    }
+
+    /// Searches the deck and removes cards within provided set of ranks/values.
+    ///
+    /// Returns back a list of cards that were removed from the deck. Duplicates can be present in
+    /// the returned vector if duplicates existed in the deck.
+    pub fn strip_ranks(&mut self, ranks_to_remove: &HashSet<Value>) -> Vec<Card> {
+        let removed_cards: Vec<Card> = self.deck
+            .clone()
+            .into_iter()
+            .filter(|card| ranks_to_remove.contains(&card.value))
+            .collect();
+
+        self.deck.retain(|card| !ranks_to_remove.contains(&card.value));
+
+        removed_cards
+    }
+
+    /// Searches the deck and removes cards within provided set of suits.
+    ///
+    /// Returns back a list of cards that were removed from the deck. Duplicates can be present in
+    /// the returned vector if duplicates existed in the deck.
+    pub fn strip_suits(&mut self, suits_to_remove: &HashSet<Suit>) -> Vec<Card> {
+        let removed_cards: Vec<Card> = self.deck
+            .clone()
+            .into_iter()
+            .filter(|card| suits_to_remove.contains(&card.suit))
+            .collect();
+
+        self.deck.retain(|card| !suits_to_remove.contains(&card.suit));
+
+        removed_cards
+    }
+
     /// Adds the inputted cards into the muck.
     ///
     /// This is primarily important if reshuffling the muck can occur.
@@ -336,6 +383,60 @@ mod tests {
         let d = CardDeck::new(Some(expected_seed.as_slice().try_into().unwrap())).unwrap();
 
         assert_eq!(Vec::from(d.get_seed().unwrap()), expected_seed);
+    }
+
+    #[test]
+    fn test_strip_spcific_cards() {
+        let cards = Card::vec_from_str("2h5dAsAdKdJc3h8d").expect("Failed parsing card string");
+        let mut deck = CardDeck::new_custom_deck(cards, None).expect("Deck could not be created");
+        deck.shuffle(None).expect("Shuffle failed");
+
+        let cards_to_remove = HashSet::from_iter(Card::vec_from_str("5d2h8d3h").expect("Failed parsing card string").iter().cloned());
+        let actual_cards_removed = deck.strip_cards(&cards_to_remove);
+
+        for c in actual_cards_removed {
+            assert!(cards_to_remove.contains(&c), "{:?} is not inside expected list of cards removed: {:?}", c, cards_to_remove);
+        }
+
+        for c in deck {
+            assert!(!cards_to_remove.contains(&c), "{:?} was not removed from deck. The following cards were to have been removed: {:?}", c, cards_to_remove);
+        }
+    }
+
+    #[test]
+    fn test_strip_ranks() {
+        let cards = Card::vec_from_str("2h5dAsAdKdJc3h8d").expect("Failed parsing card string");
+        let mut deck = CardDeck::new_custom_deck(cards, None).expect("Deck could not be created");
+        deck.shuffle(None).expect("Shuffle failed");
+
+        let ranks_to_remove = HashSet::from([Value::Ace, Value::Two, Value::Three]);
+        let actual_cards_removed = deck.strip_ranks(&ranks_to_remove);
+
+        for c in actual_cards_removed {
+            assert!(ranks_to_remove.contains(&c.value), "{:?} is not inside expected list of ranks removed: {:?}", c, ranks_to_remove);
+        }
+
+        for c in deck {
+            assert!(!ranks_to_remove.contains(&c.value), "{:?} was not removed from deck. The following ranks were to have been removed: {:?}", c, ranks_to_remove);
+        }
+    }
+
+    #[test]
+    fn test_strip_suits() {
+        let cards = Card::vec_from_str("2h5dAsAdKdJc3h8d").expect("Failed parsing card string");
+        let mut deck = CardDeck::new_custom_deck(cards, None).expect("Deck could not be created");
+        deck.shuffle(None).expect("Shuffle failed");
+
+        let suits_to_remove = HashSet::from([Suit::Spade, Suit::Diamond]);
+        let actual_cards_removed = deck.strip_suits(&suits_to_remove);
+
+        for c in actual_cards_removed {
+            assert!(suits_to_remove.contains(&c.suit), "{:?} is not inside expected list of cards removed: {:?}", c, suits_to_remove);
+        }
+
+        for c in deck {
+            assert!(!suits_to_remove.contains(&c.suit), "{:?} was not removed from deck. The following suits were to have been removed: {:?}", c, suits_to_remove);
+        }
     }
 
     // This test relies on random entropy seeding. By the very nature of random numbers and normal

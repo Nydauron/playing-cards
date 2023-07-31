@@ -10,7 +10,7 @@ use serde::{Serialize, Deserialize};
 ///
 /// Each value corresponds to the rank strength.
 #[allow(missing_docs)]
-#[derive(Debug, PartialEq, Clone, Copy, FromPrimitive, EnumIter)]
+#[derive(Debug, Clone, Copy, FromPrimitive, EnumIter, Eq, PartialEq, Hash)]
 pub enum Value {
     Two = 0,
     Three = 1,
@@ -178,7 +178,7 @@ impl std::fmt::Display for Value {
 ///
 /// Numerical value is just for distinction and each suit has equal strength
 #[allow(missing_docs)]
-#[derive(Debug, PartialEq, Clone, Copy, FromPrimitive, EnumIter)]
+#[derive(Debug, Clone, Copy, FromPrimitive, EnumIter, Eq, PartialEq, Hash)]
 pub enum Suit {
     Heart = 0,
     Club = 1,
@@ -250,7 +250,7 @@ impl std::fmt::Display for Suit {
 }
 
 /// A structural representation of a playing card.
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, Eq, PartialEq, Hash)]
 #[serde(try_from = "String")]
 #[serde(into = "String")]
 pub struct Card {
