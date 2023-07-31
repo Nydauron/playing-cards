@@ -363,7 +363,7 @@ impl Into<i32> for Card {
 
 impl std::fmt::Display for Card {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}{}", self.value, self.suit)
+        write!(f, "{} of {}", self.value, self.suit)
     }
 }
 
