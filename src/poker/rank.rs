@@ -147,24 +147,23 @@ pub fn generate_winner_list<T: Eq + Hash + Copy>(ranks: &HashMap<T, Vec<Rank>>) 
                 .sorted_by(|a, b| {
                     a.1.cmp(b.1)
                 })
-                .rev();
+                .rev()
+                .collect::<Vec<_>>();
 
-            // TODO: I hope this can be improved
-            let mut ranking_list: Vec<HashSet<T>> = vec![];
-            let mut last_rank = None;
-            for (i, rank) in sorted_ranks_desc {
-                print!("{:?}\n", rank);
-                if let Some(last_rank) = last_rank {
-                    if last_rank == rank {
-                        ranking_list.last_mut().unwrap().insert(i.clone());
-                    } else {
-                        ranking_list.push(HashSet::from([i.clone()]))
-                    }
-                } else {
-                    ranking_list.push(HashSet::from([i.clone()]))
-                }
-                last_rank = Some(rank);
+            if sorted_ranks_desc.len() == 0 {
+                return (i, vec![]);
             }
+
+            let mut ranking_list = vec![HashSet::from([sorted_ranks_desc[0].0.clone()])];
+            let _: () = sorted_ranks_desc.windows(2)
+                .flat_map(<&[(&T, &Rank); 2]>::try_from)
+                .map(|&[(_, prev_rank), (curr_id, curr_rank)]| {
+                    if prev_rank == curr_rank {
+                        ranking_list.last_mut().unwrap().insert(curr_id.clone());
+                    } else {
+                        ranking_list.push(HashSet::from([curr_id.clone()]));
+                    }
+                }).collect();
 
             (i, ranking_list)
         })
