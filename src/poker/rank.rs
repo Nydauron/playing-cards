@@ -57,7 +57,10 @@ impl PartialOrd for Rank {
 
 impl PartialEq for Rank {
     fn eq(&self, other: &Self) -> bool {
-        self.strength == other.strength
+        self.strength == other.strength &&
+            self.hand_rank == other.hand_rank &&
+            self.sub_rank == other.sub_rank &&
+            self.description == other.description
     }
 }
 
@@ -228,7 +231,7 @@ mod tests {
                     strength: 4321,
                     hand_rank: 5,
                     sub_rank: 12,
-                    description: Some("Some sick hand".to_string()),
+                    description: Some("Sick hand".to_string()),
                 },
             ]),
             (2, vec![
@@ -236,7 +239,7 @@ mod tests {
                     strength: 4321,
                     hand_rank: 5,
                     sub_rank: 12,
-                    description: Some("Same hand!".to_string()),
+                    description: Some("Sick hand".to_string()),
                 },
             ])
         ]);
