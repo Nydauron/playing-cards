@@ -1,8 +1,9 @@
-use std::collections::BinaryHeap;
+use std::collections::HashMap;
+use num::traits::FromPrimitive;
 
 use itertools::Itertools;
 
-use crate::{core::Card, poker::rank::Rank};
+use crate::{core::{Card, Value}, poker::rank::Rank};
 
 use super::EvaluatorError;
 
@@ -73,8 +74,20 @@ pub fn evaluate_hand(player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Rank,
 
             let (_, rank) = card_ranks.iter()
                 .enumerate()
-                .fold((13, Rank{strength: base_strength as u32, hand_rank: card_count as u16, sub_rank: 0, description: None}), 
+                .fold((13, Rank{strength: base_strength as u32, hand_rank: card_count as u16, sub_rank: 1, description: None}),
                     |(prev_rank_strength, mut acc), (i, rank_strength)| {
+                        if acc.description.is_none() {
+                            let hand_name_mapping: HashMap<usize, &str> = HashMap::from([
+                                (1, "1-card hand"),
+                                (2, "2-card hand"),
+                                (3, "3-card hand"),
+                                (4, "Badugi"),
+                            ]);
+                            let value_str: String = Value::from_u8((rank_strength - 1) % 13).map_or("".to_string(), |v| {
+                                format!("{}-high ", v.get_readable_string())
+                            });
+                            acc.description = Some(format!("{}{}", value_str, hand_name_mapping[&card_count]));
+                        }
                         for s in (rank_strength + 1)..prev_rank_strength {
                             let strength_inc = choose((s - 1) as u64, (card_count - i - 1) as u64);
                             acc.strength += strength_inc as u32;
@@ -108,8 +121,13 @@ mod tests {
         let hand = Card::vec_from_str("2h4hThQh").expect("Cards did not parse correctly");
         let rank = evaluate_hand(&hand, &vec![]).expect("Hand did not evaluate correctly");
 
-        assert_eq!(rank.strength, 12);
-
+        let expected_rank  = Rank {
+            strength: 12,
+            hand_rank: 1,
+            sub_rank: 12,
+            description: Some("2-high 1-card hand".to_string()),
+        };
+        assert_eq!(rank, expected_rank);
     }
 
     #[test]
@@ -117,8 +135,13 @@ mod tests {
         let hand = Card::vec_from_str("QhQsQdQc").expect("Cards did not parse correctly");
         let rank = evaluate_hand(&hand, &vec![]).expect("Hand did not evaluate correctly");
 
-        assert_eq!(rank.strength, 2);
-
+        let expected_rank = Rank {
+            strength: 2,
+            hand_rank: 1,
+            sub_rank: 2,
+            description: Some("Queen-high 1-card hand".to_string()),
+        };
+        assert_eq!(expected_rank, rank);
     }
 
     #[test]
@@ -130,8 +153,13 @@ mod tests {
         // +13 to account for all hand combos with only 1 card
         // +63 for Σ nCr(n - 1, 1) for all n ∈ [4, 13)
         // + 1 for Σ nCr(n - 1, 0) for all n ∈ [2, 3)
-        assert_eq!(rank.strength, 1 + 13 + 63 + 1);
-
+        let expected_rank = Rank {
+            strength: 1 + 13 + 63 + 1,
+            hand_rank: 2,
+            sub_rank: 65,
+            description: Some("4-high 2-card hand".to_string()),
+        };
+        assert_eq!(rank, expected_rank);
     }
 
     #[test]
@@ -144,8 +172,13 @@ mod tests {
         // +200 for Σ nCr(n - 1, 2) for all n ∈ [7, 13)
         // +  0 for Σ nCr(n - 1, 1) for all n ∈ [6, 6) but |n| = 0
         // +  2 for Σ nCr(n - 1, 0) for all n ∈ [3, 5)
-        assert_eq!(rank.strength, 1 + 91 + 200 + 0 + 2);
-
+        let expected_rank = Rank {
+            strength: 1 + 91 + 200 + 0 + 2,
+            hand_rank: 3,
+            sub_rank: 203,
+            description: Some("7-high 3-card hand".to_string()),
+        };
+        assert_eq!(expected_rank, rank)
     }
 
     #[test]
@@ -159,7 +192,13 @@ mod tests {
         // +161 for Σ nCr(n - 1, 2) for all n ∈ [5, 12)
         // +  2 for Σ nCr(n - 1, 1) for all n ∈ [3, 4)
         // +  1 for Σ nCr(n - 1, 0) for all n ∈ [1, 2)
-        assert_eq!(rank.strength, 1 + 377 + 0 + 161 + 2 + 1);
+        let expected_rank = Rank {
+            strength: 1 + 377 + 0 + 161 + 2 + 1,
+            hand_rank: 4,
+            sub_rank: 165,
+            description: Some("King-high Badugi".to_string()),
+        };
+        assert_eq!(expected_rank, rank);
     }
 
     #[test]
@@ -173,7 +212,13 @@ mod tests {
         // +  0 for Σ nCr(n - 1, 2) for all n ∈ [5, 5) but |n| = 0
         // +  3 for Σ nCr(n - 1, 1) for all n ∈ [2, 4)
         // +  0 for Σ nCr(n - 1, 0) for all n ∈ [1, 1) but |n| = 0
-        assert_eq!(rank.strength, 1 + 377 + 490 + 0 + 3 + 0);
+        let expected_rank = Rank {
+            strength: 1 + 377 + 490 + 0 + 3 + 0,
+            hand_rank: 4,
+            sub_rank: 494,
+            description: Some("6-high Badugi".to_string()),
+        };
+        assert_eq!(expected_rank, rank);
     }
 
     #[test]
@@ -187,6 +232,12 @@ mod tests {
         // +  0 for Σ nCr(n - 1, 2) for all n ∈ [5, 5) but |n| = 0
         // +  0 for Σ nCr(n - 1, 1) for all n ∈ [2, 4) but |n| = 0
         // +  0 for Σ nCr(n - 1, 0) for all n ∈ [1, 1) but |n| = 0
-        assert_eq!(rank.strength, 1 + 377 + 495 + 0 + 0 + 0);
+        let expected_rank = Rank {
+            strength: 1 + 377 + 495 + 0 + 0 + 0,
+            hand_rank: 4,
+            sub_rank: 496,
+            description: Some("4-high Badugi".to_string()),
+        };
+        assert_eq!(expected_rank, rank);
     }
 }
