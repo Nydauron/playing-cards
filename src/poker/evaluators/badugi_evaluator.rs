@@ -37,7 +37,6 @@ pub fn evaluate_hand(player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Rank,
     
     player_hand.iter().combinations(best_hand_card_count)
         .filter(|canidate_hand| {
-            println!("{:?}", canidate_hand);
             let mut suit_bits = 0;
             let mut rank_bits = 0;
             for c in canidate_hand {
@@ -65,7 +64,6 @@ pub fn evaluate_hand(player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Rank,
                 })
                 .collect::<Vec<_>>();
 
-            println!("{:?}", card_ranks);
             let mut base_strength = 1;
             let card_count = card_ranks.len();
 
@@ -86,37 +84,7 @@ pub fn evaluate_hand(player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Rank,
                         (*rank_strength, acc)
                     });
 
-            return rank;
-            let (_, strength) = card_ranks.iter()
-                .enumerate()
-                .fold((13, 0), |(prev_rank_strength, mut acc), (i, rank_strength)| {
-                    for s in (rank_strength + 1)..prev_rank_strength {
-                        acc += choose((s - 1) as u64, (card_count - i - 1) as u64);
-                    }
-
-                    (*rank_strength, acc)
-                });
-
-            // let mut strength = 0;
-            // let mut prev_rank_strength = 13;
-
-            // for (i, rank_strength) in card_ranks.into_iter().enumerate() {
-            //     println!("({}, {})", i, rank_strength);
-            //     for s in (rank_strength + 1)..prev_rank_strength {
-            //         strength += choose((s - 1) as u64, (card_count - i - 1) as u64);
-            //     }
-
-            //     println!("card {}: {}", rank_strength, strength);
-            //     prev_rank_strength = rank_strength;
-            // }
-            println!("Stength: {} ({})\n", strength, base_strength);
-
-            Rank {
-                strength: (strength + base_strength) as u32,
-                hand_rank: 0, // TODO
-                sub_rank: 0, // TODO
-                description: None,
-            }
+            rank
         })
         .fold(Err(EvaluatorError::UnknownError("No valid rank was generated".to_string())), |acc, rank| {
             if let Ok(acc) = acc {
