@@ -263,3 +263,5 @@ pub mod omaha_hilo_evaluator;
 /// assert!(hero_rank[1] > villan_rank[1]); // Hero's hand is better than the villan's
 /// ```
 pub mod drawmaha_evaluator;
+
+pub mod badugi_evaluator;
