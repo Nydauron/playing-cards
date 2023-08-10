@@ -1,7 +1,5 @@
 //! Contains all hand evaluators.
 
-pub mod evaluator;
-
 mod evaluator_errors;
 pub use self::evaluator_errors::EvaluatorError;
 
@@ -55,41 +53,41 @@ pub mod high_evaluator;
 ///
 /// Examples
 /// ```rust
-/// use playing_cards::{core::Card, poker::evaluators::low_evaluator};
+/// use playing_cards::{core::Card, poker::evaluators::low_27_evaluator};
 ///
 /// let hand = Card::vec_from_str("2dTd3s5sAc").unwrap();
 ///
-/// let rank = &low_evaluator::evaluate_hand(&hand, &Vec::new()).unwrap();
+/// let rank = &low_27_evaluator::evaluate_hand(&hand, &Vec::new()).unwrap();
 ///
 /// assert_eq!(rank.description.as_ref().unwrap(), "Ace High");
 /// ```
 ///
 /// ```rust
-/// use playing_cards::{core::Card, poker::evaluators::low_evaluator};
+/// use playing_cards::{core::Card, poker::evaluators::low_27_evaluator};
 ///
 /// let hand = Card::vec_from_str("2c4dKs2dKd").unwrap();
 ///
-/// let rank = &low_evaluator::evaluate_hand(&hand, &Vec::new()).unwrap();
+/// let rank = &low_27_evaluator::evaluate_hand(&hand, &Vec::new()).unwrap();
 ///
 /// assert_eq!(rank.description.as_ref().unwrap(), "Two Pair of Kings and 2s");
 /// ```
 ///
 /// ```rust
-/// use playing_cards::{core::Card, poker::evaluators::low_evaluator};
+/// use playing_cards::{core::Card, poker::evaluators::low_27_evaluator};
 ///
 /// let hero_hand = Card::vec_from_str("6h7h2s3cTd").unwrap();
 /// let villan_hand = Card::vec_from_str("2c3s4s5s6d").unwrap();
 /// let board = vec![];
 ///
-/// let hero_rank = &low_evaluator::evaluate_hand(&hero_hand, &board).unwrap();
-/// let villan_rank = &low_evaluator::evaluate_hand(&villan_hand, &board).unwrap();
+/// let hero_rank = &low_27_evaluator::evaluate_hand(&hero_hand, &board).unwrap();
+/// let villan_rank = &low_27_evaluator::evaluate_hand(&villan_hand, &board).unwrap();
 ///
 /// assert_eq!(hero_rank.description.as_ref().unwrap(), "10 High");
 /// assert_eq!(villan_rank.description.as_ref().unwrap(), "6 High Straight");
 ///
 /// assert!(hero_rank > villan_rank); // Hero's hand is better than the villan's
 /// ```
-pub mod low_evaluator;
+pub mod low_27_evaluator;
 
 /// An evaluator for Omaha High hands.
 ///
