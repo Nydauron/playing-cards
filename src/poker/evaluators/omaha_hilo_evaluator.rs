@@ -1,18 +1,28 @@
 use std::collections::HashSet;
 
-use super::{EvaluatorError, omaha_hi_evaluator};
-use super::super::rank::Rank;
+use super::{EvaluatorError, omaha_hi_evaluator, high_evaluator::HighRank, low_a5_evaluator::LowA5Rank};
 
 use itertools::Itertools;
 use phf::phf_map;
 
-use crate::core::{Card, Value};
+use crate::{core::{Card, Value}, poker::{rank::BasicRank, evaluator_result::{RankStrengthIterator, IntoRankStrengthIterator}}};
+
+pub struct OmahaHiLoRank {
+    pub hi_rank: HighRank,
+    pub lo_rank: Option<LowA5Rank>,
+}
+
+impl IntoRankStrengthIterator for OmahaHiLoRank {
+    fn into_strength_iter(self) -> RankStrengthIterator {
+        RankStrengthIterator::from(vec![Some((*self.hi_rank).clone()), self.lo_rank.map(|lo| { (*lo).clone() })])
+    }
+}
 
 /// Evaluates the Omaha hi/lo hand for one player.
 ///
 /// Returns a `Vec<Rank>`. If the player's hand contains less than 4 cards or the board contains
 /// less than 3 cards, then an error will return.
-pub fn evaluate_hand(player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Vec<Option<Rank>>, EvaluatorError> {
+pub fn evaluate_hand(player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<OmahaHiLoRank, EvaluatorError> {
     if player_hand.len() < 4 {
         return Err(EvaluatorError::NotEnoughCards("Player hand".to_string(), 4));
         // Player hand does not have at least 4 cards
@@ -24,7 +34,7 @@ pub fn evaluate_hand(player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Vec<O
     }
 
     let hi_hand = omaha_hi_evaluator::evaluate_hand(player_hand, board)?;
-    let mut lo_hand: Option<Rank> = None;
+    let mut lo_hand: Option<LowA5Rank> = None;
 
     let player_hand_sub_8: Vec<Card> = player_hand
         .into_iter()
@@ -60,12 +70,12 @@ pub fn evaluate_hand(player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Vec<O
 
                 if let Some(&(strength, hand_rank, sub_rank, desc)) = LO_8_MAP.get(&bit_strength) {
 
-                Some(Rank {
+                Some(LowA5Rank(BasicRank {
                     strength: strength,
                     hand_rank: hand_rank,
                     sub_rank: sub_rank,
                     description: Some(desc.to_string()),
-                })
+                }))
                 } else {
                     None
                 }
@@ -79,7 +89,7 @@ pub fn evaluate_hand(player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Vec<O
             });
     }
 
-    Ok(vec![Some(hi_hand), lo_hand])
+    Ok(OmahaHiLoRank { hi_rank: hi_hand, lo_rank: lo_hand})
 }
 
 static LO_8_MAP: phf::Map<u8, (u32, u16, u16, &'static str)> = phf_map! {

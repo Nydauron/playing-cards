@@ -2,21 +2,24 @@ use std::{cmp::Ordering, hash::Hash, collections::{HashSet, HashMap, BTreeMap}};
 
 use itertools::Itertools;
 
-/// A struct to contain hand strength metadata.
+use super::evaluator_result::IntoRankStrengthIterator;
+
+/// A fundational struct to contain hand strength metadata.
 ///
-/// The `Rank` struct is fairly trasparent allowing for easy access for evaluators to create and
-/// modify values within the struct. The struct primarily stores information on hand strength, even
-/// containing information on hand rank and sub rank if the user wants to utilize those properites.
+/// The `BasicRank` struct is fairly trasparent allowing for easy access for evaluators to create
+/// and modify values within the struct. The struct primarily stores information on hand strength,
+/// even containing information on hand rank and sub rank if the user wants to utilize those
+/// properites.
 ///
 /// A provided description is also included to allow for the user to understand what the rank is in
 /// English. Typically, the `description` field is going to be the the strength of the hand, but if
 /// the evaluator fails for whatever reason, it will contain an error message instead.
 ///
-/// Ranks can be compared with each other using the typical equality and inequality operations. Do
-/// note that two ranks from two different evaluators can be compared successfully which might lead
-/// to some undefined behavior in the user's implementation.
-#[derive(Debug, Clone, Eq)]
-pub struct Rank {
+/// Ranks can be compared with each other using the typical equality and inequality operations.
+/// The evaluators that are provided in the `evaluator` module produce structs that rely on this
+/// foundational struct.
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct BasicRank {
     /// The strength of the `Rank`.
     ///
     /// This field is what is used within the implematation of `Ord`
@@ -43,24 +46,15 @@ pub struct Rank {
     pub description: Option<String>,
 }
 
-impl Ord for Rank {
+impl Ord for BasicRank {
     fn cmp(&self, other: &Self) -> Ordering {
         self.strength.cmp(&other.strength)
     }
 }
 
-impl PartialOrd for Rank {
+impl PartialOrd for BasicRank {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
-    }
-}
-
-impl PartialEq for Rank {
-    fn eq(&self, other: &Self) -> bool {
-        self.strength == other.strength &&
-            self.hand_rank == other.hand_rank &&
-            self.sub_rank == other.sub_rank &&
-            self.description == other.description
     }
 }
 

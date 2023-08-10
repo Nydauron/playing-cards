@@ -1,5 +1,5 @@
 use super::EvaluatorError;
-use super::super::rank::Rank;
+use super::high_evaluator::HighRank;
 
 use itertools::Itertools;
 
@@ -8,9 +8,9 @@ use crate::poker::evaluators::high_evaluator;
 
 /// Evaluates the Omaha high hand for one player.
 ///
-/// Returns a `Vec<Rank>`. If the player's hand contains less than 4 cards or the board contains
+/// Returns a `HighRank`. If the player's hand contains less than 4 cards or the board contains
 /// less than 3 cards, then an error will return.
-pub fn evaluate_hand(player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Rank, EvaluatorError> {
+pub fn evaluate_hand(player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<HighRank, EvaluatorError> {
     if player_hand.len() < 4 {
         return Err(EvaluatorError::NotEnoughCards("Player hand".to_string(), 4));
         // Player hand does not have at least 4 cards
@@ -29,7 +29,9 @@ pub fn evaluate_hand(player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Rank,
         .iter()
         .cartesian_product(board_combinations.iter())
         .map(|(hand, board)| {
-            Ok(high_evaluator::evaluate_hand(hand, board)?)
+            let mut all_cards = hand.clone();
+            all_cards.extend(board.iter());
+            Ok(high_evaluator::evaluate_hand(&all_cards)?)
         })
         .reduce(|acc, rank_res| {
             let acc = acc?;

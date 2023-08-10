@@ -3,7 +3,7 @@ use num::traits::FromPrimitive;
 
 use itertools::Itertools;
 
-use crate::{core::{Card, Value}, poker::rank::Rank};
+use crate::{core::{Card, Value}, poker::{rank::BasicRank, evaluator_result::{IntoRankStrengthIterator, RankStrengthIterator}}};
 
 use super::EvaluatorError;
 
@@ -14,7 +14,22 @@ fn choose(n: u64, k: u64) -> u64 {
     n * choose(n - 1, k - 1) / k
 }
 
-pub fn evaluate_hand(player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Rank, EvaluatorError> {
+#[derive(Debug, Clone, Eq, PartialEq, PartialOrd)]
+pub struct BadugiRank(BasicRank);
+
+impl Ord for BadugiRank {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.0.strength.cmp(&other.0.strength)
+    }
+}
+
+impl IntoRankStrengthIterator for BadugiRank {
+    fn into_strength_iter(self) -> RankStrengthIterator {
+        RankStrengthIterator::from(self.0)
+    }
+}
+
+pub fn evaluate_hand(player_hand: &Vec<Card>) -> Result<BadugiRank, EvaluatorError> {
     if player_hand.len() > 4 {
         return Err(EvaluatorError::TooManyCards("The player hand had too many cards".to_string(), 4));
     }
@@ -74,7 +89,7 @@ pub fn evaluate_hand(player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Rank,
 
             let (_, rank) = card_ranks.iter()
                 .enumerate()
-                .fold((13, Rank{strength: base_strength as u32, hand_rank: card_count as u16, sub_rank: 1, description: None}),
+                .fold((13, BasicRank{strength: base_strength as u32, hand_rank: card_count as u16, sub_rank: 1, description: None}),
                     |(prev_rank_strength, mut acc), (i, rank_strength)| {
                         if acc.description.is_none() {
                             let hand_name_mapping: HashMap<usize, &str> = HashMap::from([
@@ -97,7 +112,7 @@ pub fn evaluate_hand(player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Rank,
                         (*rank_strength, acc)
                     });
 
-            rank
+            BadugiRank(rank)
         })
         .fold(Err(EvaluatorError::UnknownError("No valid rank was generated".to_string())), |acc, rank| {
             if let Ok(acc) = acc {
@@ -119,72 +134,80 @@ mod tests {
     #[test]
     fn hand_all_same_suit() {
         let hand = Card::vec_from_str("2h4hThQh").expect("Cards did not parse correctly");
-        let rank = evaluate_hand(&hand, &vec![]).expect("Hand did not evaluate correctly");
+        let rank = evaluate_hand(&hand).expect("Hand did not evaluate correctly");
 
-        let expected_rank  = Rank {
-            strength: 12,
-            hand_rank: 1,
-            sub_rank: 12,
-            description: Some("2-high 1-card hand".to_string()),
-        };
+        let expected_rank  = BadugiRank(
+            BasicRank {
+                strength: 12,
+                hand_rank: 1,
+                sub_rank: 12,
+                description: Some("2-high 1-card hand".to_string()),
+            }
+        );
         assert_eq!(rank, expected_rank);
     }
 
     #[test]
     fn hand_all_same_rank() {
         let hand = Card::vec_from_str("QhQsQdQc").expect("Cards did not parse correctly");
-        let rank = evaluate_hand(&hand, &vec![]).expect("Hand did not evaluate correctly");
+        let rank = evaluate_hand(&hand).expect("Hand did not evaluate correctly");
 
-        let expected_rank = Rank {
-            strength: 2,
-            hand_rank: 1,
-            sub_rank: 2,
-            description: Some("Queen-high 1-card hand".to_string()),
-        };
+        let expected_rank = BadugiRank(
+            BasicRank {
+                strength: 2,
+                hand_rank: 1,
+                sub_rank: 2,
+                description: Some("Queen-high 1-card hand".to_string()),
+            }
+        );
         assert_eq!(expected_rank, rank);
     }
 
     #[test]
     fn card_hand_size_2() {
         let hand = Card::vec_from_str("2h4hTd2d").expect("Cards did not parse correctly");
-        let rank = evaluate_hand(&hand, &vec![]).expect("Hand did not evaluate correctly");
+        let rank = evaluate_hand(&hand).expect("Hand did not evaluate correctly");
 
         // + 1 since all ranks start at strength of 1
         // +13 to account for all hand combos with only 1 card
         // +63 for Σ nCr(n - 1, 1) for all n ∈ [4, 13)
         // + 1 for Σ nCr(n - 1, 0) for all n ∈ [2, 3)
-        let expected_rank = Rank {
-            strength: 1 + 13 + 63 + 1,
-            hand_rank: 2,
-            sub_rank: 65,
-            description: Some("4-high 2-card hand".to_string()),
-        };
+        let expected_rank = BadugiRank(
+            BasicRank {
+                strength: 1 + 13 + 63 + 1,
+                hand_rank: 2,
+                sub_rank: 65,
+                description: Some("4-high 2-card hand".to_string()),
+            }
+        );
         assert_eq!(rank, expected_rank);
     }
 
     #[test]
     fn card_hand_size_3() {
         let hand = Card::vec_from_str("3d7h6s7c").expect("Cards did not parse correctly");
-        let rank = evaluate_hand(&hand, &vec![]).expect("Hand did not evaluate correctly");
+        let rank = evaluate_hand(&hand).expect("Hand did not evaluate correctly");
 
         // +  1 since all ranks start at strength of 1
         // + 91 to account for all hand combos with only 1 or 2 cards
         // +200 for Σ nCr(n - 1, 2) for all n ∈ [7, 13)
         // +  0 for Σ nCr(n - 1, 1) for all n ∈ [6, 6) but |n| = 0
         // +  2 for Σ nCr(n - 1, 0) for all n ∈ [3, 5)
-        let expected_rank = Rank {
+        let expected_rank = BadugiRank(
+            BasicRank {
             strength: 1 + 91 + 200 + 0 + 2,
             hand_rank: 3,
             sub_rank: 203,
             description: Some("7-high 3-card hand".to_string()),
-        };
+        }
+        );
         assert_eq!(expected_rank, rank)
     }
 
     #[test]
     fn badugi_hand() {
         let hand = Card::vec_from_str("As3dKc5h").expect("Cards did not parse correctly");
-        let rank = evaluate_hand(&hand, &vec![]).expect("Hand did not evaluate correctly");
+        let rank = evaluate_hand(&hand).expect("Hand did not evaluate correctly");
 
         // +  1 since all ranks start at strength of 1
         // +377 to account for all hand combos with only 1-3 cards
@@ -192,19 +215,21 @@ mod tests {
         // +161 for Σ nCr(n - 1, 2) for all n ∈ [5, 12)
         // +  2 for Σ nCr(n - 1, 1) for all n ∈ [3, 4)
         // +  1 for Σ nCr(n - 1, 0) for all n ∈ [1, 2)
-        let expected_rank = Rank {
-            strength: 1 + 377 + 0 + 161 + 2 + 1,
-            hand_rank: 4,
-            sub_rank: 165,
-            description: Some("King-high Badugi".to_string()),
-        };
+        let expected_rank = BadugiRank(
+            BasicRank {
+                strength: 1 + 377 + 0 + 161 + 2 + 1,
+                hand_rank: 4,
+                sub_rank: 165,
+                description: Some("King-high Badugi".to_string()),
+            }
+        );
         assert_eq!(expected_rank, rank);
     }
 
     #[test]
     fn budugi_hand_10th_best() {
         let hand = Card::vec_from_str("As2d5c6h").expect("Cards did not parse correctly");
-        let rank = evaluate_hand(&hand, &vec![]).expect("Hand did not evaluate correctly");
+        let rank = evaluate_hand(&hand).expect("Hand did not evaluate correctly");
 
         // +  1 since all ranks start at strength of 1
         // +377 to account for all hand combos with only 1-3 cards
@@ -212,19 +237,21 @@ mod tests {
         // +  0 for Σ nCr(n - 1, 2) for all n ∈ [5, 5) but |n| = 0
         // +  3 for Σ nCr(n - 1, 1) for all n ∈ [2, 4)
         // +  0 for Σ nCr(n - 1, 0) for all n ∈ [1, 1) but |n| = 0
-        let expected_rank = Rank {
-            strength: 1 + 377 + 490 + 0 + 3 + 0,
-            hand_rank: 4,
-            sub_rank: 494,
-            description: Some("6-high Badugi".to_string()),
-        };
+        let expected_rank = BadugiRank(
+            BasicRank {
+                strength: 1 + 377 + 490 + 0 + 3 + 0,
+                hand_rank: 4,
+                sub_rank: 494,
+                description: Some("6-high Badugi".to_string()),
+            }
+        );
         assert_eq!(expected_rank, rank);
     }
 
     #[test]
     fn best_badugi_hand() {
         let hand = Card::vec_from_str("As2d3c4h").expect("Cards did not parse correctly");
-        let rank = evaluate_hand(&hand, &vec![]).expect("Hand did not evaluate correctly");
+        let rank = evaluate_hand(&hand).expect("Hand did not evaluate correctly");
 
         // +  1 since all ranks start at strength of 1
         // +377 to account for all hand combos with only 1-3 cards
@@ -232,12 +259,14 @@ mod tests {
         // +  0 for Σ nCr(n - 1, 2) for all n ∈ [5, 5) but |n| = 0
         // +  0 for Σ nCr(n - 1, 1) for all n ∈ [2, 4) but |n| = 0
         // +  0 for Σ nCr(n - 1, 0) for all n ∈ [1, 1) but |n| = 0
-        let expected_rank = Rank {
-            strength: 1 + 377 + 495 + 0 + 0 + 0,
-            hand_rank: 4,
-            sub_rank: 496,
-            description: Some("4-high Badugi".to_string()),
-        };
+        let expected_rank = BadugiRank(
+            BasicRank {
+                strength: 1 + 377 + 495 + 0 + 0 + 0,
+                hand_rank: 4,
+                sub_rank: 496,
+                description: Some("4-high Badugi".to_string()),
+            }
+        );
         assert_eq!(expected_rank, rank);
     }
 }
