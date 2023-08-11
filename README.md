@@ -42,3 +42,14 @@ All the evaluators run on the [CactusKev Perfect Hash algorithm](https://github.
 Originally, the evaluators ran on the 2+2 evaluator, but due to how big the lookup graph is (the
 binary encoded file took up 4GB+) and because it increased compile time to over 5 minutes, it was
 deemed infeasible despite its super fast evaluations.
+
+## License
+
+Licensed under either of
+
+ * Apache License, Version 2.0
+   ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+ * MIT license
+   ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+
+at your option.
