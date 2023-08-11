@@ -7,13 +7,13 @@ use std::fmt;
 #[derive(Debug)]
 pub enum EvaluatorError {
     /// This error represents when there are not enough cards provided to the evaluator
-    /// 
+    ///
     /// Params:
     /// card_set_type: String - what set of cards had not enough cards
     /// expected_count: u64 - the expected amount of cards (at least)
     NotEnoughCards(String, u64),
     /// This error represents when there are too many cards provided to the evaluator
-    /// 
+    ///
     /// Params:
     /// card_set_type: String - what set of cards had not enough cards
     /// expected_count: u64 - the expected amount of cards (at most)
@@ -33,8 +33,12 @@ impl fmt::Display for EvaluatorError {
                 } else {
                     at_least_plural = "s";
                 }
-                write!(f, "{} does not have at least {} card{}", set_type, expected_at_least, at_least_plural)
-            },
+                write!(
+                    f,
+                    "{} does not have at least {} card{}",
+                    set_type, expected_at_least, at_least_plural
+                )
+            }
             TooManyCards(set_type, expected_no_more) => {
                 let at_least_plural;
                 if *expected_no_more == 1 {
@@ -42,8 +46,12 @@ impl fmt::Display for EvaluatorError {
                 } else {
                     at_least_plural = "s";
                 }
-                write!(f, "{} does not have at most {} card{}", set_type, expected_no_more, at_least_plural)
-            },
+                write!(
+                    f,
+                    "{} does not have at most {} card{}",
+                    set_type, expected_no_more, at_least_plural
+                )
+            }
             UnknownError(msg) => {
                 write!(f, "Uh oh! An unknown error occurred!\n{}", msg)
             }

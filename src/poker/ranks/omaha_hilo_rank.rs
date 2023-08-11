@@ -1,4 +1,4 @@
-use super::{HighRank, LowA5Rank, IntoRankStrengthIterator, RankStrengthIterator};
+use super::{HighRank, IntoRankStrengthIterator, LowA5Rank, RankStrengthIterator};
 
 /// A struct of for a given Omaha Hi-Lo hand
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -13,6 +13,9 @@ pub struct OmahaHiLoRank {
 
 impl IntoRankStrengthIterator for OmahaHiLoRank {
     fn into_strength_iter(self) -> RankStrengthIterator {
-        RankStrengthIterator::from(vec![Some((*self.hi_rank).strength), self.lo_rank.map(|lo| { (*lo).strength })])
+        RankStrengthIterator::from(vec![
+            Some((*self.hi_rank).strength),
+            self.lo_rank.map(|lo| (*lo).strength),
+        ])
     }
 }

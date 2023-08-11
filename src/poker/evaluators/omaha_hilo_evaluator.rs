@@ -1,23 +1,30 @@
 use std::collections::HashSet;
 
-use super::{EvaluatorError, omaha_hi_evaluator};
+use super::{omaha_hi_evaluator, EvaluatorError};
 
 use itertools::Itertools;
 use phf::phf_map;
 
-use crate::{core::{Card, Value}, poker::ranks::{BasicRank, LowA5Rank, OmahaHiLoRank}};
+use crate::{
+    core::{Card, Value},
+    poker::ranks::{BasicRank, LowA5Rank, OmahaHiLoRank},
+};
 
 /// Evaluates the Omaha hi/lo hand for one player.
 ///
 /// Returns a `Vec<Rank>`. If the player's hand contains less than 4 cards or the board contains
 /// less than 3 cards, then an error will return.
-pub fn evaluate_hand(player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<OmahaHiLoRank, EvaluatorError> {
+pub fn evaluate_hand(
+    player_hand: &Vec<Card>,
+    board: &Vec<Card>,
+) -> Result<OmahaHiLoRank, EvaluatorError> {
     if player_hand.len() < 4 {
         return Err(EvaluatorError::NotEnoughCards("Player hand".to_string(), 4));
         // Player hand does not have at least 4 cards
     }
 
-    if board.len() < 3 { // 3 because it allows for evaluation on flop-only flop-turn-only boards
+    if board.len() < 3 {
+        // 3 because it allows for evaluation on flop-only flop-turn-only boards
         return Err(EvaluatorError::NotEnoughCards("Board".to_string(), 3));
         // Board does not have at least 3 cards
     }
@@ -27,58 +34,57 @@ pub fn evaluate_hand(player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<Omaha
 
     let player_hand_sub_8: Vec<Card> = player_hand
         .into_iter()
-        .filter(|card| {
-            card.value <= Value::Eight || card.value == Value::Ace
-        })
+        .filter(|card| card.value <= Value::Eight || card.value == Value::Ace)
         .cloned()
         .collect();
 
     let board_sub_8: Vec<Card> = board
         .into_iter()
-        .filter(|card| {
-            card.value <= Value::Eight || card.value == Value::Ace
-        })
+        .filter(|card| card.value <= Value::Eight || card.value == Value::Ace)
         .cloned()
         .collect();
 
     if player_hand_sub_8.len() >= 2 && board_sub_8.len() >= 3 {
-        let hand_combinations: Vec<Vec<Card>> = player_hand_sub_8.iter().cloned().combinations(2).collect();
-        let board_combinations: Vec<Vec<Card>> = board_sub_8.iter().cloned().combinations(3).collect();
+        let hand_combinations: Vec<Vec<Card>> =
+            player_hand_sub_8.iter().cloned().combinations(2).collect();
+        let board_combinations: Vec<Vec<Card>> =
+            board_sub_8.iter().cloned().combinations(3).collect();
 
-        lo_hand = hand_combinations.iter().cartesian_product(board_combinations.iter())
-            .map(|(hand_combo, board_combo )| {
-                let cards: HashSet<Card> = hand_combo.iter().chain(board_combo.iter()).cloned().collect();
+        lo_hand = hand_combinations
+            .iter()
+            .cartesian_product(board_combinations.iter())
+            .map(|(hand_combo, board_combo)| {
+                let cards: HashSet<Card> = hand_combo
+                    .iter()
+                    .chain(board_combo.iter())
+                    .cloned()
+                    .collect();
                 if cards.len() != 5 {
                     return None;
                 }
 
-                let bit_strength = cards.iter()
-                    .fold(0, |acc, card| {
-                        acc | (1 << (card.value.clone() as u8 + 1) % 13)
-                    });
+                let bit_strength = cards.iter().fold(0, |acc, card| {
+                    acc | (1 << (card.value.clone() as u8 + 1) % 13)
+                });
 
                 if let Some(&(strength, hand_rank, sub_rank, desc)) = LO_8_MAP.get(&bit_strength) {
-
-                Some(LowA5Rank(BasicRank {
-                    strength: strength,
-                    hand_rank: hand_rank,
-                    sub_rank: sub_rank,
-                    description: Some(desc.to_string()),
-                }))
+                    Some(LowA5Rank(BasicRank {
+                        strength: strength,
+                        hand_rank: hand_rank,
+                        sub_rank: sub_rank,
+                        description: Some(desc.to_string()),
+                    }))
                 } else {
                     None
                 }
             })
-            .fold(None, |acc, rank| {
-                if acc < rank {
-                    rank
-                } else {
-                    acc
-                }
-            });
+            .fold(None, |acc, rank| if acc < rank { rank } else { acc });
     }
 
-    Ok(OmahaHiLoRank { hi_rank: hi_hand, lo_rank: lo_hand})
+    Ok(OmahaHiLoRank {
+        hi_rank: hi_hand,
+        lo_rank: lo_hand,
+    })
 }
 
 static LO_8_MAP: phf::Map<u8, (u32, u16, u16, &'static str)> = phf_map! {

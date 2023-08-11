@@ -16,11 +16,10 @@ impl Deref for LowA5Rank {
     type Target = BasicRank;
     fn deref(&self) -> &Self::Target {
         &self.0
-    }    
+    }
 }
 impl IntoRankStrengthIterator for LowA5Rank {
     fn into_strength_iter(self) -> RankStrengthIterator {
         RankStrengthIterator::from((*self).strength)
     }
 }
-

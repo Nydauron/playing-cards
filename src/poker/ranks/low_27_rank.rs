@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use super::{IntoRankStrengthIterator, RankStrengthIterator, BasicRank};
+use super::{BasicRank, IntoRankStrengthIterator, RankStrengthIterator};
 
 /// A rank of a 2-to-7 lowball hand
 #[derive(Debug, Clone, Eq, PartialEq, PartialOrd)]

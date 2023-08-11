@@ -10,22 +10,26 @@ use crate::poker::ranks::HighRank;
 ///
 /// Returns a `HighRank`. If the player's hand contains less than 4 cards or the board contains
 /// less than 3 cards, then an error will return.
-pub fn evaluate_hand(player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<HighRank, EvaluatorError> {
+pub fn evaluate_hand(
+    player_hand: &Vec<Card>,
+    board: &Vec<Card>,
+) -> Result<HighRank, EvaluatorError> {
     if player_hand.len() < 4 {
         return Err(EvaluatorError::NotEnoughCards("Player hand".to_string(), 4));
         // Player hand does not have at least 4 cards
     }
 
-    if board.len() < 3 { // 3 because it allows for evaluation on flop-only flop-turn-only boards
+    if board.len() < 3 {
+        // 3 because it allows for evaluation on flop-only flop-turn-only boards
         return Err(EvaluatorError::NotEnoughCards("Board".to_string(), 3));
         // Board does not have at least 3 cards
     }
 
-    let hand_combinations: Vec<Vec<Card>> = player_hand.into_iter().cloned().combinations(2).collect();
+    let hand_combinations: Vec<Vec<Card>> =
+        player_hand.into_iter().cloned().combinations(2).collect();
     let board_combinations: Vec<Vec<Card>> = board.into_iter().cloned().combinations(3).collect();
 
-    let best_rank =
-        hand_combinations
+    let best_rank = hand_combinations
         .iter()
         .cartesian_product(board_combinations.iter())
         .map(|(hand, board)| {
@@ -38,7 +42,9 @@ pub fn evaluate_hand(player_hand: &Vec<Card>, board: &Vec<Card>) -> Result<HighR
             let rank = rank_res?;
             Ok(std::cmp::max(rank, acc))
         })
-        .unwrap_or(Err(EvaluatorError::UnknownError("No hand combos were evaluated".to_string())))?;
+        .unwrap_or(Err(EvaluatorError::UnknownError(
+            "No hand combos were evaluated".to_string(),
+        )))?;
 
     Ok(best_rank)
 }
@@ -54,7 +60,10 @@ mod tests {
 
         let player_rank = &evaluate_hand(&player_hand, &board).expect("Evaluation failed");
 
-        let string_rank = player_rank.description.as_ref().expect("Hand generated bad rank");
+        let string_rank = player_rank
+            .description
+            .as_ref()
+            .expect("Hand generated bad rank");
         assert_eq!("Trip Kings", string_rank);
     }
 
@@ -65,7 +74,10 @@ mod tests {
 
         let player_rank = &evaluate_hand(&player_hand, &board).expect("Evaluation failed");
 
-        let string_rank = player_rank.description.as_ref().expect("Hand generated bad rank");
+        let string_rank = player_rank
+            .description
+            .as_ref()
+            .expect("Hand generated bad rank");
         assert_eq!("Two Pair of Queens and 3s", string_rank);
     }
 }
