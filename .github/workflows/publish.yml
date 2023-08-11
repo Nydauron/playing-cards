@@ -1,0 +1,33 @@
+name: Publish to crates.io
+
+on:
+  release:
+    types: [ published ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  ci-workflow:
+    uses: ./ci.yml
+  build:
+    runs-on: ubuntu-latest
+    needs: ci-workflow
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Cache
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Publish crate
+      uses: katyo/publish-crates@v2
+      with:
+          registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
