@@ -1,16 +1,18 @@
 extern crate num;
 use num::traits::FromPrimitive;
-use strum_macros::EnumIter;
 use std::str::FromStr;
+use strum_macros::EnumIter;
 
 use funty::Unsigned;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 /// An enum representation of the rank of a card
 ///
 /// Each value corresponds to the rank strength.
 #[allow(missing_docs)]
-#[derive(Debug, Clone, Copy, FromPrimitive, ToPrimitive, EnumIter, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(
+    Debug, Clone, Copy, FromPrimitive, ToPrimitive, EnumIter, Eq, PartialEq, Ord, PartialOrd, Hash,
+)]
 pub enum Value {
     Two = 0,
     Three = 1,
@@ -33,7 +35,7 @@ impl Value {
     /// This is typically used to parse a Value into a string format for users like printing
     /// shortened ASCII card representations (e.g. As for the Ace of spades, 5d for the 5 of
     /// diamonds).
-    pub fn get_char(& self) -> char {
+    pub fn get_char(&self) -> char {
         match self {
             Self::Two => '2',
             Self::Three => '3',
@@ -70,7 +72,7 @@ impl Value {
             'Q' => Some(Self::Queen),
             'K' => Some(Self::King),
             'A' => Some(Self::Ace),
-            _ => None
+            _ => None,
         }
     }
 
@@ -92,7 +94,7 @@ impl Value {
             10 => Some(Self::Queen),
             11 => Some(Self::King),
             12 => Some(Self::Ace),
-            _ => None
+            _ => None,
         }
     }
 
@@ -100,7 +102,7 @@ impl Value {
     ///
     /// These strings are meant for end-users and can also be used for printing
     /// hand ranks.
-    pub fn get_readable_string(& self) -> String {
+    pub fn get_readable_string(&self) -> String {
         match self {
             Self::Two => "2".to_string(),
             Self::Three => "3".to_string(),
@@ -121,7 +123,7 @@ impl Value {
     /// Returns the associated Cactus-Kev prime.
     ///
     /// Useful for building the original or variants of the Cactus-Kev evaluator.
-    pub fn get_cactus_kev_prime(& self) -> u8 {
+    pub fn get_cactus_kev_prime(&self) -> u8 {
         match self {
             Self::Two => 2,
             Self::Three => 3,
@@ -160,7 +162,6 @@ impl TryFrom<char> for Value {
     }
 }
 
-
 impl Into<char> for Value {
     fn into(self) -> char {
         self.get_char()
@@ -192,7 +193,7 @@ impl Suit {
     /// This is typically used to parse a Suit into a string format for users like printing
     /// shortened ASCII card representations (e.g. As for the Ace of spades, 5d for the 5 of
     /// diamonds).
-    pub fn get_char(& self) -> char {
+    pub fn get_char(&self) -> char {
         match self {
             Self::Heart => 'h',
             Self::Club => 'c',
@@ -211,7 +212,7 @@ impl Suit {
             'c' => Some(Self::Club),
             'd' => Some(Self::Diamond),
             's' => Some(Self::Spade),
-            _ => None
+            _ => None,
         }
     }
 }
@@ -271,7 +272,7 @@ impl Card {
 
         let mut cards: Vec<Card> = Vec::new();
         for i in (0..s.len()).step_by(2) {
-            let c = Card::from_str(s.get(i..i+2).unwrap()).unwrap();
+            let c = Card::from_str(s.get(i..i + 2).unwrap()).unwrap();
             cards.push(c);
         }
 
@@ -292,12 +293,14 @@ impl Card {
     pub fn calculate_bit_pattern(&self) -> u32 {
         let mut bit_pattern: u32 = 0;
         bit_pattern |= 1 << (16 + self.value as u32);
-        bit_pattern |= 1 << (12 + match self.suit {
-            Suit::Heart => 1,
-            Suit::Club => 3,
-            Suit::Diamond => 2,
-            Suit::Spade => 0
-        });
+        bit_pattern |= 1
+            << (12
+                + match self.suit {
+                    Suit::Heart => 1,
+                    Suit::Club => 3,
+                    Suit::Diamond => 2,
+                    Suit::Spade => 0,
+                });
         bit_pattern |= (self.value as u32) << 8;
         bit_pattern |= self.value.get_cactus_kev_prime() as u32;
 
@@ -315,8 +318,8 @@ impl From<i32> for Card {
 }
 
 impl TryFrom<String> for Card {
-	type Error = &'static str;
-	fn try_from(s: String) -> Result<Self, Self::Error> {
+    type Error = &'static str;
+    fn try_from(s: String) -> Result<Self, Self::Error> {
         if s.len() != 2 {
             return Err("Card string is not exactly a length of 2");
         }
@@ -367,7 +370,6 @@ impl std::fmt::Display for Card {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -385,7 +387,7 @@ mod tests {
     #[test]
     fn to_card() {
         let val = 52;
-        
+
         let expected_card = Card {
             value: Value::Ace,
             suit: Suit::Spade,

@@ -1,5 +1,5 @@
-use std::{io::Error, collections::HashSet};
 use getrandom;
+use std::{collections::HashSet, io::Error};
 
 extern crate rand;
 
@@ -9,7 +9,7 @@ use rand_xoshiro::Xoshiro256PlusPlus;
 
 use strum::IntoEnumIterator;
 
-use super::{Card, Value, Suit};
+use super::{Card, Suit, Value};
 
 /// A deck of cards.
 ///
@@ -57,7 +57,7 @@ impl CardDeck {
     /// for _ in 0..10 {
     ///     let mut deck: CardDeck = Default::default();
     ///
-    ///     // Since we did not shuffle the deck of cards, we should see cards in descending order. 
+    ///     // Since we did not shuffle the deck of cards, we should see cards in descending order.
     ///     for (i, card) in (52..0).zip(deck) {
     ///         assert_eq!(i, Into::<i32>::into(card));
     ///     }
@@ -133,14 +133,11 @@ impl CardDeck {
 
         for s in Suit::iter() {
             for v in Value::iter() {
-                d.push(Card{
-                    value: v,
-                    suit: s,
-                });
+                d.push(Card { value: v, suit: s });
             }
         }
 
-        CardDeck{
+        CardDeck {
             deck: d,
             seed: None,
             muck: Vec::new(),
@@ -160,13 +157,11 @@ impl CardDeck {
         let mut rng;
         let mut seed_used;
         match seed {
-            Some(seed) => {
-                seed_used = seed
-            },
+            Some(seed) => seed_used = seed,
             None => {
                 seed_used = [0u8; 32];
                 getrandom::getrandom(&mut seed_used)?;
-            },
+            }
         }
         rng = Xoshiro256PlusPlus::from_seed(seed_used);
         cards.shuffle(&mut rng);
@@ -174,7 +169,7 @@ impl CardDeck {
     }
 
     /// Gets the mersenne twister seed of the CardDeck.
-    pub fn get_seed(& self) -> Option<[u8; 32]> {
+    pub fn get_seed(&self) -> Option<[u8; 32]> {
         self.seed
     }
 
@@ -183,7 +178,8 @@ impl CardDeck {
     /// Returns back a list of cards that were removed from the deck. Duplicates can be present in
     /// the returned vector if duplicates existed in the deck.
     pub fn strip_cards(&mut self, cards_to_remove: &HashSet<Card>) -> Vec<Card> {
-        let removed_cards: Vec<Card> = self.deck
+        let removed_cards: Vec<Card> = self
+            .deck
             .clone()
             .into_iter()
             .filter(|card| cards_to_remove.contains(card))
@@ -198,13 +194,15 @@ impl CardDeck {
     /// Returns back a list of cards that were removed from the deck. Duplicates can be present in
     /// the returned vector if duplicates existed in the deck.
     pub fn strip_ranks(&mut self, ranks_to_remove: &HashSet<Value>) -> Vec<Card> {
-        let removed_cards: Vec<Card> = self.deck
+        let removed_cards: Vec<Card> = self
+            .deck
             .clone()
             .into_iter()
             .filter(|card| ranks_to_remove.contains(&card.value))
             .collect();
 
-        self.deck.retain(|card| !ranks_to_remove.contains(&card.value));
+        self.deck
+            .retain(|card| !ranks_to_remove.contains(&card.value));
 
         removed_cards
     }
@@ -214,13 +212,15 @@ impl CardDeck {
     /// Returns back a list of cards that were removed from the deck. Duplicates can be present in
     /// the returned vector if duplicates existed in the deck.
     pub fn strip_suits(&mut self, suits_to_remove: &HashSet<Suit>) -> Vec<Card> {
-        let removed_cards: Vec<Card> = self.deck
+        let removed_cards: Vec<Card> = self
+            .deck
             .clone()
             .into_iter()
             .filter(|card| suits_to_remove.contains(&card.suit))
             .collect();
 
-        self.deck.retain(|card| !suits_to_remove.contains(&card.suit));
+        self.deck
+            .retain(|card| !suits_to_remove.contains(&card.suit));
 
         removed_cards
     }
@@ -235,7 +235,7 @@ impl CardDeck {
     /// Checks to see if there are enough cards in the deck to deal
     ///
     /// Returns true if there are enough cards, false otherwise.
-    pub fn check_deal_cards(& self, cards_to_deal: usize, include_muck: bool) -> bool {
+    pub fn check_deal_cards(&self, cards_to_deal: usize, include_muck: bool) -> bool {
         let mut total_cards = self.deck.len();
         if include_muck {
             total_cards = self.muck.len();
@@ -247,7 +247,7 @@ impl CardDeck {
     ///
     /// If there is not enough cards remaining in the deck, it will reshuffle the mucked card back
     /// into the deck and redeal them out. If there are no more cards left, this method will return
-    /// None. The method also returns 
+    /// None. The method also returns
     ///
     /// Examples
     /// ```rust
@@ -289,7 +289,7 @@ impl CardDeck {
     /// ```
     pub fn deal_cards(&mut self, cards_to_deal: usize, include_muck: bool) -> Option<Vec<Card>> {
         if !self.check_deal_cards(cards_to_deal, include_muck) {
-            return None
+            return None;
         }
         let mut cards_dealt: Vec<Card> = Vec::new();
         for _ in 0..cards_to_deal {
@@ -306,9 +306,20 @@ impl CardDeck {
     /// The definition of drawing in this case means to discard and replace cards. This function
     /// can take any number of discard cards with the help of `muck_cards()` and then simply
     /// invokes `deal_cards()` to deal `n` cards out of the deck.
-    pub fn draw_cards(&mut self, cards_to_deal: usize, discard_cards: Option<Vec<Card>>, include_muck: bool) -> Option<Vec<Card>> {
-        if !self.check_deal_cards(cards_to_deal - discard_cards.clone().map_or(0, |v| if include_muck { v.len() } else { 0 } ), include_muck) {
-            return None
+    pub fn draw_cards(
+        &mut self,
+        cards_to_deal: usize,
+        discard_cards: Option<Vec<Card>>,
+        include_muck: bool,
+    ) -> Option<Vec<Card>> {
+        if !self.check_deal_cards(
+            cards_to_deal
+                - discard_cards
+                    .clone()
+                    .map_or(0, |v| if include_muck { v.len() } else { 0 }),
+            include_muck,
+        ) {
+            return None;
         }
         if let Some(c) = discard_cards {
             self.muck_cards(c);
@@ -344,10 +355,10 @@ impl Iterator for CardDeck {
 
 #[cfg(test)]
 mod tests {
+    use super::super::Value;
     use super::*;
     use rayon::prelude::*;
     use std::iter::Iterator;
-    use super::super::Value;
 
     #[test]
     fn test_deck_same_seed() {
@@ -356,19 +367,24 @@ mod tests {
         let mut d1 = CardDeck::new(Some(seed_bytes.as_slice().try_into().unwrap())).unwrap();
         let mut d2 = CardDeck::new(Some(seed_bytes.as_slice().try_into().unwrap())).unwrap();
 
-        are_decks_equal(&mut d1,&mut d2);
+        are_decks_equal(&mut d1, &mut d2);
     }
 
     fn are_decks_equal(d1: &mut CardDeck, d2: &mut CardDeck) {
         assert_eq!(d1.seed, d2.seed);
         let mut both_decks = Iterator::zip(d1, d2);
-        for i in 0..52 { // checks all cards
+        for i in 0..52 {
+            // checks all cards
             let both_cards = both_decks.next();
 
             assert_ne!(both_cards, None);
 
-            if let Some((c1,c2)) = both_cards {
-                assert_eq!(c1, c2, "Cards at index {} are not equal ({} != {})", i, c1, c2);
+            if let Some((c1, c2)) = both_cards {
+                assert_eq!(
+                    c1, c2,
+                    "Cards at index {} are not equal ({} != {})",
+                    i, c1, c2
+                );
             }
         }
 
@@ -391,11 +407,21 @@ mod tests {
         let mut deck = CardDeck::new_custom_deck(cards, None).expect("Deck could not be created");
         deck.shuffle(None).expect("Shuffle failed");
 
-        let cards_to_remove = HashSet::from_iter(Card::vec_from_str("5d2h8d3h").expect("Failed parsing card string").iter().cloned());
+        let cards_to_remove = HashSet::from_iter(
+            Card::vec_from_str("5d2h8d3h")
+                .expect("Failed parsing card string")
+                .iter()
+                .cloned(),
+        );
         let actual_cards_removed = deck.strip_cards(&cards_to_remove);
 
         for c in actual_cards_removed {
-            assert!(cards_to_remove.contains(&c), "{:?} is not inside expected list of cards removed: {:?}", c, cards_to_remove);
+            assert!(
+                cards_to_remove.contains(&c),
+                "{:?} is not inside expected list of cards removed: {:?}",
+                c,
+                cards_to_remove
+            );
         }
 
         for c in deck {
@@ -413,7 +439,12 @@ mod tests {
         let actual_cards_removed = deck.strip_ranks(&ranks_to_remove);
 
         for c in actual_cards_removed {
-            assert!(ranks_to_remove.contains(&c.value), "{:?} is not inside expected list of ranks removed: {:?}", c, ranks_to_remove);
+            assert!(
+                ranks_to_remove.contains(&c.value),
+                "{:?} is not inside expected list of ranks removed: {:?}",
+                c,
+                ranks_to_remove
+            );
         }
 
         for c in deck {
@@ -431,7 +462,12 @@ mod tests {
         let actual_cards_removed = deck.strip_suits(&suits_to_remove);
 
         for c in actual_cards_removed {
-            assert!(suits_to_remove.contains(&c.suit), "{:?} is not inside expected list of cards removed: {:?}", c, suits_to_remove);
+            assert!(
+                suits_to_remove.contains(&c.suit),
+                "{:?} is not inside expected list of cards removed: {:?}",
+                c,
+                suits_to_remove
+            );
         }
 
         for c in deck {
@@ -447,20 +483,23 @@ mod tests {
     fn test_monte_carlo_2kings_adjacent() {
         let iters = 150000;
 
-        let count : i32 = (0..iters).into_par_iter().map(|_| {
-            let mut deck: CardDeck = Default::default();
+        let count: i32 = (0..iters)
+            .into_par_iter()
+            .map(|_| {
+                let mut deck: CardDeck = Default::default();
 
-            deck.shuffle(None).expect("Problem occured when shuffling the deck");
+                deck.shuffle(None)
+                    .expect("Problem occured when shuffling the deck");
 
-            if are_2kings_adjacent(&mut deck) {
-                1
-            } else {
-                0
-            }
-        })
-        .sum();
+                if are_2kings_adjacent(&mut deck) {
+                    1
+                } else {
+                    0
+                }
+            })
+            .sum();
 
-        let expected_prob = 1201.0/5525.0; // 1 - ((49! / (49-4)! * 48!) / 52!)
+        let expected_prob = 1201.0 / 5525.0; // 1 - ((49! / (49-4)! * 48!) / 52!)
         let actual_prob = (count as f64) / (iters as f64);
         let epsilon = 0.002; // within a percentage of error of the actual
         assert!((actual_prob - expected_prob).abs() < epsilon, "Probability did not fall within {} of expected probability with {} iterations. Expected: {} (Actual: {})", epsilon, iters, expected_prob, actual_prob);
@@ -478,7 +517,7 @@ mod tests {
                 was_previous_king = false;
             }
         }
-        
+
         false
     }
 }
