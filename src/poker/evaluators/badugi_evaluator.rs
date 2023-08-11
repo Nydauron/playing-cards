@@ -15,9 +15,6 @@ fn choose(n: u64, k: u64) -> u64 {
 }
 
 pub fn evaluate_hand(player_hand: &Vec<Card>) -> Result<BadugiRank, EvaluatorError> {
-    if player_hand.len() > 4 {
-        return Err(EvaluatorError::TooManyCards("The player hand had too many cards".to_string(), 4));
-    }
     if player_hand.len() < 4 {
         return Err(EvaluatorError::NotEnoughCards("The player hand did not have enough cards".to_string(), 4));
     }
@@ -250,6 +247,48 @@ mod tests {
                 hand_rank: 4,
                 sub_rank: 496,
                 description: Some("4-high Badugi".to_string()),
+            }
+        );
+        assert_eq!(expected_rank, rank);
+    }
+
+    #[test]
+    fn best_badugi_hand_from_5_cards() {
+        let hand = Card::vec_from_str("3sKsAc2h4d").expect("Cards did not parse correctly");
+        let rank = evaluate_hand(&hand).expect("Hand did not evaluate correctly");
+
+        // +  1 since all ranks start at strength of 1
+        // +377 to account for all hand combos with only 1-3 cards
+        // +495 for Σ nCr(n - 1, 3) for all n ∈ [4, 13)
+        // +  0 for Σ nCr(n - 1, 2) for all n ∈ [3, 3) but |n| = 0
+        // +  0 for Σ nCr(n - 1, 1) for all n ∈ [2, 2) but |n| = 0
+        // +  0 for Σ nCr(n - 1, 0) for all n ∈ [1, 1) but |n| = 0
+        let expected_rank = BadugiRank(
+            BasicRank {
+                strength: 1 + 377 + 495 + 0 + 0 + 0,
+                hand_rank: 4,
+                sub_rank: 496,
+                description: Some("4-high Badugi".to_string()),
+            }
+        );
+        assert_eq!(expected_rank, rank);
+    }
+
+    #[test]
+    fn card_hand_size_2_from_5_cards() {
+        let hand = Card::vec_from_str("4sTh5hTsKh").expect("Cards did not parse correctly");
+        let rank = evaluate_hand(&hand).expect("Hand did not evaluate correctly");
+
+        // +  1 since all ranks start at strength of 1
+        // + 13 to account for all hand combos with only 1 card
+        // + 60 for Σ nCr(n - 1, 1) for all n ∈ [5, 13)
+        // +  0 for Σ nCr(n - 1, 0) for all n ∈ [4, 4) but |n| = 0
+        let expected_rank = BadugiRank(
+            BasicRank {
+                strength: 1 + 13 + 60 + 0,
+                hand_rank: 2,
+                sub_rank: 61,
+                description: Some("5-high 2-card hand".to_string()),
             }
         );
         assert_eq!(expected_rank, rank);
