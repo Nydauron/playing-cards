@@ -53,3 +53,7 @@ Licensed under either of
    ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
 
 at your option.
+
+## Contributing
+
+Please see [CONTRIBUTING.md](CONTRIBUTING.md) for more information.
