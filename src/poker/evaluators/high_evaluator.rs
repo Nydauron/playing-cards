@@ -35,8 +35,7 @@ pub fn evaluate_hand(cards: &Vec<Card>) -> Result<HighRank, EvaluatorError> {
                 let c2 = cactus_kev_cards[i2];
                 for i3 in i2 + 1..cactus_kev_cards.len() {
                     let c3 = cactus_kev_cards[i3];
-                    for i4 in i3 + 1..cactus_kev_cards.len() {
-                        let c4 = cactus_kev_cards[i4];
+                    for &c4 in cactus_kev_cards.iter().skip(i3 + 1) {
                         hand_results.push(eval_five_cards(c0, c1, c2, c3, c4));
                     }
                 }
@@ -69,8 +68,8 @@ pub fn evaluate_hand(cards: &Vec<Card>) -> Result<HighRank, EvaluatorError> {
 
             let rank = HighRank(BasicRank {
                 strength: 7463 - best_rank as u32,
-                hand_rank: hand_rank,
-                sub_rank: sub_rank,
+                hand_rank,
+                sub_rank,
                 description: Some(
                     get_string(hand_rank, sub_rank).unwrap_or_else(|err_str| err_str.to_string()),
                 ),
@@ -86,7 +85,7 @@ fn get_string(hand_rank: u16, sub_rank: u16) -> Result<String, &'static str> {
         1 => {
             hand_category = "High";
 
-            if sub_rank < 1 || sub_rank > 1277 {
+            if !(1..=1277).contains(&sub_rank) {
                 return Err("Sub rank for high card was not valid");
             }
 
@@ -111,27 +110,24 @@ fn get_string(hand_rank: u16, sub_rank: u16) -> Result<String, &'static str> {
                 return Err("Sub rank for high card was not valid");
             }
 
-            return Ok(Vec::from([sub_str.to_owned(), hand_category.to_owned()]).join(" "));
+            Ok(Vec::from([sub_str.to_owned(), hand_category.to_owned()]).join(" "))
         }
         2 => {
             hand_category = "Pair";
 
-            let sub_str;
-            match Value::from_int((sub_rank - 1) / 220) {
-                Some(val) => {
-                    sub_str = val.get_readable_string() + "s";
-                }
+            let sub_str = match Value::from_int((sub_rank - 1) / 220) {
+                Some(val) => val.get_readable_string() + "s",
                 None => {
                     return Err("Sub rank for one pair was not valid");
                 }
-            }
+            };
 
-            return Ok(Vec::from([
+            Ok(Vec::from([
                 hand_category.to_owned(),
                 "of".to_owned(),
                 sub_str.to_owned(),
             ])
-            .join(" "));
+            .join(" "))
         }
         3 => {
             hand_category = "Two Pair";
@@ -140,56 +136,50 @@ fn get_string(hand_rank: u16, sub_rank: u16) -> Result<String, &'static str> {
                 (((2 * (sub_rank - 1) / 11) as f64 + 0.25).sqrt() - 0.5).floor() as u16 + 1;
             let sec_pair_kick_rank = sub_rank - (first_pair_rank - 1) * first_pair_rank / 2 * 11;
 
-            let sub_str;
-            match (
+            let sub_str = match (
                 Value::from_int(first_pair_rank),
                 Value::from_int((sec_pair_kick_rank - 1) / 11),
             ) {
-                (Some(first_pair), Some(sec_pair)) => {
-                    sub_str = Vec::from([
-                        first_pair.get_readable_string() + "s",
-                        "and".to_string(),
-                        sec_pair.get_readable_string() + "s",
-                    ])
-                    .join(" ");
-                }
+                (Some(first_pair), Some(sec_pair)) => Vec::from([
+                    first_pair.get_readable_string() + "s",
+                    "and".to_string(),
+                    sec_pair.get_readable_string() + "s",
+                ])
+                .join(" "),
                 _ => {
                     return Err("Sub rank for two pair was not valid");
                 }
-            }
+            };
 
-            return Ok(Vec::from([hand_category.to_owned(), "of".to_string(), sub_str]).join(" "));
+            Ok(Vec::from([hand_category.to_owned(), "of".to_string(), sub_str]).join(" "))
         }
         4 => {
             hand_category = "Trip";
 
-            let sub_str;
-            match Value::from_int((sub_rank - 1) / 66) {
-                Some(val) => {
-                    sub_str = val.get_readable_string() + "s";
-                }
+            let sub_str = match Value::from_int((sub_rank - 1) / 66) {
+                Some(val) => val.get_readable_string() + "s",
                 None => {
                     return Err("Sub rank for three of a kind was not valid");
                 }
-            }
+            };
 
-            return Ok(Vec::from([hand_category.to_owned(), sub_str.to_owned()]).join(" "));
+            Ok(Vec::from([hand_category.to_owned(), sub_str.to_owned()]).join(" "))
         }
         5 => {
             hand_category = "Straight";
 
-            if sub_rank < 1 || sub_rank > 10 {
+            if !(1..=10).contains(&sub_rank) {
                 return Err("Sub rank for straight was not valid");
             }
 
             let sub_str = Value::from_int(sub_rank + 2).unwrap().get_readable_string();
 
-            return Ok(Vec::from([
+            Ok(Vec::from([
                 sub_str.to_owned(),
                 "High".to_string(),
                 hand_category.to_owned(),
             ])
-            .join(" "));
+            .join(" "))
         }
         6 => {
             hand_category = "Flush";
@@ -215,12 +205,12 @@ fn get_string(hand_rank: u16, sub_rank: u16) -> Result<String, &'static str> {
                 return Err("Sub rank for flush was not valid");
             }
 
-            return Ok(Vec::from([
+            Ok(Vec::from([
                 sub_str.to_owned(),
                 "High".to_string(),
                 hand_category.to_owned(),
             ])
-            .join(" "));
+            .join(" "))
         }
         7 => {
             // Full house
@@ -233,53 +223,44 @@ fn get_string(hand_rank: u16, sub_rank: u16) -> Result<String, &'static str> {
             }
 
             match (Value::from_int(trip_rank), Value::from_int(pair_rank)) {
-                (Some(trip_val), Some(pair_val)) => {
-                    return Ok(Vec::from([
-                        trip_val.get_readable_string() + "s",
-                        "Full of".to_string(),
-                        pair_val.get_readable_string() + "s",
-                    ])
-                    .join(" "))
-                }
-                _ => {
-                    return Err("Sub rank for full house was not valid");
-                }
+                (Some(trip_val), Some(pair_val)) => Ok(Vec::from([
+                    trip_val.get_readable_string() + "s",
+                    "Full of".to_string(),
+                    pair_val.get_readable_string() + "s",
+                ])
+                .join(" ")),
+                _ => Err("Sub rank for full house was not valid"),
             }
         }
         8 => {
             hand_category = "Quad";
 
-            let sub_str;
-            match Value::from_int((sub_rank - 1) / 12) {
-                Some(val) => {
-                    sub_str = val.get_readable_string() + "s";
-                }
+            let sub_str = match Value::from_int((sub_rank - 1) / 12) {
+                Some(val) => val.get_readable_string() + "s",
                 None => {
                     return Err("Sub rank for four of a kind was not valid");
                 }
-            }
+            };
 
-            return Ok(Vec::from([hand_category.to_owned(), sub_str.to_owned()]).join(" "));
+            Ok(Vec::from([hand_category.to_owned(), sub_str.to_owned()]).join(" "))
         }
         9 => {
             hand_category = "Straight Flush";
 
-            if sub_rank < 1 || sub_rank > 10 {
+            if !(1..=10).contains(&sub_rank) {
                 return Err("Sub rank for straight was not valid");
             }
 
             let sub_str = Value::from_int(sub_rank + 2).unwrap().get_readable_string();
 
-            return Ok(Vec::from([
+            Ok(Vec::from([
                 sub_str.to_owned(),
                 "High".to_string(),
                 hand_category.to_owned(),
             ])
-            .join(" "));
+            .join(" "))
         }
-        _ => {
-            return Err("Hand rank did not have a valid hand category");
-        }
+        _ => Err("Hand rank did not have a valid hand category"),
     }
 }
 
@@ -297,14 +278,12 @@ fn eval_five_cards(c0: u32, c1: u32, c2: u32, c3: u32, c4: u32) -> u16 {
 }
 
 fn find_fast(mut query: Wrapping<u32>) -> usize {
-    let a: Wrapping<u32>;
-    let b: Wrapping<u32>;
     query.add_assign(Wrapping(0xe91aaa35));
     query.bitxor_assign(query.shr(16));
     query.add_assign(query.shl(8));
     query.bitxor_assign(query.shr(4));
-    b = query.shr(8).bitand(Wrapping(0x1ff));
-    a = query.add(query.shl(2)).shr(19);
+    let b: Wrapping<u32> = query.shr(8).bitand(Wrapping(0x1ff));
+    let a: Wrapping<u32> = query.add(query.shl(2)).shr(19);
 
     a.bitxor(Wrapping::<u32>(tables::HASH_ADJUST[b.0 as usize] as u32))
         .0 as usize

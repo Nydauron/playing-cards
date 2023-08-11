@@ -97,7 +97,7 @@ pub mod high_evaluator;
 /// ```
 pub mod low_27_evaluator;
 
-pub mod low_a5_evaluator;
+// pub mod low_a5_evaluator;
 
 /// An evaluator for Omaha High hands
 ///

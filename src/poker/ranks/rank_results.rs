@@ -60,17 +60,17 @@ where
     U: IntoRankStrengthIterator + Clone,
 {
     let mut iters = ranks
-        .into_iter()
+        .iter()
         .map(|(k, v)| (k, v.clone().into_strength_iter()))
         .collect::<HashMap<_, _>>();
 
     let len = *match iters
-        .iter()
-        .map(|(_, iter)| iter.len())
+        .values()
+        .map(|iter| iter.len())
         .collect::<Vec<_>>()
         .as_slice()
     {
-        [head, tail @ ..] => tail.iter().all(|len| len == head).then(|| head),
+        [head, tail @ ..] => tail.iter().all(|len| len == head).then_some(head),
         [] => None,
     }
     .unwrap_or(&0);
@@ -79,7 +79,7 @@ where
         .map(|_| {
             iters
                 .iter_mut()
-                .map(|(&k, v)| (k, v.next().unwrap().clone()))
+                .map(|(&k, v)| (k, v.next().unwrap()))
                 .filter(|(_, v)| v.is_some())
                 .map(|(k, v)| (*k, v.unwrap()))
                 .collect::<HashMap<T, u32>>()
@@ -96,19 +96,19 @@ where
                 .rev()
                 .collect::<Vec<_>>();
 
-            if sorted_ranks_desc.len() == 0 {
+            if sorted_ranks_desc.is_empty() {
                 return (i, vec![]);
             }
 
-            let mut ranking_list = vec![HashSet::from([sorted_ranks_desc[0].0.clone()])];
+            let mut ranking_list = vec![HashSet::from([*sorted_ranks_desc[0].0])];
             let _: () = sorted_ranks_desc
                 .windows(2)
                 .flat_map(<&[(&T, &u32); 2]>::try_from)
                 .map(|&[(_, prev_rank), (curr_id, curr_rank)]| {
                     if prev_rank == curr_rank {
-                        ranking_list.last_mut().unwrap().insert(curr_id.clone());
+                        ranking_list.last_mut().unwrap().insert(*curr_id);
                     } else {
-                        ranking_list.push(HashSet::from([curr_id.clone()]));
+                        ranking_list.push(HashSet::from([*curr_id]));
                     }
                 })
                 .collect();

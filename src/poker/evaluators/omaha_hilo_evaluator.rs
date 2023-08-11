@@ -33,13 +33,13 @@ pub fn evaluate_hand(
     let mut lo_hand: Option<LowA5Rank> = None;
 
     let player_hand_sub_8: Vec<Card> = player_hand
-        .into_iter()
+        .iter()
         .filter(|card| card.value <= Value::Eight || card.value == Value::Ace)
         .cloned()
         .collect();
 
     let board_sub_8: Vec<Card> = board
-        .into_iter()
+        .iter()
         .filter(|card| card.value <= Value::Eight || card.value == Value::Ace)
         .cloned()
         .collect();
@@ -63,15 +63,15 @@ pub fn evaluate_hand(
                     return None;
                 }
 
-                let bit_strength = cards.iter().fold(0, |acc, card| {
-                    acc | (1 << (card.value.clone() as u8 + 1) % 13)
-                });
+                let bit_strength = cards
+                    .iter()
+                    .fold(0, |acc, card| acc | (1 << ((card.value as u8 + 1) % 13)));
 
                 if let Some(&(strength, hand_rank, sub_rank, desc)) = LO_8_MAP.get(&bit_strength) {
                     Some(LowA5Rank(BasicRank {
-                        strength: strength,
-                        hand_rank: hand_rank,
-                        sub_rank: sub_rank,
+                        strength,
+                        hand_rank,
+                        sub_rank,
                         description: Some(desc.to_string()),
                     }))
                 } else {

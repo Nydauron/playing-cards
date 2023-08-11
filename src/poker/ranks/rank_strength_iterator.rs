@@ -21,7 +21,7 @@ impl RankStrengthIterator {
     /// Creates a new iterator
     pub fn new(ranks: HashMap<usize, u32>, num_of_ranks: usize) -> Self {
         Self {
-            ranks: ranks,
+            ranks,
             idx: None,
             len: num_of_ranks,
         }
@@ -30,6 +30,11 @@ impl RankStrengthIterator {
     /// Returns the length of the iterator
     pub fn len(&self) -> usize {
         self.len
+    }
+
+    /// Return true if the iterator is empty, false otherwise.
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
     }
 }
 
@@ -40,7 +45,7 @@ impl From<Vec<Option<u32>>> for RankStrengthIterator {
             ranks: ranks
                 .into_iter()
                 .filter(|x| x.is_some())
-                .map(|rank| rank.unwrap())
+                .flatten()
                 .enumerate()
                 .collect::<HashMap<usize, u32>>(),
             idx: None,

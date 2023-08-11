@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use super::{high_evaluator, omaha_hi_evaluator, EvaluatorError};
 
 use crate::core::Card;
@@ -13,26 +15,24 @@ pub fn evaluate_hand(
     board: &Vec<Card>,
 ) -> Result<DramahaHighRank, EvaluatorError> {
     let expected_card_count = 5;
-    if player_hand.len() < expected_card_count {
-        return Err(EvaluatorError::NotEnoughCards("Player hand".to_string(), 5));
-        // Player hand does not have at least 5 cards
-    } else if player_hand.len() > expected_card_count {
-        return Err(EvaluatorError::TooManyCards("Player hand".to_string(), 5));
-        // Player hand does not have at most 5 cards
+    match player_hand.len().cmp(&expected_card_count) {
+        Ordering::Less => Err(EvaluatorError::NotEnoughCards("Player hand".to_string(), 5)),
+        Ordering::Greater => Err(EvaluatorError::TooManyCards("Player hand".to_string(), 5)),
+        Ordering::Equal => {
+            if board.len() < 3 {
+                return Err(EvaluatorError::NotEnoughCards("Board".to_string(), 3));
+                // Board does not have at least 3 cards
+            }
+
+            let omaha_hand_rank = omaha_hi_evaluator::evaluate_hand(player_hand, board)?;
+            let draw_hand_rank = high_evaluator::evaluate_hand(player_hand)?;
+
+            Ok(DramahaHighRank {
+                omaha_rank: omaha_hand_rank,
+                draw_rank: draw_hand_rank,
+            })
+        }
     }
-
-    if board.len() < 3 {
-        return Err(EvaluatorError::NotEnoughCards("Board".to_string(), 3));
-        // Board does not have at least 3 cards
-    }
-
-    let omaha_hand_rank = omaha_hi_evaluator::evaluate_hand(player_hand, board)?;
-    let draw_hand_rank = high_evaluator::evaluate_hand(player_hand)?;
-
-    Ok(DramahaHighRank {
-        omaha_rank: omaha_hand_rank,
-        draw_rank: draw_hand_rank,
-    })
 }
 
 #[cfg(test)]

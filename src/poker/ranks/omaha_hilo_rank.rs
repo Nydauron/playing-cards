@@ -14,8 +14,8 @@ pub struct OmahaHiLoRank {
 impl IntoRankStrengthIterator for OmahaHiLoRank {
     fn into_strength_iter(self) -> RankStrengthIterator {
         RankStrengthIterator::from(vec![
-            Some((*self.hi_rank).strength),
-            self.lo_rank.map(|lo| (*lo).strength),
+            Some(self.hi_rank.strength),
+            self.lo_rank.map(|lo| lo.strength),
         ])
     }
 }

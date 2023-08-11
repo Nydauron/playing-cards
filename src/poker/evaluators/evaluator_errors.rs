@@ -18,6 +18,10 @@ pub enum EvaluatorError {
     /// card_set_type: String - what set of cards had not enough cards
     /// expected_count: u64 - the expected amount of cards (at most)
     TooManyCards(String, u64),
+    /// An unknown error that should not normally occur
+    ///
+    /// This is typically a bandaid solution for current evaluators and contains less-concrete
+    /// errors.
     UnknownError(String),
 }
 
@@ -27,12 +31,7 @@ impl fmt::Display for EvaluatorError {
 
         match self {
             NotEnoughCards(set_type, expected_at_least) => {
-                let at_least_plural;
-                if *expected_at_least == 1 {
-                    at_least_plural = "";
-                } else {
-                    at_least_plural = "s";
-                }
+                let at_least_plural = if *expected_at_least == 1 { "" } else { "s" };
                 write!(
                     f,
                     "{} does not have at least {} card{}",
@@ -40,12 +39,7 @@ impl fmt::Display for EvaluatorError {
                 )
             }
             TooManyCards(set_type, expected_no_more) => {
-                let at_least_plural;
-                if *expected_no_more == 1 {
-                    at_least_plural = "";
-                } else {
-                    at_least_plural = "s";
-                }
+                let at_least_plural = if *expected_no_more == 1 { "" } else { "s" };
                 write!(
                     f,
                     "{} does not have at most {} card{}",

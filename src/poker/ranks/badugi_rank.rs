@@ -3,14 +3,8 @@ use std::ops::Deref;
 use super::{BasicRank, IntoRankStrengthIterator, RankStrengthIterator};
 
 /// A rank of a Badugi hand
-#[derive(Debug, Clone, Eq, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, Eq, PartialEq, PartialOrd, Ord)]
 pub struct BadugiRank(pub BasicRank);
-
-impl Ord for BadugiRank {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.0.strength.cmp(&other.0.strength)
-    }
-}
 
 impl Deref for BadugiRank {
     type Target = BasicRank;

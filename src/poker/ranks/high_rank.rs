@@ -3,14 +3,8 @@ use std::ops::Deref;
 use super::{BasicRank, IntoRankStrengthIterator, RankStrengthIterator};
 
 /// A rank of a high hand
-#[derive(Debug, Clone, Eq, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, Eq, PartialEq, PartialOrd, Ord)]
 pub struct HighRank(pub BasicRank);
-
-impl Ord for HighRank {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.0.strength.cmp(&other.0.strength)
-    }
-}
 
 impl Deref for HighRank {
     type Target = BasicRank;
@@ -21,6 +15,6 @@ impl Deref for HighRank {
 
 impl IntoRankStrengthIterator for HighRank {
     fn into_strength_iter(self) -> RankStrengthIterator {
-        RankStrengthIterator::from((*self).strength)
+        RankStrengthIterator::from(self.strength)
     }
 }

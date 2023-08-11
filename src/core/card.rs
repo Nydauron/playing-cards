@@ -162,9 +162,9 @@ impl TryFrom<char> for Value {
     }
 }
 
-impl Into<char> for Value {
-    fn into(self) -> char {
-        self.get_char()
+impl From<Value> for char {
+    fn from(value: Value) -> Self {
+        value.get_char()
     }
 }
 
@@ -237,9 +237,9 @@ impl TryFrom<char> for Suit {
     }
 }
 
-impl Into<char> for Suit {
-    fn into(self) -> char {
-        self.get_char()
+impl From<Suit> for char {
+    fn from(value: Suit) -> Self {
+        value.get_char()
     }
 }
 
@@ -326,11 +326,11 @@ impl TryFrom<String> for Card {
 
         let mut chars = s.chars();
 
-        let val = Value::try_from(chars.next().unwrap());
-        if val.is_err() {
+        let value = Value::try_from(chars.next().unwrap());
+        if value.is_err() {
             return Err("Card value was not a valid character");
         }
-        let val = val.unwrap();
+        let value = value.unwrap();
 
         let suit = Suit::try_from(chars.next().unwrap());
         if suit.is_err() {
@@ -338,10 +338,7 @@ impl TryFrom<String> for Card {
         }
         let suit = suit.unwrap();
 
-        Ok(Card {
-            value: val,
-            suit: suit,
-        })
+        Ok(Card { value, suit })
     }
 }
 
@@ -358,9 +355,9 @@ impl FromStr for Card {
     }
 }
 
-impl Into<i32> for Card {
-    fn into(self) -> i32 {
-        (self.value as i32) * 4 + self.suit as i32 + 1
+impl From<Card> for i32 {
+    fn from(value: Card) -> Self {
+        (value.value as i32) * 4 + value.suit as i32 + 1
     }
 }
 

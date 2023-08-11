@@ -25,9 +25,8 @@ pub fn evaluate_hand(
         // Board does not have at least 3 cards
     }
 
-    let hand_combinations: Vec<Vec<Card>> =
-        player_hand.into_iter().cloned().combinations(2).collect();
-    let board_combinations: Vec<Vec<Card>> = board.into_iter().cloned().combinations(3).collect();
+    let hand_combinations: Vec<Vec<Card>> = player_hand.iter().cloned().combinations(2).collect();
+    let board_combinations: Vec<Vec<Card>> = board.iter().cloned().combinations(3).collect();
 
     let best_rank = hand_combinations
         .iter()
@@ -35,7 +34,7 @@ pub fn evaluate_hand(
         .map(|(hand, board)| {
             let mut all_cards = hand.clone();
             all_cards.extend(board.iter());
-            Ok(high_evaluator::evaluate_hand(&all_cards)?)
+            high_evaluator::evaluate_hand(&all_cards)
         })
         .reduce(|acc, rank_res| {
             let acc = acc?;

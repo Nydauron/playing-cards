@@ -101,7 +101,7 @@ impl CardDeck {
     pub fn new(seed: Option<[u8; 32]>) -> Result<CardDeck, Error> {
         let mut deck = Self::create_unshuffled_deck();
 
-        if let Some(_) = seed {
+        if seed.is_some() {
             deck.shuffle(seed)?;
         }
 
@@ -117,11 +117,11 @@ impl CardDeck {
     pub fn new_custom_deck(cards: Vec<Card>, seed: Option<[u8; 32]>) -> Result<Self, Error> {
         let mut deck = CardDeck {
             deck: cards,
-            seed: seed,
+            seed,
             muck: Vec::new(),
         };
 
-        if let Some(_) = seed {
+        if seed.is_some() {
             deck.shuffle(seed)?;
         }
 

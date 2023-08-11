@@ -3,14 +3,8 @@ use std::ops::Deref;
 use crate::poker::ranks::{BasicRank, IntoRankStrengthIterator, RankStrengthIterator};
 
 /// A rank of a Ace-to-5 lowball hand
-#[derive(Debug, Clone, Eq, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, Eq, PartialEq, PartialOrd, Ord)]
 pub struct LowA5Rank(pub BasicRank);
-
-impl Ord for LowA5Rank {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.0.strength.cmp(&other.0.strength)
-    }
-}
 
 impl Deref for LowA5Rank {
     type Target = BasicRank;
@@ -20,6 +14,6 @@ impl Deref for LowA5Rank {
 }
 impl IntoRankStrengthIterator for LowA5Rank {
     fn into_strength_iter(self) -> RankStrengthIterator {
-        RankStrengthIterator::from((*self).strength)
+        RankStrengthIterator::from(self.strength)
     }
 }

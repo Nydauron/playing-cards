@@ -11,9 +11,6 @@ pub struct DramahaHighRank {
 
 impl IntoRankStrengthIterator for DramahaHighRank {
     fn into_strength_iter(self) -> RankStrengthIterator {
-        RankStrengthIterator::from(vec![
-            (*self.omaha_rank).strength,
-            (*self.draw_rank).strength,
-        ])
+        RankStrengthIterator::from(vec![self.omaha_rank.strength, self.draw_rank.strength])
     }
 }

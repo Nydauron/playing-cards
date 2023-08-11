@@ -7,10 +7,10 @@ use crate::{core::Card, poker::ranks::Low27Rank};
 /// Returns a `Vec<Rank>`. If the total card count is not with the domain [5, 7], then an error
 /// will return.
 pub fn evaluate_hand(cards: &Vec<Card>) -> Result<Low27Rank, EvaluatorError> {
-    high_evaluator::evaluate_hand(cards).and_then(|high_rank| {
+    high_evaluator::evaluate_hand(cards).map(|high_rank| {
         let mut rank = (*high_rank).clone();
         rank.strength = 7463 - rank.strength;
-        Ok(Low27Rank(rank))
+        Low27Rank(rank)
     })
 }
 

@@ -66,7 +66,7 @@ pub fn evaluate_hand(player_hand: &Vec<Card>) -> Result<BadugiRank, EvaluatorErr
         .map(|canidate_hand| {
             let card_ranks = canidate_hand
                 .iter()
-                .map(|&card| (card.value.clone() as u8 + 1) % 13)
+                .map(|&card| (card.value as u8 + 1) % 13)
                 .sorted_by(|a, b| b.cmp(a))
                 .collect::<Vec<_>>();
 
