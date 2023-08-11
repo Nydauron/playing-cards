@@ -1,20 +1,7 @@
-use super::high_evaluator::HighRank;
 use super::{high_evaluator, EvaluatorError, omaha_hi_evaluator};
 
 use crate::core::Card;
-use crate::poker::evaluator_result::{IntoRankStrengthIterator, RankStrengthIterator};
-
-#[derive(Debug, Clone, Eq, PartialEq, PartialOrd)]
-pub struct DrawmahaRank{
-    pub omaha_rank: HighRank,
-    pub draw_rank: HighRank,
-}
-
-impl IntoRankStrengthIterator for DrawmahaRank {
-    fn into_strength_iter(self) -> RankStrengthIterator {
-        RankStrengthIterator::from(vec![(*self.omaha_rank).strength, (*self.draw_rank).strength])
-    }
-}
+use crate::poker::ranks::DrawmahaRank;
 
 /// Evaluated the Drawmaha for one player.
 ///

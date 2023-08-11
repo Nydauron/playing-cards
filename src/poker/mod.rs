@@ -4,6 +4,4 @@ pub(crate) mod tables;
 pub mod evaluators;
 
 /// Contains structs for contains rank metadata and logic for parsing ranks.
-pub mod rank;
-
-pub mod evaluator_result;
+pub mod ranks;

@@ -1,23 +1,11 @@
 use std::collections::HashSet;
 
-use super::{EvaluatorError, omaha_hi_evaluator, high_evaluator::HighRank, low_a5_evaluator::LowA5Rank};
+use super::{EvaluatorError, omaha_hi_evaluator};
 
 use itertools::Itertools;
 use phf::phf_map;
 
-use crate::{core::{Card, Value}, poker::{rank::BasicRank, evaluator_result::{RankStrengthIterator, IntoRankStrengthIterator}}};
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct OmahaHiLoRank {
-    pub hi_rank: HighRank,
-    pub lo_rank: Option<LowA5Rank>,
-}
-
-impl IntoRankStrengthIterator for OmahaHiLoRank {
-    fn into_strength_iter(self) -> RankStrengthIterator {
-        RankStrengthIterator::from(vec![Some((*self.hi_rank).strength), self.lo_rank.map(|lo| { (*lo).strength })])
-    }
-}
+use crate::{core::{Card, Value}, poker::ranks::{BasicRank, LowA5Rank, OmahaHiLoRank}};
 
 /// Evaluates the Omaha hi/lo hand for one player.
 ///

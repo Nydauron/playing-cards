@@ -1,32 +1,6 @@
-use std::ops::Deref;
-
 use super::{high_evaluator, EvaluatorError};
 
-use crate::poker::evaluator_result::{RankStrengthIterator, IntoRankStrengthIterator};
-use crate::poker::rank::BasicRank;
-use crate::core::Card;
-
-#[derive(Debug, Clone, Eq, PartialEq, PartialOrd)]
-pub struct Low27Rank(pub BasicRank);
-
-impl Ord for Low27Rank {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.0.strength.cmp(&other.0.strength)
-    }
-}
-
-impl Deref for Low27Rank {
-    type Target = BasicRank;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl IntoRankStrengthIterator for Low27Rank {
-    fn into_strength_iter(self) -> RankStrengthIterator {
-        RankStrengthIterator::from((*self).strength)
-    }
-}
+use crate::{core::Card, poker::ranks::Low27Rank};
 
 /// Evaluates the low hand for one player.
 ///

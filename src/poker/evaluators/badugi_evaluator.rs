@@ -1,9 +1,9 @@
 use std::collections::HashMap;
-use num::traits::FromPrimitive;
+use num_traits::FromPrimitive;
 
 use itertools::Itertools;
 
-use crate::{core::{Card, Value}, poker::{rank::BasicRank, evaluator_result::{IntoRankStrengthIterator, RankStrengthIterator}}};
+use crate::{poker::ranks::{BasicRank, IntoRankStrengthIterator, RankStrengthIterator, BadugiRank}, core::{Card, Value}};
 
 use super::EvaluatorError;
 
@@ -12,21 +12,6 @@ fn choose(n: u64, k: u64) -> u64 {
         return 1
     }
     n * choose(n - 1, k - 1) / k
-}
-
-#[derive(Debug, Clone, Eq, PartialEq, PartialOrd)]
-pub struct BadugiRank(BasicRank);
-
-impl Ord for BadugiRank {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.0.strength.cmp(&other.0.strength)
-    }
-}
-
-impl IntoRankStrengthIterator for BadugiRank {
-    fn into_strength_iter(self) -> RankStrengthIterator {
-        RankStrengthIterator::from(self.0)
-    }
 }
 
 pub fn evaluate_hand(player_hand: &Vec<Card>) -> Result<BadugiRank, EvaluatorError> {

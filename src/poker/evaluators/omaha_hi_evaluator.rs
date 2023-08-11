@@ -1,10 +1,10 @@
 use super::EvaluatorError;
-use super::high_evaluator::HighRank;
 
 use itertools::Itertools;
 
 use crate::core::Card;
 use crate::poker::evaluators::high_evaluator;
+use crate::poker::ranks::HighRank;
 
 /// Evaluates the Omaha high hand for one player.
 ///
