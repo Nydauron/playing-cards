@@ -1,6 +1,6 @@
 use std::cmp::Ordering;
 
-/// A fundational struct to contain hand strength metadata.
+/// A fundational struct to contain hand strength metadata
 ///
 /// The `BasicRank` struct is fairly trasparent allowing for easy access for evaluators to create
 /// and modify values within the struct. The struct primarily stores information on hand strength,

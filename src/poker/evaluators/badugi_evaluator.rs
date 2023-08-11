@@ -14,6 +14,9 @@ fn choose(n: u64, k: u64) -> u64 {
     n * choose(n - 1, k - 1) / k
 }
 
+/// Evaluates a Badugi hand
+///
+/// Returns a `BadugiRank`. If the card count is less than 4, then an error will return.
 pub fn evaluate_hand(player_hand: &Vec<Card>) -> Result<BadugiRank, EvaluatorError> {
     if player_hand.len() < 4 {
         return Err(EvaluatorError::NotEnoughCards("The player hand did not have enough cards".to_string(), 4));
@@ -238,8 +241,8 @@ mod tests {
         // +  1 since all ranks start at strength of 1
         // +377 to account for all hand combos with only 1-3 cards
         // +495 for Σ nCr(n - 1, 3) for all n ∈ [4, 13)
-        // +  0 for Σ nCr(n - 1, 2) for all n ∈ [5, 5) but |n| = 0
-        // +  0 for Σ nCr(n - 1, 1) for all n ∈ [2, 4) but |n| = 0
+        // +  0 for Σ nCr(n - 1, 2) for all n ∈ [3, 3) but |n| = 0
+        // +  0 for Σ nCr(n - 1, 1) for all n ∈ [2, 2) but |n| = 0
         // +  0 for Σ nCr(n - 1, 0) for all n ∈ [1, 1) but |n| = 0
         let expected_rank = BadugiRank(
             BasicRank {

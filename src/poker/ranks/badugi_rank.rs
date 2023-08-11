@@ -2,6 +2,7 @@ use std::ops::Deref;
 
 use super::{BasicRank, IntoRankStrengthIterator, RankStrengthIterator};
 
+/// A rank of a Badugi hand
 #[derive(Debug, Clone, Eq, PartialEq, PartialOrd)]
 pub struct BadugiRank(pub BasicRank);
 

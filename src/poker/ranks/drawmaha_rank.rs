@@ -1,8 +1,11 @@
 use super::{HighRank, IntoRankStrengthIterator, RankStrengthIterator};
 
+/// A struct of ranks a Drawmaha hand
 #[derive(Debug, Clone, Eq, PartialEq, PartialOrd)]
 pub struct DrawmahaRank{
+    /// The Omaha high rank from the hand
     pub omaha_rank: HighRank,
+    /// The five-card draw rank from the hand
     pub draw_rank: HighRank,
 }
 

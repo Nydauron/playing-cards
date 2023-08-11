@@ -2,6 +2,7 @@ use std::ops::Deref;
 
 use super::{BasicRank, IntoRankStrengthIterator, RankStrengthIterator};
 
+/// A rank of a high hand
 #[derive(Debug, Clone, Eq, PartialEq, PartialOrd)]
 pub struct HighRank(pub BasicRank);
 

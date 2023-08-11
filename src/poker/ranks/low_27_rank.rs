@@ -2,6 +2,7 @@ use std::ops::Deref;
 
 use super::{IntoRankStrengthIterator, RankStrengthIterator, BasicRank};
 
+/// A rank of a 2-to-7 lowball hand
 #[derive(Debug, Clone, Eq, PartialEq, PartialOrd)]
 pub struct Low27Rank(pub BasicRank);
 

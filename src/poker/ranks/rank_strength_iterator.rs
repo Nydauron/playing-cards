@@ -2,6 +2,15 @@ use std::collections::HashMap;
 
 use super::BasicRank;
 
+/// Wrapper struct to allow ranks strengths to be iterated across
+///
+/// Some rank types might have multiple sub ranks of which some might be optional due to the nature
+/// of player hand and board combos.
+///
+/// Iterating through will give `Option<u32>` types, `Some` representing a valid rank and `None`
+/// representing a non-existent rank, useful in cases where not every player has a fully qualifying
+/// hand (e.g. Omaha Hi-Lo has an low hand criterion but it only applies if the player can make a
+/// hand with 5 distinct-rank cards within the range Ace to 8, 2 from theirs and 3 from the board).
 pub struct RankStrengthIterator {
     ranks: HashMap<usize, u32>,
     idx: Option<usize>,
@@ -9,6 +18,7 @@ pub struct RankStrengthIterator {
 }
 
 impl RankStrengthIterator {
+    /// Creates a new iterator
     pub fn new(ranks: HashMap<usize, u32>, num_of_ranks: usize) -> Self {
         Self {
             ranks: ranks,
@@ -17,6 +27,7 @@ impl RankStrengthIterator {
         }
     }
 
+    /// Returns the length of the iterator
     pub fn len(&self) -> usize {
         self.len
     }
@@ -92,6 +103,10 @@ impl Iterator for RankStrengthIterator {
     }
 }
 
+/// A trait for converting Rank structs into iterators
+///
+/// This is a similar implementation as to what IntoIterator does
 pub trait IntoRankStrengthIterator {
+    /// Creates a `RankStrengthIterator` from a rank type
     fn into_strength_iter(self) -> RankStrengthIterator;
 }

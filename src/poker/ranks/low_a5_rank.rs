@@ -2,6 +2,7 @@ use std::ops::Deref;
 
 use crate::poker::ranks::{BasicRank, IntoRankStrengthIterator, RankStrengthIterator};
 
+/// A rank of a Ace-to-5 lowball hand
 #[derive(Debug, Clone, Eq, PartialEq, PartialOrd)]
 pub struct LowA5Rank(pub BasicRank);
 

@@ -3,11 +3,11 @@
 mod evaluator_errors;
 pub use self::evaluator_errors::EvaluatorError;
 
-/// The namespace for the high evaluator.
+/// An evaluator for high hands
 ///
 /// This evaluator is typically used for games like Texas Hold'em, Five Card Draw, and Stud.
 ///
-/// Examples
+/// ## Examples
 /// ```rust
 /// use playing_cards::{core::Card, poker::evaluators::high_evaluator};
 ///
@@ -56,11 +56,11 @@ pub use self::evaluator_errors::EvaluatorError;
 /// ```
 pub mod high_evaluator;
 
-/// The namespace for the low evaluator.
+/// An evaluator for 2-7 lowball hands
 ///
 /// This evaluator is typically used for games like 2-7 Lowball Draw.
 ///
-/// Examples
+/// ## Examples
 /// ```rust
 /// use playing_cards::{core::Card, poker::evaluators::low_27_evaluator};
 ///
@@ -99,7 +99,7 @@ pub mod low_27_evaluator;
 
 pub mod low_a5_evaluator;
 
-/// An evaluator for Omaha High hands.
+/// An evaluator for Omaha High hands
 ///
 /// The evaluator requires that the player has at least 4 cards and the board has at least 3
 /// cards. In Omaha and Omaha-varients, the player is required to use only 2 cards from their
@@ -109,14 +109,14 @@ pub mod low_a5_evaluator;
 /// Some games that can make use of this evaluator include but are not limited to Omaha, Omaha 8
 /// (Hi/Lo), Big O, and Drawmaha.
 ///
-/// Examples
+/// ## Examples
 /// ```rust
 /// use playing_cards::{core::Card, poker::evaluators::omaha_hi_evaluator};
 ///
 /// let hand = Card::vec_from_str("2cAsAcKc").unwrap();
 /// let board = Card::vec_from_str("Ks2sTd8h7d").unwrap();
 ///
-/// let rank = &omaha_hi_evaluator::evaluate_hand(&hand, &board).unwrap();
+/// let rank = omaha_hi_evaluator::evaluate_hand(&hand, &board).unwrap();
 ///
 /// // Notice: Even though we have Aces in our hand, we can only use 2 cards from out hand to
 /// // make the best hand (e.g. the K and the 2 pair with the board).
@@ -129,7 +129,7 @@ pub mod low_a5_evaluator;
 /// let hand = Card::vec_from_str("AcKhKsTd").unwrap();
 /// let board = Card::vec_from_str("Tc5c3s6cQc").unwrap();
 ///
-/// let rank = &omaha_hi_evaluator::evaluate_hand(&hand, &board).unwrap();
+/// let rank = omaha_hi_evaluator::evaluate_hand(&hand, &board).unwrap();
 ///
 /// // Notice: Even though we have the Ace of Clubs in out hand, we do not have a flush, as we
 /// // need another club within our hand.
@@ -143,8 +143,8 @@ pub mod low_a5_evaluator;
 /// let villan_hand = Card::vec_from_str("AhKdAsTh").unwrap();
 /// let board = Card::vec_from_str("8hTcAdQs6s").unwrap();
 ///
-/// let hero_rank = &omaha_hi_evaluator::evaluate_hand(&hero_hand, &board).unwrap();
-/// let villan_rank = &omaha_hi_evaluator::evaluate_hand(&villan_hand, &board).unwrap();
+/// let hero_rank = omaha_hi_evaluator::evaluate_hand(&hero_hand, &board).unwrap();
+/// let villan_rank = omaha_hi_evaluator::evaluate_hand(&villan_hand, &board).unwrap();
 ///
 /// assert_eq!(hero_rank.description.as_ref().unwrap(), "10 High Straight");
 /// assert_eq!(villan_rank.description.as_ref().unwrap(), "Trip Aces");
@@ -153,7 +153,7 @@ pub mod low_a5_evaluator;
 /// ```
 pub mod omaha_hi_evaluator;
 
-/// An evaluator for Omaha Hi/Lo hands.
+/// An evaluator for Omaha Hi-Lo hands
 ///
 /// Similar to the Omaha Hi evalautor, this requires 4 player cards and at least 3 cards from the
 /// board in order to evaluate properly. Only 2 cards may be used from the player's hand to fulfill
@@ -162,14 +162,14 @@ pub mod omaha_hi_evaluator;
 /// between A-8. Since the lo hand only applies under a condition, the return value of the evaluator
 /// contains Option types to signify the player does not have a lo hand.
 ///
-/// Examples
+/// ## Examples
 /// ```rust
 /// use playing_cards::{core::Card, poker::evaluators::omaha_hilo_evaluator};
 ///
 /// let hand = Card::vec_from_str("2cAsAcKc").unwrap();
 /// let board = Card::vec_from_str("Ks2sTd8h7d").unwrap();
 ///
-/// let ranks = &omaha_hilo_evaluator::evaluate_hand(&hand, &board).unwrap();
+/// let ranks = omaha_hilo_evaluator::evaluate_hand(&hand, &board).unwrap();
 ///
 /// // Notice: Even though we have Aces in our hand, we can only use 2 cards from out hand to
 /// // make the best hand (e.g. the K and the 2 pair with the board).
@@ -185,7 +185,7 @@ pub mod omaha_hi_evaluator;
 /// let hand = Card::vec_from_str("As2d5sAd").unwrap();
 /// let board = Card::vec_from_str("Tc5c3s6c8c").unwrap();
 ///
-/// let ranks = &omaha_hilo_evaluator::evaluate_hand(&hand, &board).unwrap();
+/// let ranks = omaha_hilo_evaluator::evaluate_hand(&hand, &board).unwrap();
 ///
 /// assert_eq!(ranks.hi_rank.description.as_ref().unwrap(), "Pair of Aces");
 /// assert_eq!(ranks.lo_rank.as_ref().unwrap().description.as_ref().unwrap(), "6-5-3-2-A");
@@ -198,8 +198,8 @@ pub mod omaha_hi_evaluator;
 /// let villan_hand = Card::vec_from_str("AhKdAsTh").unwrap();
 /// let board = Card::vec_from_str("8hTcAdQs6s").unwrap();
 ///
-/// let hero_ranks = &omaha_hilo_evaluator::evaluate_hand(&hero_hand, &board).unwrap();
-/// let villan_ranks = &omaha_hilo_evaluator::evaluate_hand(&villan_hand, &board).unwrap();
+/// let hero_ranks = omaha_hilo_evaluator::evaluate_hand(&hero_hand, &board).unwrap();
+/// let villan_ranks = omaha_hilo_evaluator::evaluate_hand(&villan_hand, &board).unwrap();
 ///
 /// assert_eq!(hero_ranks.hi_rank.description.as_ref().unwrap(), "10 High Straight");
 /// assert_eq!(villan_ranks.hi_rank.description.as_ref().unwrap(), "Trip Aces");
@@ -212,12 +212,12 @@ pub mod omaha_hi_evaluator;
 /// ```
 pub mod omaha_hilo_evaluator;
 
-/// An evaluator for Drawmaha hands.
+/// An evaluator for Drawmaha hands
 ///
 /// Drawmaha is a combination of Five Card Draw and Big O (an Omaha varient). This evaluator makes
 /// use of both the HighEvaluator and OmahaHighEvaluator.
 ///
-/// Examples
+/// ## Examples
 /// ```rust
 /// use playing_cards::{core::Card, poker::evaluators::drawmaha_evaluator};
 ///
@@ -266,4 +266,46 @@ pub mod omaha_hilo_evaluator;
 /// ```
 pub mod drawmaha_evaluator;
 
+/// An evaluator for Badugi hands
+///
+/// Badugi is a lowball Poker variant where the goal is get the lowest possible hand. Aces are
+/// considered low. Hands can range from 1-4 cards, and all cards within the hand must be distinct
+/// in suit and rank. All 4-card hands, Badugis, beat all 3 card hands, all 3-card hands beat all
+/// 2-card hands, and all 2-card hands beat all 1-card hands.
+///
+/// ## Examples
+/// ```rust
+/// use playing_cards::{core::Card, poker::evaluators::badugi_evaluator};
+///
+/// let hand = Card::vec_from_str("As4d7cTh").unwrap();
+///
+/// let rank = badugi_evaluator::evaluate_hand(&hand).unwrap();
+///
+/// assert_eq!(rank.description.as_ref().unwrap(), "10-high Badugi");
+/// ```
+///
+/// ```rust
+/// use playing_cards::{core::Card, poker::evaluators::badugi_evaluator};
+///
+/// let hand = Card::vec_from_str("QsKs8sJd").unwrap();
+///
+/// let rank = badugi_evaluator::evaluate_hand(&hand).unwrap();
+///
+/// assert_eq!(rank.description.as_ref().unwrap(), "Jack-high 2-card hand");
+/// ```
+///
+/// ```rust
+/// use playing_cards::{core::Card, poker::evaluators::badugi_evaluator};
+///
+/// let hero_hand = Card::vec_from_str("Kh3hJcTd").unwrap();
+/// let villan_hand = Card::vec_from_str("4d8dTsJh").unwrap();
+///
+/// let hero_rank = badugi_evaluator::evaluate_hand(&hero_hand).unwrap();
+/// let villan_rank = badugi_evaluator::evaluate_hand(&villan_hand).unwrap();
+///
+/// assert_eq!(hero_rank.description.as_ref().unwrap(), "Jack-high 3-card hand");
+/// assert_eq!(villan_rank.description.as_ref().unwrap(), "Jack-high 3-card hand");
+///
+/// assert!(hero_rank > villan_rank);
+/// ```
 pub mod badugi_evaluator;
