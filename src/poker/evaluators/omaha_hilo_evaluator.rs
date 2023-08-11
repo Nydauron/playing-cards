@@ -7,6 +7,7 @@ use phf::phf_map;
 
 use crate::{core::{Card, Value}, poker::{rank::BasicRank, evaluator_result::{RankStrengthIterator, IntoRankStrengthIterator}}};
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct OmahaHiLoRank {
     pub hi_rank: HighRank,
     pub lo_rank: Option<LowA5Rank>,
@@ -14,7 +15,7 @@ pub struct OmahaHiLoRank {
 
 impl IntoRankStrengthIterator for OmahaHiLoRank {
     fn into_strength_iter(self) -> RankStrengthIterator {
-        RankStrengthIterator::from(vec![Some((*self.hi_rank).clone()), self.lo_rank.map(|lo| { (*lo).clone() })])
+        RankStrengthIterator::from(vec![Some((*self.hi_rank).strength), self.lo_rank.map(|lo| { (*lo).strength })])
     }
 }
 

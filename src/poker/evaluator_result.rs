@@ -16,6 +16,10 @@ impl RankStrengthIterator {
             len: num_of_ranks,
         }
     }
+
+    pub fn len(&self) -> usize {
+        self.len
+    }
 }
 
 impl From<Vec<Option<u32>>> for RankStrengthIterator {

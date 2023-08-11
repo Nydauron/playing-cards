@@ -24,7 +24,7 @@ impl Deref for HighRank {
 }
 impl IntoRankStrengthIterator for HighRank {
     fn into_strength_iter(self) -> RankStrengthIterator {
-        RankStrengthIterator::from((*self).clone())
+        RankStrengthIterator::from((*self).strength)
     }
 }
 

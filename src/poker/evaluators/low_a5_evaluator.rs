@@ -19,7 +19,7 @@ impl Deref for LowA5Rank {
 }
 impl IntoRankStrengthIterator for LowA5Rank {
     fn into_strength_iter(self) -> RankStrengthIterator {
-        RankStrengthIterator::from((*self).clone())
+        RankStrengthIterator::from((*self).strength)
     }
 }
 

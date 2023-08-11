@@ -107,31 +107,36 @@ impl<'a, T: Hash + Eq + Copy> IntoIterator for &'a RankResults<T> {
 ///
 /// A `RankResults<T>` type is returned. This can then be used to view individual hand and can be
 /// iterated across.
-pub fn generate_winner_list<T: Eq + Hash + Copy>(ranks: &HashMap<T, Vec<Rank>>) -> RankResults<T> {
-    assert!(!ranks.is_empty());
-    let mut len = None;
-    for (_, v) in ranks {
-        if let Some(len) = len {
-            assert!(v.len() == len);
-        } else {
-            len = Some(v.len());
-        }
-    }
-    let len = len.unwrap_or(0);
+pub fn generate_winner_list<T, U>(ranks: &HashMap<T, U>) -> RankResults<T> where
+    T: Eq + Hash + Copy,
+    U: IntoRankStrengthIterator + Clone
+{
+    let mut iters = ranks.into_iter()
+        .map(|(k, v)| {
+            (k, v.clone().into_strength_iter())
+        })
+        .collect::<HashMap<_,_>>();
 
-    let mut iters: HashMap<T, _> = ranks
-        .into_iter()
-        .map(|(&k, v)|
-            (k, v.into_iter())
-        ).collect();
-    let transpose: Vec<HashMap<T, Rank>> = (0..len)
+    let len = *match iters.iter()
+        .map(|(_, iter)| {
+            iter.len()
+        })
+        .collect::<Vec<_>>()
+        .as_slice() {
+        [head, tail @ ..] => tail.iter().all(|len| len == head).then(|| head),
+        [] => None,
+    }.unwrap_or(&0);
+
+    let transpose: Vec<HashMap<T, u32>> = (0..len)
         .map(|_| {
             iters
                 .iter_mut()
                 .map(|(&k, v)| {
                     (k, v.next().unwrap().clone())
                 })
-                .collect::<HashMap<T, Rank>>()
+                .filter(|(_, v)| v.is_some())
+                .map(|(k, v)| (*k, v.unwrap()))
+                .collect::<HashMap<T, u32>>()
         })
         .collect();
 
@@ -153,7 +158,7 @@ pub fn generate_winner_list<T: Eq + Hash + Copy>(ranks: &HashMap<T, Vec<Rank>>) 
 
             let mut ranking_list = vec![HashSet::from([sorted_ranks_desc[0].0.clone()])];
             let _: () = sorted_ranks_desc.windows(2)
-                .flat_map(<&[(&T, &Rank); 2]>::try_from)
+                .flat_map(<&[(&T, &u32); 2]>::try_from)
                 .map(|&[(_, prev_rank), (curr_id, curr_rank)]| {
                     if prev_rank == curr_rank {
                         ranking_list.last_mut().unwrap().insert(curr_id.clone());
@@ -171,47 +176,66 @@ pub fn generate_winner_list<T: Eq + Hash + Copy>(ranks: &HashMap<T, Vec<Rank>>) 
 
 #[cfg(test)]
 mod tests {
+    use crate::poker::{evaluators::{high_evaluator::HighRank, omaha_hilo_evaluator::OmahaHiLoRank, low_a5_evaluator::LowA5Rank}, evaluator_result::RankStrengthIterator};
+
     use super::*;
 
     #[test]
     fn get_simple_winner_list() {
         let ranks = HashMap::from([
-            (1, vec![
-                Rank {
-                    strength: 4321,
-                    hand_rank: 5,
-                    sub_rank: 12,
-                    description: Some("Some sick hand".to_string()),
-                },
-                Rank {
-                    strength: 121,
-                    hand_rank: 7,
-                    sub_rank: 1,
-                    description: Some("Pretty good low hand".to_string()),
-                },
-            ]),
-            (2, vec![
-                Rank {
-                    strength: 2012,
-                    hand_rank: 4,
-                    sub_rank: 1232,
-                    description: Some("Another sick hand".to_string()),
-                },
-                Rank {
-                    strength: 0,
-                    hand_rank: 0,
-                    sub_rank: 0,
-                    description: Some("No low hand".to_string()),
-                },
-            ])
+            (1, OmahaHiLoRank {
+                hi_rank: HighRank(BasicRank { strength: 4321, hand_rank: 5, sub_rank: 12, description: Some("Some sick hand".to_string()) }),
+                lo_rank: Some(LowA5Rank(BasicRank { strength: 121, hand_rank: 7, sub_rank: 1, description: Some("Some good low hand".to_string()) })),
+            }),
+            (2, OmahaHiLoRank {
+                hi_rank: HighRank(BasicRank { strength: 2012, hand_rank: 4, sub_rank: 1232, description: Some("Another sick hand".to_string()) }),
+                lo_rank: None,
+            })
         ]);
 
         let rank_results = generate_winner_list(&ranks);
 
         let expected_rank_results = BTreeMap::from([
             (0, vec![HashSet::from([1]), HashSet::from([2])]),
+            (1, vec![HashSet::from([1])]),
+        ]);
+        for (winner_col, expected_winner_col) in rank_results.into_iter().zip(expected_rank_results.into_iter()) {
+            assert_eq!(winner_col, expected_winner_col);
+        }
+    }
+
+    #[derive(Debug, Clone, PartialEq, Eq)]
+    struct DoubleBoardRank {
+        pub top_board_rank: HighRank,
+        pub bottom_board_rank: HighRank,
+    }
+
+    impl IntoRankStrengthIterator for DoubleBoardRank {
+        fn into_strength_iter(self) -> RankStrengthIterator {
+            RankStrengthIterator::from(vec![(*self.top_board_rank).strength, (*self.bottom_board_rank).strength])
+        }
+    }
+
+    #[test]
+    fn get_winner_list_custom_rank_type() {
+        let ranks = HashMap::from([
+            (1, DoubleBoardRank {
+                top_board_rank: HighRank(BasicRank { strength: 2034, hand_rank: 4, sub_rank: 8, description: Some("Decent high hand".to_string()) }),
+                bottom_board_rank: HighRank(BasicRank { strength: 7922, hand_rank: 7, sub_rank: 24, description: Some("Nutted high hand".to_string()) }),
+            }),
+            (2, DoubleBoardRank{
+                top_board_rank: HighRank(BasicRank { strength: 5000, hand_rank: 6, sub_rank: 54, description: Some("The nuts on the top board".to_string()) }),
+                bottom_board_rank: HighRank(BasicRank { strength: 800, hand_rank: 1, sub_rank: 27, description: Some("No pair hand".to_string()) }),
+            }),
+        ]);
+
+        let rank_results = generate_winner_list(&ranks);
+
+        let expected_rank_results = BTreeMap::from([
+            (0, vec![HashSet::from([2]), HashSet::from([1])]),
             (1, vec![HashSet::from([1]), HashSet::from([2])]),
         ]);
+
         for (winner_col, expected_winner_col) in rank_results.into_iter().zip(expected_rank_results.into_iter()) {
             assert_eq!(winner_col, expected_winner_col);
         }
@@ -220,22 +244,22 @@ mod tests {
     #[test]
     fn winner_list_same_rank() {
         let ranks = HashMap::from([
-            (1, vec![
-                Rank {
+            (1, HighRank(
+                BasicRank {
                     strength: 4321,
                     hand_rank: 5,
                     sub_rank: 12,
                     description: Some("Sick hand".to_string()),
-                },
-            ]),
-            (2, vec![
-                Rank {
+                }
+            )),
+            (2, HighRank(
+                BasicRank {
                     strength: 4321,
                     hand_rank: 5,
                     sub_rank: 12,
                     description: Some("Sick hand".to_string()),
-                },
-            ])
+                }
+            ))
         ]);
 
         let rank_results = generate_winner_list(&ranks);
@@ -243,6 +267,21 @@ mod tests {
         let expected_rank_results = BTreeMap::from([
             (0, vec![HashSet::from([1, 2])]),
         ]);
+        for (winner_col, expected_winner_col) in rank_results.into_iter().zip(expected_rank_results.into_iter()) {
+            assert_eq!(winner_col, expected_winner_col);
+        }
+    }
+
+    #[test]
+    fn generate_winners_from_empty_input() {
+        let ranks: HashMap<i32, HighRank> = HashMap::new();
+
+        let rank_results = generate_winner_list(&ranks);
+
+        let expected_rank_results: RankResults<i32> = RankResults::new(
+            BTreeMap::new()
+        );
+
         for (winner_col, expected_winner_col) in rank_results.into_iter().zip(expected_rank_results.into_iter()) {
             assert_eq!(winner_col, expected_winner_col);
         }

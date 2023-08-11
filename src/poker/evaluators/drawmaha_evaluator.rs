@@ -12,7 +12,7 @@ pub struct DrawmahaRank{
 
 impl IntoRankStrengthIterator for DrawmahaRank {
     fn into_strength_iter(self) -> RankStrengthIterator {
-        RankStrengthIterator::from(vec![(*self.omaha_rank).clone(), (*self.draw_rank).clone()])
+        RankStrengthIterator::from(vec![(*self.omaha_rank).strength, (*self.draw_rank).strength])
     }
 }
 
