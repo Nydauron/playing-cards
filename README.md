@@ -24,9 +24,9 @@ Here is a list of types included within the Poker feature:
   - Low Evaluator
   - Omaha Evaluator
   - Omaha Hi-Lo Evaluator (TODO)
-  - Drawmaha Evaluator
-  - Drawmaha 0 Evaluator (TODO)
-  - Drawmaha 49 Evaluator (TODO)
+  - Dramaha High Evaluator
+  - Dramaha 0 Evaluator (TODO)
+  - Dramaha 49 Evaluator (TODO)
   - Shortdeck High Evaluator (TODO)
 
 All the evaluators run on the [CactusKev Perfect Hash algorithm](https://github.com/tangentforks/XPokerEval/tree/master/XPokerEval.CactusKev.PerfectHash).

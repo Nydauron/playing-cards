@@ -107,7 +107,7 @@ pub mod low_a5_evaluator;
 /// with the help of map-reduce.
 ///
 /// Some games that can make use of this evaluator include but are not limited to Omaha, Omaha 8
-/// (Hi/Lo), Big O, and Drawmaha.
+/// (Hi/Lo), Big O, and Dramaha.
 ///
 /// ## Examples
 /// ```rust
@@ -212,45 +212,45 @@ pub mod omaha_hi_evaluator;
 /// ```
 pub mod omaha_hilo_evaluator;
 
-/// An evaluator for Drawmaha hands
+/// An evaluator for Dramaha High hands
 ///
-/// Drawmaha is a combination of Five Card Draw and Big O (an Omaha varient). This evaluator makes
-/// use of both the HighEvaluator and OmahaHighEvaluator.
+/// Dramaha High is a combination of Five Card Draw and Big O (an Omaha varient). This evaluator
+/// makes use of both the HighEvaluator and OmahaHighEvaluator.
 ///
 /// ## Examples
 /// ```rust
-/// use playing_cards::{core::Card, poker::evaluators::drawmaha_evaluator};
+/// use playing_cards::{core::Card, poker::evaluators::dramaha_high_evaluator};
 ///
 /// let hand = Card::vec_from_str("5cAsKdKcAc").unwrap();
 /// let board = Card::vec_from_str("Ks6s2d8c3h").unwrap();
 ///
-/// let rank = drawmaha_evaluator::evaluate_hand(&hand, &board).unwrap();
+/// let rank = dramaha_high_evaluator::evaluate_hand(&hand, &board).unwrap();
 ///
 /// assert_eq!(rank.omaha_rank.description.as_ref().unwrap(), "Trip Kings");
 /// assert_eq!(rank.draw_rank.description.as_ref().unwrap(), "Two Pair of Aces and Kings");
 /// ```
 ///
 /// ```rust
-/// use playing_cards::{core::Card, poker::evaluators::drawmaha_evaluator};
+/// use playing_cards::{core::Card, poker::evaluators::dramaha_high_evaluator};
 ///
 /// let hand = Card::vec_from_str("3s9sAsTsQs").unwrap();
 /// let board = Card::vec_from_str("4d9hQdTcKh").unwrap();
 ///
-/// let rank = drawmaha_evaluator::evaluate_hand(&hand, &board).unwrap();
+/// let rank = dramaha_high_evaluator::evaluate_hand(&hand, &board).unwrap();
 ///
 /// assert_eq!(rank.omaha_rank.description.as_ref().unwrap(), "Two Pair of Queens and 10s");
 /// assert_eq!(rank.draw_rank.description.as_ref().unwrap(), "Ace High Flush");
 /// ```
 ///
 /// ```rust
-/// use playing_cards::{core::Card, poker::evaluators::drawmaha_evaluator};
+/// use playing_cards::{core::Card, poker::evaluators::dramaha_high_evaluator};
 ///
 /// let hero_hand = Card::vec_from_str("Tc9sJs8hQd").unwrap();
 /// let villan_hand = Card::vec_from_str("AsQcKdQhAc").unwrap();
 /// let board = Card::vec_from_str("8d8s3cAh7d").unwrap();
 ///
-/// let hero_rank = drawmaha_evaluator::evaluate_hand(&hero_hand, &board).unwrap();
-/// let villan_rank = drawmaha_evaluator::evaluate_hand(&villan_hand, &board).unwrap();
+/// let hero_rank = dramaha_high_evaluator::evaluate_hand(&hero_hand, &board).unwrap();
+/// let villan_rank = dramaha_high_evaluator::evaluate_hand(&villan_hand, &board).unwrap();
 ///
 /// // Omaha Rank
 /// assert_eq!(hero_rank.omaha_rank.description.as_ref().unwrap(), "Trip 8s");
@@ -264,7 +264,7 @@ pub mod omaha_hilo_evaluator;
 ///
 /// assert!(hero_rank.draw_rank > villan_rank.draw_rank); // Hero's hand is better than the villan's
 /// ```
-pub mod drawmaha_evaluator;
+pub mod dramaha_high_evaluator;
 
 /// An evaluator for Badugi hands
 ///

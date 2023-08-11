@@ -14,8 +14,8 @@ pub use low_a5_rank::*;
 mod omaha_hilo_rank;
 pub use omaha_hilo_rank::*;
 
-mod drawmaha_rank;
-pub use drawmaha_rank::*;
+mod dramaha_high_rank;
+pub use dramaha_high_rank::*;
 
 mod badugi_rank;
 pub use badugi_rank::*;
