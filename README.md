@@ -4,7 +4,13 @@
 [![Crates.io](https://img.shields.io/crates/v/playing-cards.svg)](https://crates.io/crates/playing-cards)
 [![Docs.rs](https://img.shields.io/docsrs/playing-cards)](https://docs.rs/playing-cards/)
 
-Playing Cards is a Rust library that implements playing cards, primarily focussing on hand evaluation for games like poker.
+`playing-cards` is a Rust library for developing card games, ranging from dealing cards from a deck to
+hand evaluations.
+
+## DISCLAIMER
+This library is still in early development. While I will try to mitgate such a case from occuring,
+features may be subject to breaking changes across minor version changes. Be sure to check the docs
+for updates on any changes and deprecations.
 
 ## Features
 
@@ -36,8 +42,3 @@ All the evaluators run on the [CactusKev Perfect Hash algorithm](https://github.
 Originally, the evaluators ran on the 2+2 evaluator, but due to how big the lookup graph is (the
 binary encoded file took up 4GB+) and because it increased compile time to over 5 minutes, it was
 deemed infeasible despite its super fast evaluations.
-
-## Other Things Still TODO
-
-- [ ] Build the rest of the evaluators
-- [X] Documentation
