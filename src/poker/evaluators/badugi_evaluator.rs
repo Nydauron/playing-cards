@@ -3,7 +3,7 @@ use num_traits::FromPrimitive;
 
 use itertools::Itertools;
 
-use crate::{poker::ranks::{BasicRank, IntoRankStrengthIterator, RankStrengthIterator, BadugiRank}, core::{Card, Value}};
+use crate::{poker::ranks::{BasicRank, BadugiRank}, core::{Card, Value}};
 
 use super::EvaluatorError;
 

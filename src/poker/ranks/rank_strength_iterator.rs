@@ -1,6 +1,6 @@
-use std::{collections::HashMap, hash::Hash};
+use std::collections::HashMap;
 
-use super::{BasicRank, RankResults};
+use super::BasicRank;
 
 pub struct RankStrengthIterator {
     ranks: HashMap<usize, u32>,
