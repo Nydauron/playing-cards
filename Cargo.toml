@@ -13,12 +13,10 @@ categories = ["games", "simulation"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-funty = "2.0.0"
 getrandom = "0.2.7"
 itertools = { version = "0.10.3", optional = true }
-num = "0.4.0"
-num-derive = "0.3.3"
-num-traits = "0.2.15"
+num-derive = "0.4.0"
+num-traits = "0.2.16"
 phf = { version = "0.11.2", features = ["macros"], optional = true }
 rand = "0.8.5"
 rand_core = "0.6.3"
@@ -26,7 +24,7 @@ rand_xoshiro = "0.6.0"
 serde = { version = "1.0.139", features = ["derive"] }
 strum = "0.24.1"
 strum_macros = "0.24.0"
-thiserror = "1.0.44"
+thiserror = { version = "1.0.44", optional = true }
 
 [dev-dependencies]
 rayon = "1.5.3"
@@ -37,4 +35,4 @@ all-features = true
 [features]
 default = ["poker"]
 unstable = []
-poker = ["dep:phf", "dep:itertools"]
+poker = ["dep:phf", "dep:itertools", "dep:thiserror"]

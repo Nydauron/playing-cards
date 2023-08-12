@@ -1,4 +1,5 @@
 use super::EvaluatorError;
+use num_traits::FromPrimitive;
 
 use crate::core::{Card, Value};
 use crate::poker::ranks::{BasicRank, HighRank};
@@ -133,7 +134,7 @@ fn get_string(hand_rank: u16, sub_rank: u16) -> Result<String, &'static str> {
         2 => {
             hand_category = "Pair";
 
-            let sub_str = match Value::from_int((sub_rank - 1) / 220) {
+            let sub_str = match Value::from_u16((sub_rank - 1) / 220) {
                 Some(val) => val.get_readable_string() + "s",
                 None => {
                     return Err("Sub rank for one pair was not valid");
@@ -155,8 +156,8 @@ fn get_string(hand_rank: u16, sub_rank: u16) -> Result<String, &'static str> {
             let sec_pair_kick_rank = sub_rank - (first_pair_rank - 1) * first_pair_rank / 2 * 11;
 
             let sub_str = match (
-                Value::from_int(first_pair_rank),
-                Value::from_int((sec_pair_kick_rank - 1) / 11),
+                Value::from_u16(first_pair_rank),
+                Value::from_u16((sec_pair_kick_rank - 1) / 11),
             ) {
                 (Some(first_pair), Some(sec_pair)) => Vec::from([
                     first_pair.get_readable_string() + "s",
@@ -174,7 +175,7 @@ fn get_string(hand_rank: u16, sub_rank: u16) -> Result<String, &'static str> {
         4 => {
             hand_category = "Trip";
 
-            let sub_str = match Value::from_int((sub_rank - 1) / 66) {
+            let sub_str = match Value::from_u16((sub_rank - 1) / 66) {
                 Some(val) => val.get_readable_string() + "s",
                 None => {
                     return Err("Sub rank for three of a kind was not valid");
@@ -190,7 +191,7 @@ fn get_string(hand_rank: u16, sub_rank: u16) -> Result<String, &'static str> {
                 return Err("Sub rank for straight was not valid");
             }
 
-            let sub_str = Value::from_int(sub_rank + 2).unwrap().get_readable_string();
+            let sub_str = Value::from_u16(sub_rank + 2).unwrap().get_readable_string();
 
             Ok(Vec::from([
                 sub_str.to_owned(),
@@ -240,7 +241,7 @@ fn get_string(hand_rank: u16, sub_rank: u16) -> Result<String, &'static str> {
                 pair_rank += 1;
             }
 
-            match (Value::from_int(trip_rank), Value::from_int(pair_rank)) {
+            match (Value::from_u16(trip_rank), Value::from_u16(pair_rank)) {
                 (Some(trip_val), Some(pair_val)) => Ok(Vec::from([
                     trip_val.get_readable_string() + "s",
                     "Full of".to_string(),
@@ -253,7 +254,7 @@ fn get_string(hand_rank: u16, sub_rank: u16) -> Result<String, &'static str> {
         8 => {
             hand_category = "Quad";
 
-            let sub_str = match Value::from_int((sub_rank - 1) / 12) {
+            let sub_str = match Value::from_u16((sub_rank - 1) / 12) {
                 Some(val) => val.get_readable_string() + "s",
                 None => {
                     return Err("Sub rank for four of a kind was not valid");
@@ -269,7 +270,7 @@ fn get_string(hand_rank: u16, sub_rank: u16) -> Result<String, &'static str> {
                 return Err("Sub rank for straight was not valid");
             }
 
-            let sub_str = Value::from_int(sub_rank + 2).unwrap().get_readable_string();
+            let sub_str = Value::from_u16(sub_rank + 2).unwrap().get_readable_string();
 
             Ok(Vec::from([
                 sub_str.to_owned(),

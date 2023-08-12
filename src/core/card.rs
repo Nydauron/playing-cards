@@ -1,9 +1,7 @@
-extern crate num;
-use num::traits::FromPrimitive;
+use num_traits::FromPrimitive;
 use std::str::FromStr;
 use strum_macros::EnumIter;
 
-use funty::Unsigned;
 use serde::{Deserialize, Serialize};
 
 /// An enum representation of the rank of a card
@@ -72,28 +70,6 @@ impl Value {
             'Q' => Some(Self::Queen),
             'K' => Some(Self::King),
             'A' => Some(Self::Ace),
-            _ => None,
-        }
-    }
-
-    /// Attempts to parse an integer to a Value
-    ///
-    /// Returns back None if the number does not fall within `[0, 13)`.
-    pub fn from_int<T: Unsigned>(u: T) -> Option<Value> {
-        match u.as_u8() {
-            0 => Some(Self::Two),
-            1 => Some(Self::Three),
-            2 => Some(Self::Four),
-            3 => Some(Self::Five),
-            4 => Some(Self::Six),
-            5 => Some(Self::Seven),
-            6 => Some(Self::Eight),
-            7 => Some(Self::Nine),
-            8 => Some(Self::Ten),
-            9 => Some(Self::Jack),
-            10 => Some(Self::Queen),
-            11 => Some(Self::King),
-            12 => Some(Self::Ace),
             _ => None,
         }
     }
