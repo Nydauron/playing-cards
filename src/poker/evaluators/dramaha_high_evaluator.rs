@@ -18,17 +18,20 @@ pub fn evaluate_hand(
     match player_hand.len().cmp(&expected_card_count) {
         Ordering::Less => Err(EvaluatorError::NotEnoughCards {
             card_set_type: "Player hand".to_string(),
-            expected_count: 5,
+            expected_count: expected_card_count as u64,
+            actual_count: player_hand.len() as u64,
         }),
         Ordering::Greater => Err(EvaluatorError::TooManyCards {
             card_set_type: "Player hand".to_string(),
-            expected_count: 5,
+            expected_count: expected_card_count as u64,
+            actual_count: player_hand.len() as u64,
         }),
         Ordering::Equal => {
             if board.len() < 3 {
                 return Err(EvaluatorError::NotEnoughCards {
                     card_set_type: "Board".to_string(),
                     expected_count: 3,
+                    actual_count: board.len() as u64,
                 });
             }
 

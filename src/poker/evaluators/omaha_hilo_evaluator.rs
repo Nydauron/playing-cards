@@ -22,6 +22,7 @@ pub fn evaluate_hand(
         return Err(EvaluatorError::NotEnoughCards {
             card_set_type: "Player hand".to_string(),
             expected_count: 4,
+            actual_count: player_hand.len() as u64,
         });
         // Player hand does not have at least 4 cards
     }
@@ -31,6 +32,7 @@ pub fn evaluate_hand(
         return Err(EvaluatorError::NotEnoughCards {
             card_set_type: "Board".to_string(),
             expected_count: 3,
+            actual_count: board.len() as u64,
         });
         // Board does not have at least 3 cards
     }

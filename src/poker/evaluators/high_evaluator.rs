@@ -16,14 +16,14 @@ pub fn evaluate_hand(cards: &Vec<Card>) -> Result<HighRank, EvaluatorError> {
         return Err(EvaluatorError::NotEnoughCards {
             card_set_type: "Set of cards".to_string(),
             expected_count: 5,
+            actual_count: card_count as u64,
         });
-        // Set of cards does not have at least 5 card.s
     } else if card_count > 7 {
         return Err(EvaluatorError::TooManyCards {
             card_set_type: "Set of cards".to_string(),
             expected_count: 7,
+            actual_count: card_count as u64,
         });
-        // Set of cards does not have at most 7 cards
     }
 
     let cactus_kev_cards = Vec::from_iter(cards.iter().map(|card| card.calculate_bit_pattern()));

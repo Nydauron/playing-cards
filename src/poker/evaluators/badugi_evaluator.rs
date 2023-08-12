@@ -25,6 +25,7 @@ pub fn evaluate_hand(player_hand: &Vec<Card>) -> Result<BadugiRank, EvaluatorErr
         return Err(EvaluatorError::NotEnoughCards {
             card_set_type: "The player hand did not have enough cards".to_string(),
             expected_count: 4,
+            actual_count: player_hand.len() as u64,
         });
     }
     let mut suit_bits = 0;
