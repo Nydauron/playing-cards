@@ -2,9 +2,9 @@ use super::{high_evaluator, EvaluatorError};
 
 use crate::{core::Card, poker::ranks::Low27Rank};
 
-/// Evaluates the low hand for one player.
+/// Evaluates the low hand for one player
 ///
-/// Returns a `Vec<Rank>`. If the total card count is not with the domain [5, 7], then an error
+/// Returns a `Low27Rank`. If the total card count is not with the domain [5, 7], then an error
 /// will return.
 ///
 /// This implementation does not support the use of duplicate cards. If duplicate cards are found,

@@ -6,7 +6,7 @@ use crate::core::Card;
 use crate::poker::evaluators::high_evaluator;
 use crate::poker::ranks::HighRank;
 
-/// Evaluates the Omaha high hand for one player.
+/// Evaluates the Omaha high hand for one player
 ///
 /// Returns a `HighRank`. If the player's hand contains less than 4 cards or the board contains
 /// less than 3 cards, then an error will return.

@@ -11,11 +11,11 @@ use strum::IntoEnumIterator;
 
 use super::{Card, Suit, Value};
 
-/// A deck of cards.
+/// A deck of cards
 ///
-/// This deck will contain 52 distinct cards upon initalization. To ensure uniform randomness,
-/// mersenne twisters are used when the deck is intialized and everytime when the muck is
-/// reshuffled back in.
+/// This deck will contain 52 distinct cards upon initialization. To ensure uniform randomness,
+/// the Xoshiro256PlusPlus pseudorandom generator is used when the deck is shuffled and every time
+/// when the muck is reshuffled back in.
 ///
 /// Example
 /// ```rust
@@ -41,9 +41,9 @@ impl Default for CardDeck {
 }
 
 impl CardDeck {
-    /// Creates a new shuffled or unshuffled CardDeck.
+    /// Creates a new shuffled or unshuffled CardDeck
     ///
-    /// This method is a way to create deterministic deck for random but predictiable outcomes.
+    /// This method is a way to create deterministic deck for random but predictable outcomes.
     /// Please note that this method will attempt to shuffle the deck if a seed is provided, but if
     /// shuffling fails, `new_with_seed()` will return an error.
     ///
@@ -95,7 +95,7 @@ impl CardDeck {
     /// ```
     ///
     /// If you do provide a seed to `new()`, the cards within the deck can be predicted if the seed
-    /// generation is predictable (e.g. incrementing the seed by one, using unix time). It is
+    /// generation is predictable (e.g. incrementing the seed by one, using UNIX time). It is
     /// better to use `new()` in these cases since the entropy from the system cannot be replicated
     /// across systems easily unless the seed generated is shared.
     pub fn new(seed: Option<[u8; 32]>) -> Result<CardDeck, Error> {
@@ -108,7 +108,7 @@ impl CardDeck {
         Ok(deck)
     }
 
-    /// Creates a new CardDeck with provided `cards`.
+    /// Creates a new CardDeck with provided `cards`
     ///
     /// Useful if a standard 52-card deck does not fulfill your needs.
     ///
@@ -144,7 +144,7 @@ impl CardDeck {
         }
     }
 
-    /// Shuffles the deck.
+    /// Shuffles the deck
     ///
     /// An optional seed can be provided if the deck should be shuffled with a specific seed. If no
     /// seed is provided, then system entropy is sampled for a random seed.
@@ -168,12 +168,12 @@ impl CardDeck {
         Ok(seed_used)
     }
 
-    /// Gets the mersenne twister seed of the CardDeck.
+    /// Gets the Xoshiro256PlusPlus seed of the CardDeck
     pub fn get_seed(&self) -> Option<[u8; 32]> {
         self.seed
     }
 
-    /// Searches the deck and removes cards within provided set of cards.
+    /// Searches the deck and removes cards within provided set of cards
     ///
     /// Returns back a list of cards that were removed from the deck. Duplicates can be present in
     /// the returned vector if duplicates existed in the deck.
@@ -189,7 +189,7 @@ impl CardDeck {
         removed_cards
     }
 
-    /// Searches the deck and removes cards within provided set of ranks/values.
+    /// Searches the deck and removes cards within provided set of ranks/values
     ///
     /// Returns back a list of cards that were removed from the deck. Duplicates can be present in
     /// the returned vector if duplicates existed in the deck.
@@ -207,7 +207,7 @@ impl CardDeck {
         removed_cards
     }
 
-    /// Searches the deck and removes cards within provided set of suits.
+    /// Searches the deck and removes cards within provided set of suits
     ///
     /// Returns back a list of cards that were removed from the deck. Duplicates can be present in
     /// the returned vector if duplicates existed in the deck.
@@ -225,7 +225,7 @@ impl CardDeck {
         removed_cards
     }
 
-    /// Adds the inputted cards into the muck.
+    /// Adds the inputted cards into the muck
     ///
     /// This is primarily important if reshuffling the muck can occur.
     pub fn muck_cards(&mut self, mut cards: Vec<Card>) {
@@ -243,7 +243,7 @@ impl CardDeck {
         total_cards >= cards_to_deal
     }
 
-    /// Deals `n` cards out from the CardDeck.
+    /// Deals `n` cards out from the CardDeck
     ///
     /// If there is not enough cards remaining in the deck, it will reshuffle the mucked card back
     /// into the deck and redeal them out. If there are no more cards left, this method will return
@@ -301,7 +301,7 @@ impl CardDeck {
         Some(cards_dealt)
     }
 
-    /// Draws `n` cards out from the CardDeck.
+    /// Draws `n` cards out from the CardDeck
     ///
     /// The definition of drawing in this case means to discard and replace cards. This function
     /// can take any number of discard cards with the help of `muck_cards()` and then simply
@@ -328,11 +328,11 @@ impl CardDeck {
         self.deal_cards(cards_to_deal, include_muck)
     }
 
-    /// Reshuffles the muck and inserts those cards into the deck.
+    /// Reshuffles the muck and inserts those cards into the deck
     ///
     /// The muck will be placed behind the remaining cards in the deck.
     ///
-    /// Similar to `shuffle()` this funtion takes in an optional seed if a specific seed is
+    /// Similar to `shuffle()`, this function takes in an optional seed if a specific seed is
     /// desired. If no seed is provided, a seed will be sampled from entropy.
     pub fn reshuffle_muck(&mut self, seed: Option<[u8; 32]>) -> Result<(), Error> {
         Self::shuffle_cards(&mut self.muck, seed)?;

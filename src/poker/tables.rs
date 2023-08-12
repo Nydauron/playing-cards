@@ -1,4 +1,4 @@
-// // The following hashmaps were generated based off of the Castus Kev evaluator. All values within
+// // The following hashmaps were generated based off of the Castus-Kev evaluator. All values within
 // // the hashmaps were derived from the tables in the `tables.h`.
 // //
 // // The following C code will generate a `tables.rs` file creating the two static hashmaps:

@@ -7,10 +7,10 @@ use itertools::Itertools;
 
 use super::IntoRankStrengthIterator;
 
-/// Contains information on which key has the strongest rank (i.e the winning hand).
+/// Contains information on which key has the strongest rank (i.e the winning hand)
 ///
 /// The struct does not contain any `Rank` types, but rather contains the keys associated with the
-/// rank. The underlying implementation uses HashSets to store the keys so the generic type `T`
+/// rank. The underlying implementation uses hashsets to store the keys so the generic type `T`
 /// must fulfill the traits `Hash`, `Eq`, and `Copy`.
 ///
 /// The vectors returned by the iterator or `hand_number(&self)` is a list of hashsets of keys. The
@@ -29,7 +29,7 @@ impl<T: Hash + Eq + Copy> RankResults<T> {
         Self { hand_table }
     }
 
-    /// Gets the sepcified hand number if it exists.
+    /// Gets the specified hand number if it exists.
     ///
     /// Similar to indexing an vector, this will either return a list of hashsets of keys which are
     /// sorted by the strength of the key's rank, or None if the index does not exist.

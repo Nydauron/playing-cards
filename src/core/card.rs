@@ -53,7 +53,7 @@ impl Value {
         }
     }
 
-    /// Attempts to parse a character and returns the associated Value.
+    /// Attempts to parse a character and returns the associated Value
     ///
     /// The function will return back None if the input character is not any of the mapped
     /// characters.
@@ -76,7 +76,7 @@ impl Value {
         }
     }
 
-    /// Attempts to parse an interger to a Value.
+    /// Attempts to parse an integer to a Value
     ///
     /// Returns back None if the number does not fall within `[0, 13)`.
     pub fn from_int<T: Unsigned>(u: T) -> Option<Value> {
@@ -98,7 +98,7 @@ impl Value {
         }
     }
 
-    /// Returns a prettified string of the Value.
+    /// Returns a prettified string of the Value
     ///
     /// These strings are meant for end-users and can also be used for printing
     /// hand ranks.
@@ -120,7 +120,7 @@ impl Value {
         }
     }
 
-    /// Returns the associated Cactus-Kev prime.
+    /// Returns the associated Cactus-Kev prime
     ///
     /// Useful for building the original or variants of the Cactus-Kev evaluator.
     pub fn get_cactus_kev_prime(&self) -> u8 {
@@ -177,7 +177,7 @@ impl std::fmt::Display for Value {
 
 /// An enum representation of the suit of a card
 ///
-/// Numerical value is just for distinction and each suit has equal strength
+/// Numerical value is just for distinction and each suit has equal strength.
 #[allow(missing_docs)]
 #[derive(Debug, Clone, Copy, FromPrimitive, ToPrimitive, EnumIter, Eq, PartialEq, Hash)]
 pub enum Suit {
@@ -250,7 +250,7 @@ impl std::fmt::Display for Suit {
     }
 }
 
-/// A structural representation of a playing card.
+/// A structural representation of a playing card
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, Eq, PartialEq, Hash)]
 #[serde(try_from = "String")]
 #[serde(into = "String")]
@@ -262,7 +262,7 @@ pub struct Card {
 }
 
 impl Card {
-    /// Takes in a string and returns back a vector of Cards.
+    /// Takes in a string and returns back a vector of Cards
     ///
     /// This can be used to quickly static hands that can be evaluated for testing.
     pub fn vec_from_str(s: &str) -> Result<Vec<Card>, &str> {
@@ -279,17 +279,17 @@ impl Card {
         Ok(cards)
     }
 
-    /// Turns card into integer.
+    /// Turns card into integer
     ///
-    /// This is typically used for when travesing the lookup table.
+    /// This is typically used for when traversing the lookup table.
     pub fn to_int(&self) -> i32 {
         ((self.value as i32) * 4) + (self.suit as i32) + 1
     }
 
-    /// Calcualtes the Catus Kev bit pattern for the card. This can be useful for building custom
-    /// hand evaluators.
+    /// Calculates the Catus-Kev bit pattern for the card
     ///
-    /// For poker-related hand evaulators, please see the poker module.
+    /// This can be useful for building custom hand evaluators. For poker-related hand evaluators,
+    /// please see the poker module.
     pub fn calculate_bit_pattern(&self) -> u32 {
         let mut bit_pattern: u32 = 0;
         bit_pattern |= 1 << (16 + self.value as u32);

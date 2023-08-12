@@ -7,7 +7,7 @@ use std::collections::HashSet;
 use std::num::Wrapping;
 use std::ops::{Add, AddAssign, BitAnd, BitXor, BitXorAssign, Shl, Shr};
 
-/// Evaluates the high hand for one player.
+/// Evaluates the high hand for one player
 ///
 /// Returns a `HighRank`. If the total card count is not with the domain [5, 7], then an error will
 /// return.

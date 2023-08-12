@@ -105,12 +105,12 @@ pub mod low_27_evaluator;
 /// An evaluator for Omaha High hands
 ///
 /// The evaluator requires that the player has at least 4 cards and the board has at least 3
-/// cards. In Omaha and Omaha-varients, the player is required to use only 2 cards from their
+/// cards. In Omaha and Omaha-variants, the player is required to use only 2 cards from their
 /// hand and 3 from the board. This evaluator permutates through these combinations in parallel
 /// with the help of map-reduce.
 ///
 /// Some games that can make use of this evaluator include but are not limited to Omaha, Omaha 8
-/// (Hi/Lo), Big O, and Dramaha.
+/// (Hi-Lo), Big O, and Dramaha.
 ///
 /// ## Examples
 /// ```rust
@@ -122,7 +122,7 @@ pub mod low_27_evaluator;
 /// let rank = omaha_hi_evaluator::evaluate_hand(&hand, &board).unwrap();
 ///
 /// // Notice: Even though we have Aces in our hand, we can only use 2 cards from out hand to
-/// // make the best hand (e.g. the K and the 2 pair with the board).
+/// // make the best hand (e.g. the king and the deuce pair with the board).
 /// assert_eq!(rank.description.as_ref().unwrap(), "Two Pair of Kings and 2s");
 /// ```
 ///
@@ -152,13 +152,13 @@ pub mod low_27_evaluator;
 /// assert_eq!(hero_rank.description.as_ref().unwrap(), "10 High Straight");
 /// assert_eq!(villan_rank.description.as_ref().unwrap(), "Trip Aces");
 ///
-/// assert!(hero_rank > villan_rank); // Hero's hand is better than the villans's
+/// assert!(hero_rank > villan_rank); // Hero's hand is better than the villan's
 /// ```
 pub mod omaha_hi_evaluator;
 
 /// An evaluator for Omaha Hi-Lo hands
 ///
-/// Similar to the Omaha Hi evalautor, this requires 4 player cards and at least 3 cards from the
+/// Similar to the Omaha Hi evaluator, this requires 4 player cards and at least 3 cards from the
 /// board in order to evaluate properly. Only 2 cards may be used from the player's hand to fulfill
 /// their high hand and lo hand (can be the same pair or different). The lo hand only plays if the
 /// player cards has at least 2 cards and the board has at least 3 cards with a distinct rank
@@ -210,14 +210,14 @@ pub mod omaha_hi_evaluator;
 /// assert_eq!(hero_ranks.lo_rank.as_ref().unwrap().description.as_ref().unwrap(), "8-7-6-5-A");
 /// assert_eq!(villan_ranks.lo_rank, None);
 ///
-/// assert!(hero_ranks.hi_rank > villan_ranks.hi_rank); // Hero's hi hand is better than the villans's
-/// assert!(hero_ranks.lo_rank.gt(&villan_ranks.lo_rank)); // Hero's lo hand is better than the villans's
+/// assert!(hero_ranks.hi_rank > villan_ranks.hi_rank); // Hero's hi hand is better than the villan's
+/// assert!(hero_ranks.lo_rank.gt(&villan_ranks.lo_rank)); // Hero's lo hand is better than the villan's
 /// ```
 pub mod omaha_hilo_evaluator;
 
 /// An evaluator for Dramaha High hands
 ///
-/// Dramaha High is a combination of Five Card Draw and Big O (an Omaha varient). This evaluator
+/// Dramaha High is a combination of Five Card Draw and Big O (an Omaha variant). This evaluator
 /// makes use of both the HighEvaluator and OmahaHighEvaluator.
 ///
 /// ## Examples
