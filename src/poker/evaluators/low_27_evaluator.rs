@@ -6,6 +6,9 @@ use crate::{core::Card, poker::ranks::Low27Rank};
 ///
 /// Returns a `Vec<Rank>`. If the total card count is not with the domain [5, 7], then an error
 /// will return.
+///
+/// This implementation does not support the use of duplicate cards. If duplicate cards are found,
+/// a `FailedToCalculateRank` error will return.
 pub fn evaluate_hand(cards: &Vec<Card>) -> Result<Low27Rank, EvaluatorError> {
     high_evaluator::evaluate_hand(cards).map(|high_rank| {
         let mut rank = (*high_rank).clone();
@@ -112,14 +115,15 @@ mod tests {
             ("2c2hAcKsQs", "Pair of 2s"),
             ("3c3hAcKsQs", "Pair of 3s"),
             ("7c7hAcKsJs", "Pair of 7s"),
-            ("2c2hAcQsQs", "Two Pair of Queens and 2s"),
-            ("2c7hAcQsQs", "Pair of Queens"),
+            ("2c2hAcQsQd", "Two Pair of Queens and 2s"),
+            ("2c7hAcQcQs", "Pair of Queens"),
             ("2c7hTcKsQs", "King High"),
         ];
         for (h, expected_str) in hands {
             let player_hand = Card::vec_from_str(h).unwrap();
 
-            let player_rank = evaluate_hand(&player_hand).expect("Evaluation failed");
+            let player_rank = evaluate_hand(&player_hand)
+                .expect(&format!("Evaluation failed for hand {:?}", player_hand));
 
             let string_rank = player_rank
                 .description

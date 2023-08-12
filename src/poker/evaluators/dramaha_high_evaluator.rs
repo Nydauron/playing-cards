@@ -10,6 +10,10 @@ use crate::poker::ranks::DramahaHighRank;
 /// Returns a `Vec<Rank>` where the first element is the rank for the Omaha hand and the second
 /// element is for the draw hand. If the player's hand does not contain exactly 5 cards or the
 /// board contains less than 3 cards, then an error will return.
+///
+/// This implementation does not support the use of duplicate cards. If duplicate cards are found
+/// when both the player's cards and the board are chained, a `FailedToCalculateRank` error will
+/// return.
 pub fn evaluate_hand(
     player_hand: &Vec<Card>,
     board: &Vec<Card>,

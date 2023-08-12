@@ -1,5 +1,5 @@
 use num_traits::FromPrimitive;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use itertools::Itertools;
 
@@ -20,14 +20,24 @@ fn choose(n: u64, k: u64) -> u64 {
 /// Evaluates a Badugi hand
 ///
 /// Returns a `BadugiRank`. If the card count is less than 4, then an error will return.
+///
+/// This implementation does not support the use of duplicate cards. If duplicate cards are found,
+/// a `FailedToCalculateRank` error will return.
 pub fn evaluate_hand(player_hand: &Vec<Card>) -> Result<BadugiRank, EvaluatorError> {
     if player_hand.len() < 4 {
         return Err(EvaluatorError::NotEnoughCards {
-            card_set_type: "The player hand did not have enough cards".to_string(),
+            card_set_type: "Player hand".to_string(),
             expected_count: 4,
             actual_count: player_hand.len() as u64,
         });
     }
+
+    if player_hand.len() != HashSet::<&Card>::from_iter(player_hand.iter()).len() {
+        return Err(EvaluatorError::FailedToCalculateRank(
+            "Found duplicate cards".to_string(),
+        ));
+    }
+
     let mut suit_bits = 0;
     let mut rank_bits = 0;
     for c in player_hand {
@@ -62,7 +72,7 @@ pub fn evaluate_hand(player_hand: &Vec<Card>) -> Result<BadugiRank, EvaluatorErr
                 distinct_rank_suit_cards += 1;
             }
 
-            distinct_rank_suit_cards == best_hand_card_count
+            !canidate_hand.is_empty() && distinct_rank_suit_cards == best_hand_card_count
         })
         .map(|canidate_hand| {
             let card_ranks = canidate_hand
@@ -116,8 +126,8 @@ pub fn evaluate_hand(player_hand: &Vec<Card>) -> Result<BadugiRank, EvaluatorErr
             BadugiRank(rank)
         })
         .fold(
-            Err(EvaluatorError::UnknownError(
-                "No valid rank was generated".to_string(),
+            Err(EvaluatorError::FailedToCalculateRank(
+                "Badugi rank failed to generate".to_string(),
             )),
             |acc, rank| {
                 if let Ok(acc) = acc {
@@ -298,5 +308,34 @@ mod tests {
             description: Some("5-high 2-card hand".to_string()),
         });
         assert_eq!(expected_rank, rank);
+    }
+
+    #[test]
+    fn duplicate_cards() {
+        let hand = Card::vec_from_str("3d3d3d3d").expect("Cards did not parse correctly");
+        let rank = evaluate_hand(&hand).expect_err("Deplicate cards generated a valid rank");
+
+        assert_eq!(
+            rank,
+            EvaluatorError::FailedToCalculateRank("Found duplicate cards".to_string())
+        );
+    }
+
+    #[test]
+    fn no_cards() {
+        let hand: Vec<Card> = vec![];
+        let rank = evaluate_hand(&hand)
+            .expect_err("An empty vec of cards was somehow a valid Badugi rank");
+
+        assert_eq!(
+            rank,
+            EvaluatorError::NotEnoughCards {
+                card_set_type: "Player hand".to_string(),
+                expected_count: 4,
+                actual_count: 0
+            }
+        );
+
+        // note without this card gaurd, this test should still fail with FailedToCalculateRank
     }
 }

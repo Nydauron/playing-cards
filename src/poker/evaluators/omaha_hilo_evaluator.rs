@@ -14,6 +14,10 @@ use crate::{
 ///
 /// Returns a `Vec<Rank>`. If the player's hand contains less than 4 cards or the board contains
 /// less than 3 cards, then an error will return.
+///
+/// This implementation does not support the use of duplicate cards. If duplicate cards are found
+/// when both the player's cards and the board are chained, a `FailedToCalculateRank` error will
+/// return.
 pub fn evaluate_hand(
     player_hand: &Vec<Card>,
     board: &Vec<Card>,

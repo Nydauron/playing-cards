@@ -3,6 +3,7 @@ use super::EvaluatorError;
 use crate::core::{Card, Value};
 use crate::poker::ranks::{BasicRank, HighRank};
 use crate::poker::tables;
+use std::collections::HashSet;
 use std::num::Wrapping;
 use std::ops::{Add, AddAssign, BitAnd, BitXor, BitXorAssign, Shl, Shr};
 
@@ -10,6 +11,9 @@ use std::ops::{Add, AddAssign, BitAnd, BitXor, BitXorAssign, Shl, Shr};
 ///
 /// Returns a `HighRank`. If the total card count is not with the domain [5, 7], then an error will
 /// return.
+///
+/// This implementation does not support the use of duplicate cards. If duplicate cards are found,
+/// a `FailedToCalculateRank` error will return.
 pub fn evaluate_hand(cards: &Vec<Card>) -> Result<HighRank, EvaluatorError> {
     let card_count = cards.len();
     if card_count < 5 {
@@ -24,6 +28,12 @@ pub fn evaluate_hand(cards: &Vec<Card>) -> Result<HighRank, EvaluatorError> {
             expected_count: 7,
             actual_count: card_count as u64,
         });
+    }
+
+    if card_count != HashSet::<&Card>::from_iter(cards.iter()).len() {
+        return Err(EvaluatorError::FailedToCalculateRank(
+            "Found duplicate cards".to_string(),
+        ));
     }
 
     let cactus_kev_cards = Vec::from_iter(cards.iter().map(|card| card.calculate_bit_pattern()));
@@ -46,9 +56,14 @@ pub fn evaluate_hand(cards: &Vec<Card>) -> Result<HighRank, EvaluatorError> {
         }
     }
 
-    match hand_results.iter().min() {
-        None => Err(EvaluatorError::UnknownError(
-            "Could not get the minimum rank".to_string(),
+    match hand_results
+        .iter()
+        .filter(|rank| rank.is_some())
+        .flatten()
+        .min()
+    {
+        None => Err(EvaluatorError::FailedToCalculateRank(
+            "Cactus-Kev lookup tables could not find a valid rank entry".to_string(),
         )),
         Some(&best_rank) => {
             let mut hand_rank: u16 = 0;
@@ -267,16 +282,16 @@ fn get_string(hand_rank: u16, sub_rank: u16) -> Result<String, &'static str> {
     }
 }
 
-fn eval_five_cards(c0: u32, c1: u32, c2: u32, c3: u32, c4: u32) -> u16 {
+fn eval_five_cards(c0: u32, c1: u32, c2: u32, c3: u32, c4: u32) -> Option<u16> {
     let q = (c0 | c1 | c2 | c3 | c4) >> 16;
 
     if c0 & c1 & c2 & c3 & c4 & 0xf000 != 0 {
-        tables::FLUSHES[&q]
+        tables::FLUSHES.get(&q).cloned()
     } else if tables::UNIQUE5.contains_key(&q) {
-        tables::UNIQUE5[&q]
+        tables::UNIQUE5.get(&q).cloned()
     } else {
         let q = (c0 & 0xff) * (c1 & 0xff) * (c2 & 0xff) * (c3 & 0xff) * (c4 & 0xff);
-        tables::HASH_VALUES[find_fast(Wrapping(q))]
+        tables::HASH_VALUES.get(find_fast(Wrapping(q))).cloned()
     }
 }
 
@@ -374,14 +389,15 @@ mod tests {
             ("2c2hAcKsQs", "Pair of 2s"),
             ("3c3hAcKsQs", "Pair of 3s"),
             ("7c7hAcKsJs", "Pair of 7s"),
-            ("2c2hAcQsQs", "Two Pair of Queens and 2s"),
-            ("2c7hAcQsQs", "Pair of Queens"),
+            ("2c2hAcQsQd", "Two Pair of Queens and 2s"),
+            ("2c7hAcQcQs", "Pair of Queens"),
             ("2c7hTcKsQs", "King High"),
         ];
         for (h, expected_str) in hands {
             let player_hand = Card::vec_from_str(h).unwrap();
 
-            let player_rank = evaluate_hand(&player_hand).expect("Evaluation failed");
+            let player_rank = evaluate_hand(&player_hand)
+                .expect(&format!("Evaluation failed for hand {:?}", player_hand));
 
             let string_rank = player_rank
                 .description
@@ -534,6 +550,36 @@ mod tests {
                 .expect("Hand generated bad rank");
             assert_eq!(expected_str, string_rank, "\nFailed on hand {}\n", h);
         }
+    }
+
+    #[test]
+    fn duplicate_cards_two_pair() {
+        let player_hand = Card::vec_from_str("5h2dAdAs5h").unwrap();
+
+        let player_rank =
+            evaluate_hand(&player_hand).expect_err("Set of cards with duplicates has a valid rank");
+
+        assert_eq!(
+            player_rank,
+            EvaluatorError::FailedToCalculateRank("Found duplicate cards".to_string())
+        );
+    }
+
+    #[test]
+    fn duplicate_cards_flush() {
+        let player_hand = Card::vec_from_str("5h2hAhQh5h").unwrap();
+
+        let player_rank =
+            evaluate_hand(&player_hand).expect_err("Evaluator was able to calculate rank");
+
+        assert_eq!(
+            player_rank,
+            EvaluatorError::FailedToCalculateRank("Found duplicate cards".to_string())
+        );
+
+        // If the duplicate gaurd did not exist, then the evaluator would output the following
+        // error:
+        // assert_eq!(player_rank, EvaluatorError::FailedToCalculateRank("Cactus-Kev lookup tables could not find a valid rank entry".to_string()));
     }
 }
 

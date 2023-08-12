@@ -1,4 +1,7 @@
-//! Contains all hand evaluators.
+//! Contains all Poker hand evaluators
+//!
+//! Please note that all evaluators will error if the appropriate number of cards are given or if
+//! any duplicate cards are detected.
 
 mod evaluator_errors;
 pub use self::evaluator_errors::EvaluatorError;
@@ -12,7 +15,7 @@ pub use self::evaluator_errors::EvaluatorError;
 /// use playing_cards::{core::Card, poker::evaluators::high_evaluator};
 ///
 /// let hand = Card::vec_from_str("5h5s").unwrap();
-/// let board = Card::vec_from_str("2dTdKs5sAc").unwrap();
+/// let board = Card::vec_from_str("2dTdKs5dAc").unwrap();
 ///
 /// let mut all_cards = hand.clone();
 /// all_cards.extend(board.iter());

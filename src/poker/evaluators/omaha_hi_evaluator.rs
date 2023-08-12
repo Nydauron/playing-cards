@@ -10,6 +10,10 @@ use crate::poker::ranks::HighRank;
 ///
 /// Returns a `HighRank`. If the player's hand contains less than 4 cards or the board contains
 /// less than 3 cards, then an error will return.
+///
+/// This implementation does not support the use of duplicate cards. If duplicate cards are found
+/// when both the player's cards and the board are chained, a `FailedToCalculateRank` error will
+/// return.
 pub fn evaluate_hand(
     player_hand: &Vec<Card>,
     board: &Vec<Card>,
@@ -47,7 +51,7 @@ pub fn evaluate_hand(
             let rank = rank_res?;
             Ok(std::cmp::max(rank, acc))
         })
-        .unwrap_or(Err(EvaluatorError::UnknownError(
+        .unwrap_or(Err(EvaluatorError::FailedToCalculateRank(
             "No hand combos were evaluated".to_string(),
         )))?;
 
@@ -84,6 +88,24 @@ mod tests {
             .as_ref()
             .expect("Hand generated bad rank");
         assert_eq!("Two Pair of Queens and 3s", string_rank);
+    }
+
+    #[test]
+    fn duplicate_cards_flush() {
+        let player_hand = Card::vec_from_str("4s3c5h2h").unwrap();
+        let board = Card::vec_from_str("2d8h5hAhTc").unwrap();
+
+        let player_rank =
+            evaluate_hand(&player_hand, &board).expect_err("Evaluator was able to calculate rank");
+
+        assert_eq!(
+            player_rank,
+            EvaluatorError::FailedToCalculateRank("Found duplicate cards".to_string())
+        );
+
+        // If the duplicate guard did not exist in high_evaluator::evaluate_hand, then the evaluator
+        // would output the following error:
+        // assert_eq!(player_rank, EvaluatorError::FailedToCalculateRank("Cactus-Kev lookup tables could not find a valid rank entry".to_string()));
     }
 }
 
