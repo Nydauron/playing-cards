@@ -19,13 +19,19 @@ pub fn evaluate_hand(
     board: &Vec<Card>,
 ) -> Result<OmahaHiLoRank, EvaluatorError> {
     if player_hand.len() < 4 {
-        return Err(EvaluatorError::NotEnoughCards("Player hand".to_string(), 4));
+        return Err(EvaluatorError::NotEnoughCards {
+            card_set_type: "Player hand".to_string(),
+            expected_count: 4,
+        });
         // Player hand does not have at least 4 cards
     }
 
     if board.len() < 3 {
         // 3 because it allows for evaluation on flop-only flop-turn-only boards
-        return Err(EvaluatorError::NotEnoughCards("Board".to_string(), 3));
+        return Err(EvaluatorError::NotEnoughCards {
+            card_set_type: "Board".to_string(),
+            expected_count: 3,
+        });
         // Board does not have at least 3 cards
     }
 

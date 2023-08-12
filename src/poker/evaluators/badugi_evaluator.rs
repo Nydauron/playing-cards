@@ -22,10 +22,10 @@ fn choose(n: u64, k: u64) -> u64 {
 /// Returns a `BadugiRank`. If the card count is less than 4, then an error will return.
 pub fn evaluate_hand(player_hand: &Vec<Card>) -> Result<BadugiRank, EvaluatorError> {
     if player_hand.len() < 4 {
-        return Err(EvaluatorError::NotEnoughCards(
-            "The player hand did not have enough cards".to_string(),
-            4,
-        ));
+        return Err(EvaluatorError::NotEnoughCards {
+            card_set_type: "The player hand did not have enough cards".to_string(),
+            expected_count: 4,
+        });
     }
     let mut suit_bits = 0;
     let mut rank_bits = 0;

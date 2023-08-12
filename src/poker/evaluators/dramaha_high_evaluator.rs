@@ -16,12 +16,20 @@ pub fn evaluate_hand(
 ) -> Result<DramahaHighRank, EvaluatorError> {
     let expected_card_count = 5;
     match player_hand.len().cmp(&expected_card_count) {
-        Ordering::Less => Err(EvaluatorError::NotEnoughCards("Player hand".to_string(), 5)),
-        Ordering::Greater => Err(EvaluatorError::TooManyCards("Player hand".to_string(), 5)),
+        Ordering::Less => Err(EvaluatorError::NotEnoughCards {
+            card_set_type: "Player hand".to_string(),
+            expected_count: 5,
+        }),
+        Ordering::Greater => Err(EvaluatorError::TooManyCards {
+            card_set_type: "Player hand".to_string(),
+            expected_count: 5,
+        }),
         Ordering::Equal => {
             if board.len() < 3 {
-                return Err(EvaluatorError::NotEnoughCards("Board".to_string(), 3));
-                // Board does not have at least 3 cards
+                return Err(EvaluatorError::NotEnoughCards {
+                    card_set_type: "Board".to_string(),
+                    expected_count: 3,
+                });
             }
 
             let omaha_hand_rank = omaha_hi_evaluator::evaluate_hand(player_hand, board)?;

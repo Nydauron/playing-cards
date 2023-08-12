@@ -13,13 +13,16 @@ use std::ops::{Add, AddAssign, BitAnd, BitXor, BitXorAssign, Shl, Shr};
 pub fn evaluate_hand(cards: &Vec<Card>) -> Result<HighRank, EvaluatorError> {
     let card_count = cards.len();
     if card_count < 5 {
-        return Err(EvaluatorError::NotEnoughCards(
-            "Set of cards".to_string(),
-            5,
-        ));
+        return Err(EvaluatorError::NotEnoughCards {
+            card_set_type: "Set of cards".to_string(),
+            expected_count: 5,
+        });
         // Set of cards does not have at least 5 card.s
     } else if card_count > 7 {
-        return Err(EvaluatorError::TooManyCards("Set of cards".to_string(), 7));
+        return Err(EvaluatorError::TooManyCards {
+            card_set_type: "Set of cards".to_string(),
+            expected_count: 7,
+        });
         // Set of cards does not have at most 7 cards
     }
 

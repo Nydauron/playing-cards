@@ -30,7 +30,7 @@ pub enum Value {
 }
 
 impl Value {
-    /// Gets the associated character for the Value.
+    /// Gets the associated character for the Value
     ///
     /// This is typically used to parse a Value into a string format for users like printing
     /// shortened ASCII card representations (e.g. As for the Ace of spades, 5d for the 5 of
