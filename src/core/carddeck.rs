@@ -1,5 +1,6 @@
 use getrandom;
-use std::{collections::HashSet, io::Error};
+use std::collections::HashSet;
+use thiserror::Error;
 
 extern crate rand;
 
@@ -10,6 +11,18 @@ use rand_xoshiro::Xoshiro256PlusPlus;
 use strum::IntoEnumIterator;
 
 use super::{Card, Suit, Value};
+
+/// Error type for `CardDeck`
+#[non_exhaustive]
+#[derive(Debug, Error)]
+pub enum CardDeckError {
+    /// Something wrong happened when tryinfg to sample entropy for randomness
+    ///
+    /// While this is rare to occur, this can happend if you do not provide a seed to shuffle the
+    /// deck.
+    #[error("Error occured when trying to sample entropy: {0}")]
+    EntropyError(#[from] getrandom::Error),
+}
 
 /// A deck of cards
 ///
@@ -99,7 +112,7 @@ impl CardDeck {
     /// generation is predictable (e.g. incrementing the seed by one, using UNIX time). It is
     /// better to use `new()` in these cases since the entropy from the system cannot be replicated
     /// across systems easily unless the seed generated is shared.
-    pub fn new(seed: Option<[u8; 32]>) -> Result<CardDeck, Error> {
+    pub fn new(seed: Option<[u8; 32]>) -> Result<Self, CardDeckError> {
         let mut deck = Self::create_unshuffled_deck();
 
         if seed.is_some() {
@@ -115,8 +128,11 @@ impl CardDeck {
     ///
     /// Will attempt to shuffle deck if a seed is provided. An error will return if shuffling
     /// fails. If no seed is provided, the deck remains unshuffled.
-    pub fn new_custom_deck(cards: Vec<Card>, seed: Option<[u8; 32]>) -> Result<Self, Error> {
-        let mut deck = CardDeck {
+    pub fn new_custom_deck(
+        cards: Vec<Card>,
+        seed: Option<[u8; 32]>,
+    ) -> Result<Self, CardDeckError> {
+        let mut deck = Self {
             deck: cards,
             seed,
             muck: Vec::new(),
@@ -129,7 +145,7 @@ impl CardDeck {
         Ok(deck)
     }
 
-    fn create_unshuffled_deck() -> CardDeck {
+    fn create_unshuffled_deck() -> Self {
         let mut d: Vec<Card> = Vec::with_capacity(52);
 
         for s in Suit::iter() {
@@ -149,12 +165,15 @@ impl CardDeck {
     ///
     /// An optional seed can be provided if the deck should be shuffled with a specific seed. If no
     /// seed is provided, then system entropy is sampled for a random seed.
-    pub fn shuffle(&mut self, seed: Option<[u8; 32]>) -> Result<(), Error> {
+    pub fn shuffle(&mut self, seed: Option<[u8; 32]>) -> Result<(), CardDeckError> {
         self.seed = Some(Self::shuffle_cards(&mut self.deck, seed)?);
         Ok(())
     }
 
-    fn shuffle_cards(cards: &mut Vec<Card>, seed: Option<[u8; 32]>) -> Result<[u8; 32], Error> {
+    fn shuffle_cards(
+        cards: &mut Vec<Card>,
+        seed: Option<[u8; 32]>,
+    ) -> Result<[u8; 32], CardDeckError> {
         let mut rng;
         let mut seed_used;
         match seed {
@@ -339,7 +358,7 @@ impl CardDeck {
     ///
     /// Similar to `shuffle()`, this function takes in an optional seed if a specific seed is
     /// desired. If no seed is provided, a seed will be sampled from entropy.
-    pub fn reshuffle_muck(&mut self, seed: Option<[u8; 32]>) -> Result<(), Error> {
+    pub fn reshuffle_muck(&mut self, seed: Option<[u8; 32]>) -> Result<(), CardDeckError> {
         Self::shuffle_cards(&mut self.muck, seed)?;
 
         self.muck.append(&mut self.deck);

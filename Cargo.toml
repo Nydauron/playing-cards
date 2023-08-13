@@ -24,7 +24,7 @@ rand_xoshiro = "0.6.0"
 serde = { version = "1.0.139", features = ["derive"] }
 strum = "0.24.1"
 strum_macros = "0.24.0"
-thiserror = { version = "1.0.44", optional = true }
+thiserror = "1.0.44"
 
 [dev-dependencies]
 rayon = "1.5.3"
@@ -35,4 +35,4 @@ all-features = true
 [features]
 default = ["poker"]
 unstable = []
-poker = ["dep:phf", "dep:itertools", "dep:thiserror"]
+poker = ["dep:phf", "dep:itertools"]
