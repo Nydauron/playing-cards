@@ -20,13 +20,13 @@ num-traits = "0.2.16"
 phf = { version = "0.11.2", features = ["macros"], optional = true }
 rand = "0.8.5"
 rand_core = "0.6.3"
-rand_xoshiro = "0.6.0"
 serde = { version = "1.0.139", features = ["derive"] }
 strum = "0.24.1"
 strum_macros = "0.24.0"
 thiserror = "1.0.44"
 
 [dev-dependencies]
+rand_xoshiro = "0.6.0"
 rayon = "1.5.3"
 
 [package.metadata.docs.rs]

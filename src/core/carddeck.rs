@@ -5,8 +5,7 @@ use thiserror::Error;
 extern crate rand;
 
 use rand::seq::SliceRandom;
-use rand_core::SeedableRng;
-use rand_xoshiro::Xoshiro256PlusPlus;
+use rand_core::{RngCore, SeedableRng};
 
 use strum::IntoEnumIterator;
 
@@ -33,9 +32,10 @@ pub enum CardDeckError {
 /// Example
 /// ```rust
 /// use playing_cards::core::CardDeck;
+/// use rand_xoshiro::Xoshiro256PlusPlus;
 ///
 /// let mut deck: CardDeck = Default::default();
-/// deck.shuffle(None);
+/// deck.shuffle::<Xoshiro256PlusPlus>(None);
 ///
 /// let hand = deck.deal_cards(2, false);
 ///
@@ -44,7 +44,6 @@ pub enum CardDeckError {
 #[derive(Debug, Clone)]
 pub struct CardDeck {
     deck: Vec<Card>,
-    seed: Option<[u8; 32]>,
     muck: Vec<Card>,
 }
 
@@ -80,11 +79,12 @@ impl CardDeck {
     ///
     /// ```rust
     /// use playing_cards::core::CardDeck;
+    /// use rand_xoshiro::Xoshiro256PlusPlus;
     ///
     /// for _ in 0..10 {
     ///     let mut seed_bytes = Vec::from(1337_u32.to_ne_bytes());
     ///     seed_bytes.extend_from_slice(&[0u8; 28]);
-    ///     let mut deck = CardDeck::new(Some(seed_bytes.as_slice().try_into().unwrap())).unwrap();
+    ///     let mut deck = CardDeck::new::<Xoshiro256PlusPlus>(Some(seed_bytes.as_slice().try_into().unwrap())).unwrap();
     ///
     ///     // Every single line should produce the same 5 cards in the same exact order because
     ///     // we gave each deck the same seed.
@@ -95,11 +95,12 @@ impl CardDeck {
     ///
     /// ```rust
     /// use playing_cards::core::CardDeck;
+    /// use rand_xoshiro::Xoshiro256PlusPlus;
     ///
     /// for i in 0..10 {
     ///     let mut seed_bytes = Vec::from((i as u32).to_ne_bytes());
     ///     seed_bytes.extend_from_slice(&[0u8; 28]);
-    ///     let mut deck = CardDeck::new(Some(seed_bytes.as_slice().try_into().unwrap())).unwrap();
+    ///     let mut deck = CardDeck::new::<Xoshiro256PlusPlus>(Some(seed_bytes.as_slice().try_into().unwrap())).unwrap();
     ///
     ///     // Each line should be different from one another, but if you rerun this code again,
     ///     // it will print out the exact 10 lines again.
@@ -112,11 +113,11 @@ impl CardDeck {
     /// generation is predictable (e.g. incrementing the seed by one, using UNIX time). It is
     /// better to use `new()` in these cases since the entropy from the system cannot be replicated
     /// across systems easily unless the seed generated is shared.
-    pub fn new(seed: Option<[u8; 32]>) -> Result<Self, CardDeckError> {
+    pub fn new<T: SeedableRng + RngCore>(seed: Option<T::Seed>) -> Result<Self, CardDeckError> {
         let mut deck = Self::create_unshuffled_deck();
 
         if seed.is_some() {
-            deck.shuffle(seed)?;
+            deck.shuffle::<T>(seed)?;
         }
 
         Ok(deck)
@@ -128,18 +129,17 @@ impl CardDeck {
     ///
     /// Will attempt to shuffle deck if a seed is provided. An error will return if shuffling
     /// fails. If no seed is provided, the deck remains unshuffled.
-    pub fn new_custom_deck(
+    pub fn new_custom_deck<T: SeedableRng + RngCore>(
         cards: Vec<Card>,
-        seed: Option<[u8; 32]>,
+        seed: Option<T::Seed>,
     ) -> Result<Self, CardDeckError> {
         let mut deck = Self {
             deck: cards,
-            seed,
             muck: Vec::new(),
         };
 
         if seed.is_some() {
-            deck.shuffle(seed)?;
+            deck.shuffle::<T>(seed)?;
         }
 
         Ok(deck)
@@ -156,7 +156,6 @@ impl CardDeck {
 
         CardDeck {
             deck: d,
-            seed: None,
             muck: Vec::new(),
         }
     }
@@ -165,36 +164,29 @@ impl CardDeck {
     ///
     /// An optional seed can be provided if the deck should be shuffled with a specific seed. If no
     /// seed is provided, then system entropy is sampled for a random seed.
-    pub fn shuffle(&mut self, seed: Option<[u8; 32]>) -> Result<(), CardDeckError> {
-        self.seed = Some(Self::shuffle_cards(&mut self.deck, seed)?);
-        Ok(())
+    pub fn shuffle<T: SeedableRng + RngCore>(
+        &mut self,
+        seed: Option<T::Seed>,
+    ) -> Result<(), CardDeckError> {
+        Self::shuffle_cards::<T>(&mut self.deck, seed)
     }
 
-    fn shuffle_cards(
+    fn shuffle_cards<T: SeedableRng + RngCore>(
         cards: &mut Vec<Card>,
-        seed: Option<[u8; 32]>,
-    ) -> Result<[u8; 32], CardDeckError> {
+        seed: Option<T::Seed>,
+    ) -> Result<(), CardDeckError> {
         let mut rng;
         let mut seed_used;
         match seed {
             Some(seed) => seed_used = seed,
             None => {
-                seed_used = [0u8; 32];
-                getrandom::getrandom(&mut seed_used)?;
+                seed_used = Default::default();
+                getrandom::getrandom(seed_used.as_mut())?;
             }
         }
-        rng = Xoshiro256PlusPlus::from_seed(seed_used);
+        rng = T::from_seed(seed_used);
         cards.shuffle(&mut rng);
-        Ok(seed_used)
-    }
-
-    /// Gets the Xoshiro256PlusPlus seed of the CardDeck
-    #[deprecated(
-        since = "0.1.2",
-        note = "`rand_core::SeedableRng` does not support the `Clone` trait, so `CardDeck` has no feasible way of storing the seed after moving it into the PRNG for shuffling. It is reccommended that the user stores the intial seed if the seed had value after PRNG seeding."
-    )]
-    pub fn get_seed(&self) -> Option<[u8; 32]> {
-        self.seed
+        Ok(())
     }
 
     /// Searches the deck and removes cards within provided set of cards
@@ -276,11 +268,12 @@ impl CardDeck {
     /// Examples
     /// ```rust
     /// use playing_cards::core::{Card, CardDeck};
+    /// use rand_xoshiro::Xoshiro256PlusPlus;
     ///
     /// let mut player_hands: Vec<Vec<Card>> = Vec::new();
     ///
     /// let mut deck: CardDeck = Default::default();
-    /// deck.shuffle(None);
+    /// deck.shuffle::<Xoshiro256PlusPlus>(None);
     ///
     /// for i in 0..10 {
     ///     if let Some(hand) = deck.deal_cards(2, false) { // 2 cards per player would require 20 cards
@@ -294,12 +287,13 @@ impl CardDeck {
     /// ```
     ///
     /// ```rust should_panic
-    ///  use playing_cards::core::{Card, CardDeck};
+    /// use playing_cards::core::{Card, CardDeck};
+    /// use rand_xoshiro::Xoshiro256PlusPlus;
     ///
     /// let mut player_hands: Vec<Vec<Card>> = Vec::new();
     ///
     /// let mut deck: CardDeck = Default::default();
-    /// deck.shuffle(None);
+    /// deck.shuffle::<Xoshiro256PlusPlus>(None);
     ///
     /// for i in 0..10 {
     ///     if let Some(hand) = deck.deal_cards(6, false) { // 6 cards per player would require 60 cards, but there's only 52
@@ -356,8 +350,11 @@ impl CardDeck {
     ///
     /// Similar to `shuffle()`, this function takes in an optional seed if a specific seed is
     /// desired. If no seed is provided, a seed will be sampled from entropy.
-    pub fn reshuffle_muck(&mut self, seed: Option<[u8; 32]>) -> Result<(), CardDeckError> {
-        Self::shuffle_cards(&mut self.muck, seed)?;
+    pub fn reshuffle_muck<T: SeedableRng + RngCore>(
+        &mut self,
+        seed: Option<T::Seed>,
+    ) -> Result<(), CardDeckError> {
+        Self::shuffle_cards::<T>(&mut self.muck, seed)?;
 
         self.muck.append(&mut self.deck);
         self.deck = self.muck.to_owned();
@@ -379,6 +376,7 @@ impl Iterator for CardDeck {
 mod tests {
     use super::super::Value;
     use super::*;
+    use rand_xoshiro::Xoshiro256PlusPlus;
     use rayon::prelude::*;
     use std::iter::Iterator;
 
@@ -386,14 +384,17 @@ mod tests {
     fn test_deck_same_seed() {
         let mut seed_bytes = Vec::from(233_i32.to_le_bytes());
         seed_bytes.extend_from_slice(&[0u8; 28]);
-        let mut d1 = CardDeck::new(Some(seed_bytes.as_slice().try_into().unwrap())).unwrap();
-        let mut d2 = CardDeck::new(Some(seed_bytes.as_slice().try_into().unwrap())).unwrap();
+        let mut d1 =
+            CardDeck::new::<Xoshiro256PlusPlus>(Some(seed_bytes.as_slice().try_into().unwrap()))
+                .unwrap();
+        let mut d2 =
+            CardDeck::new::<Xoshiro256PlusPlus>(Some(seed_bytes.as_slice().try_into().unwrap()))
+                .unwrap();
 
         are_decks_equal(&mut d1, &mut d2);
     }
 
     fn are_decks_equal(d1: &mut CardDeck, d2: &mut CardDeck) {
-        assert_eq!(d1.seed, d2.seed);
         let mut both_decks = Iterator::zip(d1, d2);
         for i in 0..52 {
             // checks all cards
@@ -415,19 +416,12 @@ mod tests {
     }
 
     #[test]
-    fn test_get_seed() {
-        let mut expected_seed = Vec::from(233_i32.to_le_bytes());
-        expected_seed.extend_from_slice(&[0u8; 28]);
-        let d = CardDeck::new(Some(expected_seed.as_slice().try_into().unwrap())).unwrap();
-
-        assert_eq!(Vec::from(d.get_seed().unwrap()), expected_seed);
-    }
-
-    #[test]
     fn test_strip_spcific_cards() {
         let cards = Card::vec_from_str("2h5dAsAdKdJc3h8d").expect("Failed parsing card string");
-        let mut deck = CardDeck::new_custom_deck(cards, None).expect("Deck could not be created");
-        deck.shuffle(None).expect("Shuffle failed");
+        let mut deck: CardDeck = CardDeck::new_custom_deck::<Xoshiro256PlusPlus>(cards, None)
+            .expect("Deck could not be created");
+        deck.shuffle::<Xoshiro256PlusPlus>(None)
+            .expect("Shuffle failed");
 
         let cards_to_remove = HashSet::from_iter(
             Card::vec_from_str("5d2h8d3h")
@@ -454,8 +448,10 @@ mod tests {
     #[test]
     fn test_strip_ranks() {
         let cards = Card::vec_from_str("2h5dAsAdKdJc3h8d").expect("Failed parsing card string");
-        let mut deck = CardDeck::new_custom_deck(cards, None).expect("Deck could not be created");
-        deck.shuffle(None).expect("Shuffle failed");
+        let mut deck: CardDeck = CardDeck::new_custom_deck::<Xoshiro256PlusPlus>(cards, None)
+            .expect("Deck could not be created");
+        deck.shuffle::<Xoshiro256PlusPlus>(None)
+            .expect("Shuffle failed");
 
         let ranks_to_remove = HashSet::from([Value::Ace, Value::Two, Value::Three]);
         let actual_cards_removed = deck.strip_ranks(&ranks_to_remove);
@@ -477,8 +473,10 @@ mod tests {
     #[test]
     fn test_strip_suits() {
         let cards = Card::vec_from_str("2h5dAsAdKdJc3h8d").expect("Failed parsing card string");
-        let mut deck = CardDeck::new_custom_deck(cards, None).expect("Deck could not be created");
-        deck.shuffle(None).expect("Shuffle failed");
+        let mut deck: CardDeck = CardDeck::new_custom_deck::<Xoshiro256PlusPlus>(cards, None)
+            .expect("Deck could not be created");
+        deck.shuffle::<Xoshiro256PlusPlus>(None)
+            .expect("Shuffle failed");
 
         let suits_to_remove = HashSet::from([Suit::Spade, Suit::Diamond]);
         let actual_cards_removed = deck.strip_suits(&suits_to_remove);
@@ -510,7 +508,7 @@ mod tests {
             .map(|_| {
                 let mut deck: CardDeck = Default::default();
 
-                deck.shuffle(None)
+                deck.shuffle::<Xoshiro256PlusPlus>(None)
                     .expect("Problem occured when shuffling the deck");
 
                 if are_2kings_adjacent(&mut deck) {
