@@ -28,6 +28,7 @@ use super::{Card, Suit, Value};
 ///
 /// println!("{:?}", hand.unwrap()); // Two random cards from the deck
 /// ```
+#[derive(Debug, Clone)]
 pub struct CardDeck {
     deck: Vec<Card>,
     seed: Option<[u8; 32]>,

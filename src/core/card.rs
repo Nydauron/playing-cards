@@ -221,8 +221,13 @@ impl From<Suit> for char {
 
 impl std::fmt::Display for Suit {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let c: char = self.get_char();
-        write!(f, "{}", c)
+        let symbol = match *self {
+            Suit::Heart => '♥',
+            Suit::Club => '♣',
+            Suit::Diamond => '♦',
+            Suit::Spade => '♠',
+        };
+        write!(f, "{}", symbol)
     }
 }
 
@@ -339,7 +344,7 @@ impl From<Card> for i32 {
 
 impl std::fmt::Display for Card {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{} of {}", self.value, self.suit)
+        write!(f, "{}{}", self.value, self.suit)
     }
 }
 
