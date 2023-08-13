@@ -170,6 +170,10 @@ impl CardDeck {
     }
 
     /// Gets the Xoshiro256PlusPlus seed of the CardDeck
+    #[deprecated(
+        since = "0.1.2",
+        note = "`rand_core::SeedableRng` does not support the `Clone` trait, so `CardDeck` has no feasible way of storing the seed after moving it into the PRNG for shuffling. It is reccommended that the user stores the intial seed if the seed had value after PRNG seeding."
+    )]
     pub fn get_seed(&self) -> Option<[u8; 32]> {
         self.seed
     }
