@@ -299,23 +299,32 @@ impl From<i32> for Card {
 }
 
 impl TryFrom<String> for Card {
-    type Error = &'static str;
+    type Error = String;
     fn try_from(s: String) -> Result<Self, Self::Error> {
         if s.len() != 2 {
-            return Err("Card string is not exactly a length of 2");
+            return Err(format!(
+                r#"Card string "{}" is not exactly a length of 2"#,
+                s
+            ));
         }
 
         let mut chars = s.chars();
 
         let value = Value::try_from(chars.next().unwrap());
         if value.is_err() {
-            return Err("Card value was not a valid character");
+            return Err(format!(
+                r#"Card value "{}" was not a valid character"#,
+                value.unwrap_err()
+            ));
         }
         let value = value.unwrap();
 
         let suit = Suit::try_from(chars.next().unwrap());
         if suit.is_err() {
-            return Err("Card suit was not a valid character");
+            return Err(format!(
+                r#"Card suit "{}" was not a valid character"#,
+                suit.unwrap_err()
+            ));
         }
         let suit = suit.unwrap();
 
@@ -330,7 +339,7 @@ impl From<Card> for String {
 }
 
 impl FromStr for Card {
-    type Err = &'static str;
+    type Err = String;
     fn from_str(s: &'_ str) -> Result<Self, Self::Err> {
         Self::try_from(s.to_string())
     }
@@ -396,5 +405,23 @@ mod tests {
             let card = Card::from_str(card_str).unwrap();
             assert_eq!(card.to_int(), 49);
         }
+    }
+
+    #[test]
+    fn conversion_error() {
+        assert_eq!(
+            Card::from_str("xh").unwrap_err(),
+            r#"Card value "x" was not a valid character"#
+        );
+
+        assert_eq!(
+            Card::from_str("Ky").unwrap_err(),
+            r#"Card suit "y" was not a valid character"#,
+        );
+
+        assert_eq!(
+            Card::from_str("abc").unwrap_err(),
+            r#"Card string "abc" is not exactly a length of 2"#,
+        );
     }
 }
