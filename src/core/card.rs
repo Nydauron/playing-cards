@@ -131,7 +131,7 @@ impl TryFrom<i32> for Value {
 impl TryFrom<char> for Value {
     type Error = char;
     fn try_from(s: char) -> Result<Self, Self::Error> {
-        match Value::from_char(s) {
+        match Value::from_char(s.to_ascii_uppercase()) {
             Some(val) => Ok(val),
             None => Err(s),
         }
@@ -183,7 +183,7 @@ impl Suit {
     /// The function will return back None if the input character is not any of the mapped
     /// characters.
     pub fn from_char(c: char) -> Option<Suit> {
-        match c {
+        match c.to_ascii_lowercase() {
             'h' => Some(Self::Heart),
             'c' => Some(Self::Club),
             'd' => Some(Self::Diamond),
@@ -388,5 +388,13 @@ mod tests {
         let val = 53;
 
         let _ = Card::from(val);
+    }
+
+    #[test]
+    fn conversion() {
+        for card_str in ["AH", "ah"] {
+            let card = Card::from_str(card_str).unwrap();
+            assert_eq!(card.to_int(), 49);
+        }
     }
 }
