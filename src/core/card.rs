@@ -51,12 +51,11 @@ impl Value {
         }
     }
 
-    /// Attempts to parse a character and returns the associated Value
+    /// Parses a character, returning the corresponding Value if valid.
     ///
-    /// The function will return back None if the input character is not any of the mapped
-    /// characters.
+    /// Returns `None` for characters not representing a Value. This function is case-insensitive.
     pub fn from_char(c: char) -> Option<Value> {
-        match c {
+        match c.to_ascii_uppercase() {
             '2' => Some(Self::Two),
             '3' => Some(Self::Three),
             '4' => Some(Self::Four),
@@ -178,12 +177,11 @@ impl Suit {
         }
     }
 
-    /// Attempts to parse a character and returns the associated Suit.
+    /// Parses a character, returning the corresponding Suit if valid.
     ///
-    /// The function will return back None if the input character is not any of the mapped
-    /// characters.
+    /// Returns `None` for characters not representing a Suit. The input is case-insensitive.
     pub fn from_char(c: char) -> Option<Suit> {
-        match c {
+        match c.to_ascii_lowercase() {
             'h' => Some(Self::Heart),
             'c' => Some(Self::Club),
             'd' => Some(Self::Diamond),
@@ -299,23 +297,32 @@ impl From<i32> for Card {
 }
 
 impl TryFrom<String> for Card {
-    type Error = &'static str;
+    type Error = String;
     fn try_from(s: String) -> Result<Self, Self::Error> {
         if s.len() != 2 {
-            return Err("Card string is not exactly a length of 2");
+            return Err(format!(
+                r#"Card string "{}" is not exactly a length of 2"#,
+                s
+            ));
         }
 
         let mut chars = s.chars();
 
         let value = Value::try_from(chars.next().unwrap());
         if value.is_err() {
-            return Err("Card value was not a valid character");
+            return Err(format!(
+                r#"Card value "{}" was not a valid character"#,
+                value.unwrap_err()
+            ));
         }
         let value = value.unwrap();
 
         let suit = Suit::try_from(chars.next().unwrap());
         if suit.is_err() {
-            return Err("Card suit was not a valid character");
+            return Err(format!(
+                r#"Card suit "{}" was not a valid character"#,
+                suit.unwrap_err()
+            ));
         }
         let suit = suit.unwrap();
 
@@ -330,7 +337,7 @@ impl From<Card> for String {
 }
 
 impl FromStr for Card {
-    type Err = &'static str;
+    type Err = String;
     fn from_str(s: &'_ str) -> Result<Self, Self::Err> {
         Self::try_from(s.to_string())
     }
@@ -388,5 +395,31 @@ mod tests {
         let val = 53;
 
         let _ = Card::from(val);
+    }
+
+    #[test]
+    fn conversion() {
+        for card_str in ["AH", "ah"] {
+            let card = Card::from_str(card_str).unwrap();
+            assert_eq!(card.to_int(), 49);
+        }
+    }
+
+    #[test]
+    fn conversion_error() {
+        assert_eq!(
+            Card::from_str("xh").unwrap_err(),
+            r#"Card value "x" was not a valid character"#
+        );
+
+        assert_eq!(
+            Card::from_str("Ky").unwrap_err(),
+            r#"Card suit "y" was not a valid character"#,
+        );
+
+        assert_eq!(
+            Card::from_str("abc").unwrap_err(),
+            r#"Card string "abc" is not exactly a length of 2"#,
+        );
     }
 }
