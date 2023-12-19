@@ -51,12 +51,11 @@ impl Value {
         }
     }
 
-    /// Attempts to parse a character and returns the associated Value
+    /// Parses a character, returning the corresponding Value if valid.
     ///
-    /// The function will return back None if the input character is not any of the mapped
-    /// characters.
+    /// Returns `None` for characters not representing a Value. This function is case-insensitive.
     pub fn from_char(c: char) -> Option<Value> {
-        match c {
+        match c.to_ascii_uppercase() {
             '2' => Some(Self::Two),
             '3' => Some(Self::Three),
             '4' => Some(Self::Four),
@@ -131,7 +130,7 @@ impl TryFrom<i32> for Value {
 impl TryFrom<char> for Value {
     type Error = char;
     fn try_from(s: char) -> Result<Self, Self::Error> {
-        match Value::from_char(s.to_ascii_uppercase()) {
+        match Value::from_char(s) {
             Some(val) => Ok(val),
             None => Err(s),
         }
