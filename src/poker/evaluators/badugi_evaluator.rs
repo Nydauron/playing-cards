@@ -125,21 +125,12 @@ pub fn evaluate_hand(player_hand: &Vec<Card>) -> Result<BadugiRank, EvaluatorErr
 
             BadugiRank(rank)
         })
-        .fold(
+        .reduce(|acc, rank| if rank > acc { rank } else { acc })
+        .map_or(
             Err(EvaluatorError::FailedToCalculateRank(
                 "Badugi rank failed to generate".to_string(),
             )),
-            |acc, rank| {
-                if let Ok(acc) = acc {
-                    if rank > acc {
-                        Ok(rank)
-                    } else {
-                        Ok(acc)
-                    }
-                } else {
-                    Ok(rank)
-                }
-            },
+            Ok,
         )
 }
 
