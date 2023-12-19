@@ -266,7 +266,7 @@ impl CardDeck {
     pub fn check_deal_cards(&self, cards_to_deal: usize, include_muck: bool) -> bool {
         let mut total_cards = self.deck.len();
         if include_muck {
-            total_cards = self.muck.len();
+            total_cards += self.muck.len();
         }
         total_cards >= cards_to_deal
     }
@@ -492,6 +492,46 @@ mod tests {
 
         for c in deck {
             assert!(!suits_to_remove.contains(&c.suit), "{:?} was not removed from deck. The following suits were to have been removed: {:?}", c, suits_to_remove);
+        }
+    }
+
+    #[test]
+    fn test_calculate_cards_left_without_muck() {
+        let mut deck = CardDeck::new(None).expect("Deck could not be created");
+
+        deck.shuffle(None).expect("Deck could not be shuffled");
+
+        let enough_cards = [true, true, true, true, true, false];
+        const CARDS_TO_DEAL: usize = 10;
+        const INCLUDE_MUCK: bool = false;
+        for expect_enough_cards in enough_cards {
+            assert!(deck.check_deal_cards(CARDS_TO_DEAL, INCLUDE_MUCK) == expect_enough_cards);
+            if expect_enough_cards {
+                let drawn_cards = deck
+                    .deal_cards(CARDS_TO_DEAL, INCLUDE_MUCK)
+                    .expect("Cards could not be drawn");
+                deck.muck_cards(drawn_cards);
+            }
+        }
+    }
+
+    #[test]
+    fn test_calculate_cards_left_with_muck() {
+        let mut deck = CardDeck::new(None).expect("Deck could not be created");
+
+        deck.shuffle(None).expect("Deck could not be shuffled");
+
+        let enough_cards = [true, true, true, true, true, true];
+        const CARDS_TO_DEAL: usize = 10;
+        const INCLUDE_MUCK: bool = true;
+        for expect_enough_cards in enough_cards {
+            assert!(deck.check_deal_cards(CARDS_TO_DEAL, INCLUDE_MUCK) == expect_enough_cards);
+            if expect_enough_cards {
+                let drawn_cards = deck
+                    .deal_cards(CARDS_TO_DEAL, INCLUDE_MUCK)
+                    .expect("Cards could not be drawn");
+                deck.muck_cards(drawn_cards);
+            }
         }
     }
 
