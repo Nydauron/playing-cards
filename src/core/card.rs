@@ -332,7 +332,7 @@ impl TryFrom<String> for Card {
 
 impl From<Card> for String {
     fn from(c: Card) -> Self {
-        format!("{}{}", c.value.get_char(), c.suit.get_char())
+        c.to_string()
     }
 }
 
