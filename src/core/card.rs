@@ -179,7 +179,8 @@ impl Suit {
 
     /// Parses a character, returning the corresponding Suit if valid.
     ///
-    /// Returns `None` for characters not representing a Suit. The input is case-insensitive.
+    /// The input is either a case-insensitive letter, or the UTF-8 character representing the suit.
+    /// Returns `None` for characters not representing a Suit.
     pub fn from_char(c: char) -> Option<Suit> {
         match c.to_ascii_lowercase() {
             'h' | '♥' => Some(Self::Heart),
