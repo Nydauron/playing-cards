@@ -308,8 +308,6 @@ impl CardDeck {
     ///         panic!("Ran out of cards!");
     ///     }
     /// }
-    ///
-    /// unreachable!();
     /// ```
     pub fn deal_cards(&mut self, cards_to_deal: usize, include_muck: bool) -> Option<Vec<Card>> {
         if !self.check_deal_cards(cards_to_deal, include_muck) {
