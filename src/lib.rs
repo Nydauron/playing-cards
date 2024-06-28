@@ -41,6 +41,11 @@
 //!   - Omaha Hi-Lo
 //!   - Dramaha High
 //!   - Badugi
+//!
+//! ## Features
+//! * `core`: A default feature that includes the core module
+//! * `poker`: The poker module
+//! * `serde`: Adds serde-related traits to structs
 
 #![cfg_attr(feature = "unstable", feature(test))]
 

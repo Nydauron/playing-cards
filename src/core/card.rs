@@ -2,15 +2,20 @@ use num_traits::FromPrimitive;
 use std::str::FromStr;
 use strum_macros::EnumIter;
 
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 /// An enum representation of the rank of a card
 ///
 /// Each value corresponds to the rank strength.
+///
+/// With the `serde` feature enabled, this struct also implements serde's `Serialize` and
+/// `Deserialize` traits.
 #[allow(missing_docs)]
 #[derive(
     Debug, Clone, Copy, FromPrimitive, ToPrimitive, EnumIter, Eq, PartialEq, Ord, PartialOrd, Hash,
 )]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Value {
     Two = 0,
     Three = 1,
@@ -153,8 +158,12 @@ impl std::fmt::Display for Value {
 /// An enum representation of the suit of a card
 ///
 /// Numerical value is just for distinction and each suit has equal strength.
+///
+/// With the `serde` feature enabled, this struct also implements serde's `Serialize` and
+/// `Deserialize` traits.
 #[allow(missing_docs)]
 #[derive(Debug, Clone, Copy, FromPrimitive, ToPrimitive, EnumIter, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Suit {
     Heart = 0,
     Club = 1,
@@ -230,9 +239,13 @@ impl std::fmt::Display for Suit {
 }
 
 /// A structural representation of a playing card
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, Eq, PartialEq, Hash)]
-#[serde(try_from = "String")]
-#[serde(into = "String")]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(try_from = "String"),
+    serde(into = "String")
+)]
 pub struct Card {
     /// The Value of the Card
     pub value: Value,

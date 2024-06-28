@@ -2,6 +2,9 @@ use getrandom;
 use std::collections::HashSet;
 use thiserror::Error;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 extern crate rand;
 
 use rand::seq::SliceRandom;
@@ -42,6 +45,7 @@ pub enum CardDeckError {
 /// println!("{:?}", hand.unwrap()); // Two random cards from the deck
 /// ```
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct CardDeck {
     deck: Vec<Card>,
     seed: Option<[u8; 32]>,

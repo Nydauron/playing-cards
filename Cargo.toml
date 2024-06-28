@@ -22,7 +22,7 @@ phf = { version = "0.11.2", features = ["macros"], optional = true }
 rand = "0.8.5"
 rand_core = "0.6.3"
 rand_xoshiro = "0.6.0"
-serde = { version = "1.0.139", features = ["derive"] }
+serde = { version = "1.0.139", features = ["derive"], optional = true }
 strum = "0.24.1"
 strum_macros = "0.24.0"
 thiserror = "1.0.44"
@@ -37,3 +37,4 @@ all-features = true
 default = ["poker"]
 unstable = []
 poker = ["dep:phf", "dep:itertools"]
+serde = ["dep:serde"]
