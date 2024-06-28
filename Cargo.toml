@@ -9,6 +9,7 @@ repository = "https://github.com/Nydauron/playing-cards"
 readme = "README.md"
 keywords = ["cards", "poker", "hand-evaluation"]
 categories = ["games", "simulation"]
+rust-version = "1.62"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

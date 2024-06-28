@@ -9,6 +9,9 @@ This library is still in early development. While I will try to mitgate such a c
 features may be subject to breaking changes across minor version changes. Be sure to check the docs
 for updates on any changes and deprecations.
 
+## MSRV (Minimum Supported Rust Version)
+Requires rustc 1.62+
+
 ## Features
 
 ### Core

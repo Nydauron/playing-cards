@@ -9,6 +9,9 @@
 //! This library is still in early development. A lot of features may be subject to breaking
 //! changes across minor version changes. Be sure to check the docs for updates on any changes.
 //!
+//! ## MSRV (Minimum Supported Rust Version)
+//! Requires rustc 1.62+
+//!
 //! ## Breaking Changes in v0.1.0
 //! - Rank types are now primarily used for storing hand rankings instead of `u64`s.
 //! - The `Evaluator` trait has been removed.
