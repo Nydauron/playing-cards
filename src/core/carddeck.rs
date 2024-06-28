@@ -202,11 +202,11 @@ impl CardDeck {
     /// Returns back a list of cards that were removed from the deck. Duplicates can be present in
     /// the returned vector if duplicates existed in the deck.
     pub fn strip_cards(&mut self, cards_to_remove: &HashSet<Card>) -> Vec<Card> {
-        let removed_cards: Vec<Card> = self
+        let removed_cards = self
             .deck
-            .clone()
-            .into_iter()
+            .iter()
             .filter(|card| cards_to_remove.contains(card))
+            .cloned()
             .collect();
 
         self.deck.retain(|card| !cards_to_remove.contains(card));
@@ -218,11 +218,11 @@ impl CardDeck {
     /// Returns back a list of cards that were removed from the deck. Duplicates can be present in
     /// the returned vector if duplicates existed in the deck.
     pub fn strip_ranks(&mut self, ranks_to_remove: &HashSet<Value>) -> Vec<Card> {
-        let removed_cards: Vec<Card> = self
+        let removed_cards = self
             .deck
-            .clone()
-            .into_iter()
+            .iter()
             .filter(|card| ranks_to_remove.contains(&card.value))
+            .cloned()
             .collect();
 
         self.deck
@@ -236,11 +236,11 @@ impl CardDeck {
     /// Returns back a list of cards that were removed from the deck. Duplicates can be present in
     /// the returned vector if duplicates existed in the deck.
     pub fn strip_suits(&mut self, suits_to_remove: &HashSet<Suit>) -> Vec<Card> {
-        let removed_cards: Vec<Card> = self
+        let removed_cards = self
             .deck
-            .clone()
-            .into_iter()
+            .iter()
             .filter(|card| suits_to_remove.contains(&card.suit))
+            .cloned()
             .collect();
 
         self.deck
@@ -339,7 +339,7 @@ impl CardDeck {
         if !self.check_deal_cards(
             cards_to_deal
                 - discard_cards
-                    .clone()
+                    .as_ref()
                     .map_or(0, |v| if include_muck { v.len() } else { 0 }),
             include_muck,
         ) {
