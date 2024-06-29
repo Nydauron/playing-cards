@@ -533,7 +533,7 @@ mod tests {
 
     fn are_2kings_adjacent(deck: &mut CardDeck) -> bool {
         let mut was_previous_king = false;
-        while let Some(c) = deck.next() {
+        for c in deck.by_ref() {
             if c.value == Value::King {
                 if was_previous_king {
                     return true;

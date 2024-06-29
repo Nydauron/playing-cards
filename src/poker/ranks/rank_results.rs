@@ -185,8 +185,8 @@ mod tests {
     impl IntoRankStrengthIterator for DoubleBoardRank {
         fn into_strength_iter(self) -> RankStrengthIterator {
             RankStrengthIterator::from(vec![
-                (*self.top_board_rank).strength,
-                (*self.bottom_board_rank).strength,
+                self.top_board_rank.strength,
+                self.bottom_board_rank.strength,
             ])
         }
     }

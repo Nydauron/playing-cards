@@ -62,8 +62,8 @@ mod tests {
         let player_ranks = evaluate_hand(&player_hand, &board).expect("Evaluation failed");
 
         let string_ranks = vec![
-            (*player_ranks.omaha_rank).description.as_ref().unwrap(),
-            (*player_ranks.draw_rank).description.as_ref().unwrap(),
+            player_ranks.omaha_rank.description.as_ref().unwrap(),
+            player_ranks.draw_rank.description.as_ref().unwrap(),
         ];
         assert_eq!(
             vec!["Kings Full of Queens", "Two Pair of Aces and Queens"],
@@ -79,8 +79,8 @@ mod tests {
         let player_ranks = evaluate_hand(&player_hand, &board).expect("Evaluation failed");
 
         let string_ranks = vec![
-            (*player_ranks.omaha_rank).description.as_ref().unwrap(),
-            (*player_ranks.draw_rank).description.as_ref().unwrap(),
+            player_ranks.omaha_rank.description.as_ref().unwrap(),
+            player_ranks.draw_rank.description.as_ref().unwrap(),
         ];
         assert_eq!(vec!["Two Pair of Queens and 3s", "Ace High"], string_ranks);
     }

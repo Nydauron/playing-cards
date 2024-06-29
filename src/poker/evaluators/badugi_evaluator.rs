@@ -192,7 +192,7 @@ mod tests {
         // +  0 for Σ nCr(n - 1, 1) for all n ∈ [6, 6) but |n| = 0
         // +  2 for Σ nCr(n - 1, 0) for all n ∈ [3, 5)
         let expected_rank = BadugiRank(BasicRank {
-            strength: 1 + 91 + 200 + 0 + 2,
+            strength: 1 + 91 + 200 + 2,
             hand_rank: 3,
             sub_rank: 203,
             description: Some("7-high 3-card hand".to_string()),
@@ -212,7 +212,7 @@ mod tests {
         // +  2 for Σ nCr(n - 1, 1) for all n ∈ [3, 4)
         // +  1 for Σ nCr(n - 1, 0) for all n ∈ [1, 2)
         let expected_rank = BadugiRank(BasicRank {
-            strength: 1 + 377 + 0 + 161 + 2 + 1,
+            strength: 1 + 377 + 161 + 2 + 1,
             hand_rank: 4,
             sub_rank: 165,
             description: Some("King-high Badugi".to_string()),
@@ -232,7 +232,7 @@ mod tests {
         // +  3 for Σ nCr(n - 1, 1) for all n ∈ [2, 4)
         // +  0 for Σ nCr(n - 1, 0) for all n ∈ [1, 1) but |n| = 0
         let expected_rank = BadugiRank(BasicRank {
-            strength: 1 + 377 + 490 + 0 + 3 + 0,
+            strength: 1 + 377 + 490 + 3,
             hand_rank: 4,
             sub_rank: 494,
             description: Some("6-high Badugi".to_string()),
@@ -252,7 +252,7 @@ mod tests {
         // +  0 for Σ nCr(n - 1, 1) for all n ∈ [2, 2) but |n| = 0
         // +  0 for Σ nCr(n - 1, 0) for all n ∈ [1, 1) but |n| = 0
         let expected_rank = BadugiRank(BasicRank {
-            strength: 1 + 377 + 495 + 0 + 0 + 0,
+            strength: 1 + 377 + 495,
             hand_rank: 4,
             sub_rank: 496,
             description: Some("4-high Badugi".to_string()),
@@ -272,7 +272,7 @@ mod tests {
         // +  0 for Σ nCr(n - 1, 1) for all n ∈ [2, 2) but |n| = 0
         // +  0 for Σ nCr(n - 1, 0) for all n ∈ [1, 1) but |n| = 0
         let expected_rank = BadugiRank(BasicRank {
-            strength: 1 + 377 + 495 + 0 + 0 + 0,
+            strength: 1 + 377 + 495,
             hand_rank: 4,
             sub_rank: 496,
             description: Some("4-high Badugi".to_string()),
@@ -290,7 +290,7 @@ mod tests {
         // + 60 for Σ nCr(n - 1, 1) for all n ∈ [5, 13)
         // +  0 for Σ nCr(n - 1, 0) for all n ∈ [4, 4) but |n| = 0
         let expected_rank = BadugiRank(BasicRank {
-            strength: 1 + 13 + 60 + 0,
+            strength: 1 + 13 + 60,
             hand_rank: 2,
             sub_rank: 61,
             description: Some("5-high 2-card hand".to_string()),
