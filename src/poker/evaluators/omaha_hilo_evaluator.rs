@@ -13,7 +13,7 @@ use crate::{
 /// Evaluates the Omaha hi/lo hand for one player
 ///
 /// Returns a `OmahaHiLoRank`. If the player's hand contains less than 4 cards or the board contains
-/// less than 3 cards, then an error will return.
+/// less than 3 cards, then a `NotEnoughCards` error will return.
 ///
 /// This implementation does not support the use of duplicate cards. If duplicate cards are found
 /// when both the player's cards and the board are chained, a `FailedToCalculateRank` error will
@@ -22,20 +22,22 @@ pub fn evaluate_hand(
     player_hand: &Vec<Card>,
     board: &Vec<Card>,
 ) -> Result<OmahaHiLoRank, EvaluatorError> {
-    if player_hand.len() < 4 {
+    const MINIMUM_PLAYER_CARDS: usize = 4;
+    const MINIMUM_BOARD_CARDS: usize = 3;
+    if player_hand.len() < MINIMUM_PLAYER_CARDS {
         return Err(EvaluatorError::NotEnoughCards {
             card_set_type: "Player hand".to_string(),
-            expected_count: 4,
+            expected_count: MINIMUM_PLAYER_CARDS as u64,
             actual_count: player_hand.len() as u64,
         });
         // Player hand does not have at least 4 cards
     }
 
-    if board.len() < 3 {
+    if board.len() < MINIMUM_BOARD_CARDS {
         // 3 because it allows for evaluation on flop-only flop-turn-only boards
         return Err(EvaluatorError::NotEnoughCards {
             card_set_type: "Board".to_string(),
-            expected_count: 3,
+            expected_count: MINIMUM_BOARD_CARDS as u64,
             actual_count: board.len() as u64,
         });
         // Board does not have at least 3 cards

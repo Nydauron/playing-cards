@@ -9,7 +9,8 @@ use crate::poker::ranks::DramahaHighRank;
 ///
 /// Returns a `DramahaHighRank` where the first element is the rank for the Omaha hand and the
 /// second element is for the draw hand. If the player's hand does not contain exactly 5 cards or
-/// the board contains less than 3 cards, then an error will return.
+/// the board contains less than 3 cards, then either a `NotEnoughCards` or a `TooManyCards` will
+/// return respective to whether not enough or too many cards were given.
 ///
 /// This implementation does not support the use of duplicate cards. If duplicate cards are found
 /// when both the player's cards and the board are chained, a `FailedToCalculateRank` error will
@@ -18,23 +19,24 @@ pub fn evaluate_hand(
     player_hand: &Vec<Card>,
     board: &Vec<Card>,
 ) -> Result<DramahaHighRank, EvaluatorError> {
-    let expected_card_count = 5;
-    match player_hand.len().cmp(&expected_card_count) {
+    const EXPECTED_PLAYER_CARD_COUNT: usize = 5;
+    const MINIMUM_BOARD_CARDS: usize = 3;
+    match player_hand.len().cmp(&EXPECTED_PLAYER_CARD_COUNT) {
         Ordering::Less => Err(EvaluatorError::NotEnoughCards {
             card_set_type: "Player hand".to_string(),
-            expected_count: expected_card_count as u64,
+            expected_count: EXPECTED_PLAYER_CARD_COUNT as u64,
             actual_count: player_hand.len() as u64,
         }),
         Ordering::Greater => Err(EvaluatorError::TooManyCards {
             card_set_type: "Player hand".to_string(),
-            expected_count: expected_card_count as u64,
+            expected_count: EXPECTED_PLAYER_CARD_COUNT as u64,
             actual_count: player_hand.len() as u64,
         }),
         Ordering::Equal => {
-            if board.len() < 3 {
+            if board.len() < MINIMUM_BOARD_CARDS {
                 return Err(EvaluatorError::NotEnoughCards {
                     card_set_type: "Board".to_string(),
-                    expected_count: 3,
+                    expected_count: MINIMUM_BOARD_CARDS as u64,
                     actual_count: board.len() as u64,
                 });
             }

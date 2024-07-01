@@ -10,23 +10,26 @@ use std::ops::{Add, AddAssign, BitAnd, BitXor, BitXorAssign, Shl, Shr};
 
 /// Evaluates the high hand for one player
 ///
-/// Returns a `HighRank`. If the total card count is not with the domain [5, 7], then an error will
-/// return.
+/// Returns a `HighRank`. If the total card count is not with the domain [5, 7], then either a
+/// `NotEnoughCards` or a `TooManyCards` will return respective to whether not enough or too many
+/// cards were given.
 ///
 /// This implementation does not support the use of duplicate cards. If duplicate cards are found,
 /// a `FailedToCalculateRank` error will return.
 pub fn evaluate_hand(cards: &Vec<Card>) -> Result<HighRank, EvaluatorError> {
+    const MINIMUM_CARD_COUNT: usize = 5;
+    const MAXIMUM_CARD_COUNT: usize = 7;
     let card_count = cards.len();
-    if card_count < 5 {
+    if card_count < MINIMUM_CARD_COUNT {
         return Err(EvaluatorError::NotEnoughCards {
             card_set_type: "Set of cards".to_string(),
-            expected_count: 5,
+            expected_count: MINIMUM_CARD_COUNT as u64,
             actual_count: card_count as u64,
         });
-    } else if card_count > 7 {
+    } else if card_count > MAXIMUM_CARD_COUNT {
         return Err(EvaluatorError::TooManyCards {
             card_set_type: "Set of cards".to_string(),
-            expected_count: 7,
+            expected_count: MAXIMUM_CARD_COUNT as u64,
             actual_count: card_count as u64,
         });
     }

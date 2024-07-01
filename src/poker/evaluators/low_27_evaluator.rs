@@ -4,8 +4,9 @@ use crate::{core::Card, poker::ranks::Low27Rank};
 
 /// Evaluates the low hand for one player
 ///
-/// Returns a `Low27Rank`. If the total card count is not with the domain [5, 7], then an error
-/// will return.
+/// Returns a `Low27Rank`. If the total card count is not with the domain [5, 7], then either a
+/// `NotEnoughCards` or a `TooManyCards` will return respective to whether not enough or too many
+/// cards were given.
 ///
 /// This implementation does not support the use of duplicate cards. If duplicate cards are found,
 /// a `FailedToCalculateRank` error will return.
