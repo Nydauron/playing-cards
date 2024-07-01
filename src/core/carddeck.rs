@@ -317,12 +317,7 @@ impl CardDeck {
         if !self.check_deal_cards(cards_to_deal, include_muck) {
             return None;
         }
-        let mut cards_dealt: Vec<Card> = Vec::new();
-        for _ in 0..cards_to_deal {
-            if let Some(s) = self.next() {
-                cards_dealt.push(s);
-            }
-        }
+        let cards_dealt: Vec<Card> = (0..cards_to_deal).filter_map(|_| self.next()).collect();
 
         Some(cards_dealt)
     }
@@ -384,7 +379,6 @@ mod tests {
     use super::super::Value;
     use super::*;
     use rayon::prelude::*;
-    use std::iter::Iterator;
 
     #[test]
     fn test_deck_same_seed() {
