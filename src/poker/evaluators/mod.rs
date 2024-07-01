@@ -2,6 +2,17 @@
 //!
 //! Please note that all evaluators will error if the appropriate number of cards are given or if
 //! any duplicate cards are detected.
+//!
+//! <div class="warning">
+//! Signatures in all the of the evaluator functions in this module have changed!
+//!
+//! In older versions, the list of cards input was strictly a <code>&amp;Vec&lt;Card&gt;</code>.
+//! This has been loosened to <code>&amp;[Card]</code> to allow for other list types besides
+//! <code>&amp;Vec</code>. While this change may not break existing code, it can cause certain code
+//! snippets to fail to compile due to insufficent information on size or type inferencing, hence
+//! why this is a breaking change. If you used the argument type for inferencing the caller
+//! argument types, then they need to be refactored. Please see the below examples:
+//! </div>
 
 mod evaluator_errors;
 pub use self::evaluator_errors::EvaluatorError;
@@ -10,7 +21,7 @@ pub use self::evaluator_errors::EvaluatorError;
 ///
 /// This evaluator is typically used for games like Texas Hold'em, Five Card Draw, and Stud.
 ///
-/// ## Examples
+/// ## Normal examples
 /// ```rust
 /// use playing_cards::{core::Card, poker::evaluators::high_evaluator};
 ///
@@ -57,13 +68,76 @@ pub use self::evaluator_errors::EvaluatorError;
 ///
 /// assert!(hero_rank < villan_rank); // Villan's hand is better than the hero's
 /// ```
+///
+/// ## Breaking v1.0 changes
+/// <div class="warning">
+/// In older versions, the list of cards input was strictly a <code>&amp;Vec&lt;Card&gt;</code>.
+/// This has been loosened to <code>&amp;[Card]</code> to allow for other list types besides
+/// <code>&amp;Vec</code>. While this change may not break existing code, it can cause certain code
+/// snippets to fail to compile due to insufficent information on size or type inferencing, hence
+/// why this is a breaking change. If you used the argument type for inferencing the caller
+/// argument types, then they need to be refactored. Please see the below examples:
+/// </div>
+///
+/// ```compile_fail
+/// use playing_cards::{core::Card, poker::evaluators::high_evaluator::evaluate_hand};
+///
+/// let player_hand = Vec::from([Card::from(1), Card::from(2)]);
+/// let board = Vec::from([Card::from(7), Card::from(5), Card::from(6), Card::from(52)]);
+///
+/// evaluate_hand(
+///     &player_hand
+///         .iter()
+///         .chain(board.iter())
+///         .cloned()
+///         .collect() // In prior versions, `collect()` would be able to inference the type that
+///                    // the iterator should collect into into a `Vec<Card>` without any
+///                    // additional type hints. Since `[Card]` does not implement the `Sized`
+///                    // trait, the iterator cannot collect the cards into a slice.
+/// );
+/// ```
+///
+/// ```
+/// use playing_cards::{core::Card, poker::evaluators::high_evaluator::evaluate_hand};
+///
+/// let player_hand = Vec::from([Card::from(1), Card::from(2)]);
+/// let board = Vec::from([Card::from(7), Card::from(5), Card::from(6), Card::from(52)]);
+///
+/// evaluate_hand(
+///     &player_hand
+///         .iter()
+///         .chain(board.iter())
+///         .cloned()
+///         .collect::<Vec<Card>>() // A simple fix would be to add type hints to `collect()` as
+///                                 // such.
+/// );
+/// ```
+///
+/// ```
+/// use playing_cards::{core::Card, poker::evaluators::high_evaluator::evaluate_hand};
+///
+/// let five_card_hand = Vec::from(
+///     [
+///         Card::from(1),
+///         Card::from(2),
+///         Card::from(12),
+///         Card::from(20),
+///         Card::from(43),
+///     ]
+/// );
+///
+/// evaluate_hand(
+///     &five_card_hand // Passing a previously defined vector works exactly as before since
+///                     // `Vec<T>` implements the `AsRef<[T]>` trait.
+/// );
+/// ```
 pub mod high_evaluator;
 
 /// An evaluator for 2-7 lowball hands
 ///
 /// This evaluator is typically used for games like 2-7 Lowball Draw.
 ///
-/// ## Examples
+/// ## Normal examples
 /// ```rust
 /// use playing_cards::{core::Card, poker::evaluators::low_27_evaluator};
 ///
@@ -98,6 +172,69 @@ pub mod high_evaluator;
 ///
 /// assert!(hero_rank > villan_rank); // Hero's hand is better than the villan's
 /// ```
+///
+/// ## Breaking v1.0 changes
+/// <div class="warning">
+/// In older versions, the list of cards input was strictly a <code>&amp;Vec&lt;Card&gt;</code>.
+/// This has been loosened to <code>&amp;[Card]</code> to allow for other list types besides
+/// <code>&amp;Vec</code>. While this change may not break existing code, it can cause certain code
+/// snippets to fail to compile due to insufficent information on size or type inferencing, hence
+/// why this is a breaking change. If you used the argument type for inferencing the caller
+/// argument types, then they need to be refactored. Please see the below examples:
+/// </div>
+///
+/// ```compile_fail
+/// use playing_cards::{core::Card, poker::evaluators::low_27_evaluator::evaluate_hand};
+///
+/// let player_hand = Vec::from([Card::from(1), Card::from(2)]);
+/// let board = Vec::from([Card::from(7), Card::from(5), Card::from(6), Card::from(52)]);
+///
+/// evaluate_hand(
+///     &player_hand
+///         .iter()
+///         .chain(board.iter())
+///         .cloned()
+///         .collect() // In prior versions, `collect()` would be able to inference the type that
+///                    // the iterator should collect into into a `Vec<Card>` without any
+///                    // additional type hints. Since `[Card]` does not implement the `Sized`
+///                    // trait, the iterator cannot collect the cards into a slice.
+/// );
+/// ```
+///
+/// ```
+/// use playing_cards::{core::Card, poker::evaluators::low_27_evaluator::evaluate_hand};
+///
+/// let player_hand = Vec::from([Card::from(1), Card::from(2)]);
+/// let board = Vec::from([Card::from(7), Card::from(5), Card::from(6), Card::from(52)]);
+///
+/// evaluate_hand(
+///     &player_hand
+///         .iter()
+///         .chain(board.iter())
+///         .cloned()
+///         .collect::<Vec<Card>>() // A simple fix would be to add type hints to `collect()` as
+///                                 // such.
+/// );
+/// ```
+///
+/// ```
+/// use playing_cards::{core::Card, poker::evaluators::low_27_evaluator::evaluate_hand};
+///
+/// let five_card_hand = Vec::from(
+///     [
+///         Card::from(1),
+///         Card::from(2),
+///         Card::from(12),
+///         Card::from(20),
+///         Card::from(43),
+///     ]
+/// );
+///
+/// evaluate_hand(
+///     &five_card_hand // Passing a previously defined vector works exactly as before since
+///                     // `Vec<T>` implements the `AsRef<[T]>` trait.
+/// );
+/// ```
 pub mod low_27_evaluator;
 
 // pub mod low_a5_evaluator;
@@ -112,7 +249,7 @@ pub mod low_27_evaluator;
 /// Some games that can make use of this evaluator include but are not limited to Omaha, Omaha 8
 /// (Hi-Lo), Big O, and Dramaha.
 ///
-/// ## Examples
+/// ## Normal examples
 /// ```rust
 /// use playing_cards::{core::Card, poker::evaluators::omaha_hi_evaluator};
 ///
@@ -154,6 +291,60 @@ pub mod low_27_evaluator;
 ///
 /// assert!(hero_rank > villan_rank); // Hero's hand is better than the villan's
 /// ```
+///
+/// ## Breaking v1.0 changes
+/// <div class="warning">
+/// In older versions, the list of cards input was strictly a <code>&amp;Vec&lt;Card&gt;</code>.
+/// This has been loosened to <code>&amp;[Card]</code> to allow for other list types besides
+/// <code>&amp;Vec</code>. While this change may not break existing code, it can cause certain code
+/// snippets to fail to compile due to insufficent information on size or type inferencing, hence
+/// why this is a breaking change. If you used the argument type for inferencing the caller
+/// argument types, then they need to be refactored. Please see the below examples:
+/// </div>
+///
+/// ```compile_fail
+/// use playing_cards::{core::Card, poker::evaluators::omaha_hi_evaluator::evaluate_hand};
+///
+/// evaluate_hand(
+///     &([Card::from(1), Card::from(2), Card::from(3), Card::from(4)].into_iter().collect()),
+///     &([Card::from(7), Card::from(5), Card::from(6), Card::from(52)].into_iter().collect()),
+///     // In prior versions, `collect()` would be able to inference the type that
+///     // the iterator should collect into into a `Vec<Card>` without any
+///     // additional type hints. Since `[Card]` does not implement the `Sized`
+///     // trait, the iterator cannot collect the cards into a slice.
+/// );
+/// ```
+///
+/// ```
+/// use playing_cards::{core::Card, poker::evaluators::omaha_hi_evaluator::evaluate_hand};
+///
+/// evaluate_hand(
+///     &([Card::from(1), Card::from(2), Card::from(3), Card::from(4)].into_iter().collect::<Vec<Card>>()),
+///     &([Card::from(7), Card::from(5), Card::from(6), Card::from(52)].into_iter().collect::<Vec<Card>>()),
+///     // A simple fix would be to add type hints to `collect()` as such.
+/// );
+/// ```
+///
+/// ```
+/// use playing_cards::{core::Card, poker::evaluators::omaha_hi_evaluator::evaluate_hand};
+///
+/// let player_hand = Vec::from(
+///     [
+///         Card::from(1),
+///         Card::from(2),
+///         Card::from(12),
+///         Card::from(20),
+///     ]
+/// );
+/// let board = Vec::from([Card::from(24), Card::from(14), Card::from(47)]);
+///
+/// evaluate_hand(
+///     &player_hand,
+///     &board,
+///     // Passing a previously defined vector works exactly as before since `Vec<T>` implements
+///     // the `AsRef<[T]>` trait.
+/// );
+/// ```
 pub mod omaha_hi_evaluator;
 
 /// An evaluator for Omaha Hi-Lo hands
@@ -165,7 +356,7 @@ pub mod omaha_hi_evaluator;
 /// between A-8. Since the lo hand only applies under a condition, the return value of the evaluator
 /// contains Option types to signify the player does not have a lo hand.
 ///
-/// ## Examples
+/// ## Normal examples
 /// ```rust
 /// use playing_cards::{core::Card, poker::evaluators::omaha_hilo_evaluator};
 ///
@@ -213,6 +404,60 @@ pub mod omaha_hi_evaluator;
 /// assert!(hero_ranks.hi_rank > villan_ranks.hi_rank); // Hero's hi hand is better than the villan's
 /// assert!(hero_ranks.lo_rank.gt(&villan_ranks.lo_rank)); // Hero's lo hand is better than the villan's
 /// ```
+///
+/// ## Breaking v1.0 changes
+/// <div class="warning">
+/// In older versions, the list of cards input was strictly a <code>&amp;Vec&lt;Card&gt;</code>.
+/// This has been loosened to <code>&amp;[Card]</code> to allow for other list types besides
+/// <code>&amp;Vec</code>. While this change may not break existing code, it can cause certain code
+/// snippets to fail to compile due to insufficent information on size or type inferencing, hence
+/// why this is a breaking change. If you used the argument type for inferencing the caller
+/// argument types, then they need to be refactored. Please see the below examples:
+/// </div>
+///
+/// ```compile_fail
+/// use playing_cards::{core::Card, poker::evaluators::omaha_hilo_evaluator::evaluate_hand};
+///
+/// evaluate_hand(
+///     &([Card::from(1), Card::from(2), Card::from(3), Card::from(4)].into_iter().collect()),
+///     &([Card::from(7), Card::from(5), Card::from(6), Card::from(52)].into_iter().collect()),
+///     // In prior versions, `collect()` would be able to inference the type that
+///     // the iterator should collect into into a `Vec<Card>` without any
+///     // additional type hints. Since `[Card]` does not implement the `Sized`
+///     // trait, the iterator cannot collect the cards into a slice.
+/// );
+/// ```
+///
+/// ```
+/// use playing_cards::{core::Card, poker::evaluators::omaha_hilo_evaluator::evaluate_hand};
+///
+/// evaluate_hand(
+///     &([Card::from(1), Card::from(2), Card::from(3), Card::from(4)].into_iter().collect::<Vec<Card>>()),
+///     &([Card::from(7), Card::from(5), Card::from(6), Card::from(52)].into_iter().collect::<Vec<Card>>()),
+///     // A simple fix would be to add type hints to `collect()` as such.
+/// );
+/// ```
+///
+/// ```
+/// use playing_cards::{core::Card, poker::evaluators::omaha_hilo_evaluator::evaluate_hand};
+///
+/// let player_hand = Vec::from(
+///     [
+///         Card::from(1),
+///         Card::from(2),
+///         Card::from(12),
+///         Card::from(20),
+///     ]
+/// );
+/// let board = Vec::from([Card::from(24), Card::from(14), Card::from(47)]);
+///
+/// evaluate_hand(
+///     &player_hand,
+///     &board,
+///     // Passing a previously defined vector works exactly as before since `Vec<T>` implements
+///     // the `AsRef<[T]>` trait.
+/// );
+/// ```
 pub mod omaha_hilo_evaluator;
 
 /// An evaluator for Dramaha High hands
@@ -220,7 +465,7 @@ pub mod omaha_hilo_evaluator;
 /// Dramaha High is a combination of Five Card Draw and Big O (an Omaha variant). This evaluator
 /// makes use of both the HighEvaluator and OmahaHighEvaluator.
 ///
-/// ## Examples
+/// ## Normal examples
 /// ```rust
 /// use playing_cards::{core::Card, poker::evaluators::dramaha_high_evaluator};
 ///
@@ -267,6 +512,80 @@ pub mod omaha_hilo_evaluator;
 ///
 /// assert!(hero_rank.draw_rank > villan_rank.draw_rank); // Hero's hand is better than the villan's
 /// ```
+///
+/// ## Breaking v1.0 changes
+/// <div class="warning">
+/// In older versions, the list of cards input was strictly a <code>&amp;Vec&lt;Card&gt;</code>.
+/// This has been loosened to <code>&amp;[Card]</code> to allow for other list types besides
+/// <code>&amp;Vec</code>. While this change may not break existing code, it can cause certain code
+/// snippets to fail to compile due to insufficent information on size or type inferencing, hence
+/// why this is a breaking change. If you used the argument type for inferencing the caller
+/// argument types, then they need to be refactored. Please see the below examples:
+/// </div>
+///
+/// ```compile_fail
+/// use playing_cards::{core::Card, poker::evaluators::dramaha_high_evaluator::evaluate_hand};
+///
+/// evaluate_hand(
+///     &(
+///         [
+///             Card::from(1),
+///             Card::from(2),
+///             Card::from(3),
+///             Card::from(4),
+///             Card::from(10)
+///         ]
+///         .into_iter()
+///         .collect()
+///     ),
+///     &([Card::from(7), Card::from(5), Card::from(6), Card::from(52)].into_iter().collect()),
+///     // In prior versions, `collect()` would be able to inference the type that
+///     // the iterator should collect into into a `Vec<Card>` without any
+///     // additional type hints. Since `[Card]` does not implement the `Sized`
+///     // trait, the iterator cannot collect the cards into a slice.
+/// );
+/// ```
+///
+/// ```
+/// use playing_cards::{core::Card, poker::evaluators::dramaha_high_evaluator::evaluate_hand};
+///
+/// evaluate_hand(
+///     &(
+///         [
+///             Card::from(1),
+///             Card::from(2),
+///             Card::from(3),
+///             Card::from(4),
+///             Card::from(10)
+///         ]
+///         .into_iter()
+///         .collect::<Vec<Card>>()
+///     ),
+///     &([Card::from(7), Card::from(5), Card::from(6), Card::from(52)].into_iter().collect::<Vec<Card>>()),
+///     // A simple fix would be to add type hints to `collect()` as such.
+/// );
+/// ```
+///
+/// ```
+/// use playing_cards::{core::Card, poker::evaluators::dramaha_high_evaluator::evaluate_hand};
+///
+/// let player_hand = Vec::from(
+///     [
+///         Card::from(1),
+///         Card::from(2),
+///         Card::from(12),
+///         Card::from(20),
+///     ]
+/// );
+/// let board = Vec::from([Card::from(24), Card::from(14), Card::from(47)]);
+///
+/// evaluate_hand(
+///     &player_hand,
+///     &board,
+///     // Passing a previously defined vector works exactly as before since `Vec<T>` implements
+///     // the `AsRef<[T]>` trait.
+/// );
+/// ```
 pub mod dramaha_high_evaluator;
 
 /// An evaluator for Badugi hands
@@ -276,7 +595,7 @@ pub mod dramaha_high_evaluator;
 /// in suit and rank. All 4-card hands, Badugis, beat all 3 card hands, all 3-card hands beat all
 /// 2-card hands, and all 2-card hands beat all 1-card hands.
 ///
-/// ## Examples
+/// ## Normal examples
 /// ```rust
 /// use playing_cards::{core::Card, poker::evaluators::badugi_evaluator};
 ///
@@ -310,5 +629,67 @@ pub mod dramaha_high_evaluator;
 /// assert_eq!(villan_rank.description.as_ref().unwrap(), "Jack-high 3-card hand");
 ///
 /// assert!(hero_rank > villan_rank);
+/// ```
+///
+/// ## Breaking v1.0 changes
+/// <div class="warning">
+/// In older versions, the list of cards input was strictly a <code>&amp;Vec&lt;Card&gt;</code>.
+/// This has been loosened to <code>&amp;[Card]</code> to allow for other list types besides
+/// <code>&amp;Vec</code>. While this change may not break existing code, it can cause certain code
+/// snippets to fail to compile due to insufficent information on size or type inferencing, hence
+/// why this is a breaking change. If you used the argument type for inferencing the caller
+/// argument types, then they need to be refactored. Please see the below examples:
+/// </div>
+///
+/// ```compile_fail
+/// use playing_cards::{core::Card, poker::evaluators::badugi_evaluator::evaluate_hand};
+///
+/// let player_hand = Vec::from([Card::from(1), Card::from(2)]);
+/// let potential_card = Card::from(42);
+///
+/// evaluate_hand(
+///     &player_hand
+///         .iter()
+///         .chain([potential_card].iter())
+///         .cloned()
+///         .collect() // In prior versions, `collect()` would be able to inference the type that
+///                    // the iterator should collect into into a `Vec<Card>` without any
+///                    // additional type hints. Since `[Card]` does not implement the `Sized`
+///                    // trait, the iterator cannot collect the cards into a slice.
+/// );
+/// ```
+///
+/// ```
+/// use playing_cards::{core::Card, poker::evaluators::badugi_evaluator::evaluate_hand};
+///
+/// let player_hand = Vec::from([Card::from(1), Card::from(2)]);
+/// let potential_card = Card::from(42);
+///
+/// evaluate_hand(
+///     &player_hand
+///         .iter()
+///         .chain([potential_card].iter())
+///         .cloned()
+///         .collect::<Vec<Card>>() // A simple fix would be to add type hints to `collect()` as
+///                                 // such.
+/// );
+/// ```
+///
+/// ```
+/// use playing_cards::{core::Card, poker::evaluators::badugi_evaluator::evaluate_hand};
+///
+/// let four_card_hand = Vec::from(
+///     [
+///         Card::from(1),
+///         Card::from(2),
+///         Card::from(12),
+///         Card::from(43),
+///     ]
+/// );
+///
+/// evaluate_hand(
+///     &four_card_hand // Passing a previously defined vector works exactly as before since
+///                     // `Vec<T>` implements the `AsRef<[T]>` trait.
+/// );
 /// ```
 pub mod badugi_evaluator;

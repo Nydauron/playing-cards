@@ -16,7 +16,9 @@ use std::ops::{Add, AddAssign, BitAnd, BitXor, BitXorAssign, Shl, Shr};
 ///
 /// This implementation does not support the use of duplicate cards. If duplicate cards are found,
 /// a `FailedToCalculateRank` error will return.
-pub fn evaluate_hand(cards: &Vec<Card>) -> Result<HighRank, EvaluatorError> {
+///
+/// Please see module-level documentation for examples.
+pub fn evaluate_hand(cards: &[Card]) -> Result<HighRank, EvaluatorError> {
     const MINIMUM_CARD_COUNT: usize = 5;
     const MAXIMUM_CARD_COUNT: usize = 7;
     let card_count = cards.len();
