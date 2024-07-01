@@ -10,7 +10,9 @@ use crate::{core::Card, poker::ranks::Low27Rank};
 ///
 /// This implementation does not support the use of duplicate cards. If duplicate cards are found,
 /// a `FailedToCalculateRank` error will return.
-pub fn evaluate_hand(cards: &Vec<Card>) -> Result<Low27Rank, EvaluatorError> {
+///
+/// Please see module-level documentation for examples.
+pub fn evaluate_hand(cards: &[Card]) -> Result<Low27Rank, EvaluatorError> {
     high_evaluator::evaluate_hand(cards).map(|high_rank| {
         let mut rank = (*high_rank).clone();
         rank.strength = 7463 - rank.strength;

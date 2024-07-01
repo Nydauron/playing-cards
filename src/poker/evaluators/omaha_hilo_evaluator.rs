@@ -18,9 +18,11 @@ use crate::{
 /// This implementation does not support the use of duplicate cards. If duplicate cards are found
 /// when both the player's cards and the board are chained, a `FailedToCalculateRank` error will
 /// return.
+///
+/// Please see module-level documentation for examples.
 pub fn evaluate_hand(
-    player_hand: &Vec<Card>,
-    board: &Vec<Card>,
+    player_hand: &[Card],
+    board: &[Card],
 ) -> Result<OmahaHiLoRank, EvaluatorError> {
     const MINIMUM_PLAYER_CARDS: usize = 4;
     const MINIMUM_BOARD_CARDS: usize = 3;

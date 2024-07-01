@@ -15,9 +15,11 @@ use crate::poker::ranks::DramahaHighRank;
 /// This implementation does not support the use of duplicate cards. If duplicate cards are found
 /// when both the player's cards and the board are chained, a `FailedToCalculateRank` error will
 /// return.
+///
+/// Please see module-level documentation for examples.
 pub fn evaluate_hand(
-    player_hand: &Vec<Card>,
-    board: &Vec<Card>,
+    player_hand: &[Card],
+    board: &[Card],
 ) -> Result<DramahaHighRank, EvaluatorError> {
     const EXPECTED_PLAYER_CARD_COUNT: usize = 5;
     const MINIMUM_BOARD_CARDS: usize = 3;

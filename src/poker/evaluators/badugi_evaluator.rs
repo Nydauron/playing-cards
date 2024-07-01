@@ -23,7 +23,9 @@ fn choose(n: u64, k: u64) -> u64 {
 ///
 /// This implementation does not support the use of duplicate cards. If duplicate cards are found,
 /// a `FailedToCalculateRank` error will return.
-pub fn evaluate_hand(player_hand: &Vec<Card>) -> Result<BadugiRank, EvaluatorError> {
+///
+/// Please see module-level documentation for examples.
+pub fn evaluate_hand(player_hand: &[Card]) -> Result<BadugiRank, EvaluatorError> {
     if player_hand.len() < 4 {
         return Err(EvaluatorError::NotEnoughCards {
             card_set_type: "Player hand".to_string(),
