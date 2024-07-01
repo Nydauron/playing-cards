@@ -120,6 +120,11 @@ impl Value {
             Self::Ace => 41,
         }
     }
+
+    /// Returns true if the card value is of a face card (Jack, Queen, King)
+    pub fn is_face_card(&self) -> bool {
+        matches!(self, Self::Jack | Self::Queen | Self::King)
+    }
 }
 
 impl TryFrom<i32> for Value {
@@ -297,6 +302,11 @@ impl Card {
         bit_pattern |= self.value.get_cactus_kev_prime() as u32;
 
         bit_pattern
+    }
+
+    /// Returns true if the card is a face card (Jack, Queen, King)
+    pub fn is_face_card(&self) -> bool {
+        self.value.is_face_card()
     }
 }
 
