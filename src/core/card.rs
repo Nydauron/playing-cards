@@ -193,13 +193,14 @@ impl Suit {
 
     /// Parses a character, returning the corresponding Suit if valid.
     ///
-    /// Returns `None` for characters not representing a Suit. The input is case-insensitive.
+    /// The input is either a case-insensitive letter, or the UTF-8 character representing the suit.
+    /// Returns `None` for characters not representing a Suit.
     pub fn from_char(c: char) -> Option<Suit> {
         match c.to_ascii_lowercase() {
-            'h' => Some(Self::Heart),
-            'c' => Some(Self::Club),
-            'd' => Some(Self::Diamond),
-            's' => Some(Self::Spade),
+            'h' | '♥' => Some(Self::Heart),
+            'c' | '♣' => Some(Self::Club),
+            'd' | '♦' => Some(Self::Diamond),
+            's' | '♠' => Some(Self::Spade),
             _ => None,
         }
     }
@@ -322,7 +323,7 @@ impl From<i32> for Card {
 impl TryFrom<String> for Card {
     type Error = String;
     fn try_from(s: String) -> Result<Self, Self::Error> {
-        if s.len() != 2 {
+        if s.chars().count() != 2 {
             return Err(format!(
                 r#"Card string "{}" is not exactly a length of 2"#,
                 s
@@ -355,7 +356,7 @@ impl TryFrom<String> for Card {
 
 impl From<Card> for String {
     fn from(c: Card) -> Self {
-        format!("{}{}", c.value.get_char(), c.suit.get_char())
+        c.to_string()
     }
 }
 
@@ -425,6 +426,14 @@ mod tests {
         for card_str in ["AH", "ah"] {
             let card = Card::from_str(card_str).unwrap();
             assert_eq!(card.to_int(), 49);
+        }
+    }
+
+    #[test]
+    fn conversion_from_suit_symbols() {
+        for index in 1..=52 {
+            let card = Card::from(index);
+            assert_eq!(Card::from_str(&card.to_string()).unwrap(), card);
         }
     }
 
